@@ -1,7 +1,7 @@
 ---
-title: "Istio入門"
+title: "入門"
 date: 2021-01-30T15:26:01+09:00
-slug: "k8s-istio-basics"
+slug: "basics"
 tags:
 - Kubernetes
 - Istio

@@ -18,7 +18,7 @@ pluralizeListTitles = false # Sectionのタイトル名複数形を防ぐ
   twitter_cards = true
   color_main = "#737373"
   color_second = "#b30000"
-  disableSearch = false
+  disableSearch = true
   mathjax = true
 
 [Params.widgets.social]
