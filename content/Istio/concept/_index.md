@@ -1,7 +1,7 @@
 ---
 title: "概念整理"
 date: 2021-01-30T18:52:48+09:00
-draft: true
+draft: false
 hide:
 - toc
 - nextpage

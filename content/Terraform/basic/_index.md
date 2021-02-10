@@ -1,7 +1,7 @@
 ---
 title: "入門"
 date: 2021-02-09T22:14:00+09:00
-draft: true
+draft: false
 hide:
 - toc
 - nextpage

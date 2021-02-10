@@ -1,16 +1,16 @@
 DefaultContentLanguage = "ja"
 languageCode = "ja-JP"
 
-baseURL = "https://pepese.github.io/"
-title = "ぺーぺーSEのまとめ"
+baseURL = "https://tanakakns.github.io/"
+title = "テックまとめ"
 theme = "docport"
 enableRobotsTXT = true
 googleAnalytics = "UA-42388425-3"
 pluralizeListTitles = false # Sectionのタイトル名複数形を防ぐ
 
 [Author]
-  name = "ぺーぺーSE"
-  bio = "ぺーぺーSEがきまぐれでテックネタをまとめる。"
+  name = "ぺーぺーSEの中の人"
+  bio = "ぺーぺーSEの中の人がテックネタをまとめる。"
   avatar = "img/yaruwo.gif"
 
 [Params]
