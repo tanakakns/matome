@@ -5,6 +5,7 @@ draft: false
 hide:
 - toc
 - nextpage
+weight: 1
 ---
 
 超今更ながら [Terraform](https://www.terraform.io/) に入門する。  

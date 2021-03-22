@@ -5,7 +5,7 @@ draft: false
 hide:
 - toc
 - nextpage
-weight: 2
+weight: 1
 ---
 
 **Kubernetes** （ **k8s** ）の概念について整理する。

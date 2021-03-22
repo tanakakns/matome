@@ -10,3 +10,5 @@ hide:
 # テックまとめ
 
 テックネタをまとめてく。
+
+{{% children description="true"   %}}

@@ -5,7 +5,7 @@ draft: false
 hide:
 - toc
 - nextpage
-weight: 3
+weight: 2
 ---
 
 **Kubernetes** （ **k8s** ）のアーキテクチャについて整理する。

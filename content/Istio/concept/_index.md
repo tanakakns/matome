@@ -5,6 +5,7 @@ draft: false
 hide:
 - toc
 - nextpage
+weight: 2
 ---
 
 Istio でアプリケーションの設定する際の概念について整理する。
