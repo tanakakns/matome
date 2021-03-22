@@ -5,7 +5,7 @@ draft: false
 hide:
 - toc
 - nextpage
-weight: 2
+weight: 1
 ---
 
 Gitの認証周りの初期設定について。
