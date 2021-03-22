@@ -100,11 +100,11 @@ Github は 2021 年 8 月 13 日より Basic 認証による Git アクセスが
 
 ### 3.1. 個人アクセストークン
 
-1. Web で Github にログインする
-2. 設定画面( https://github.com/settings/tokens )を開く
+1. Web で [Github](https://github.com) にログインする
+2. [設定画面](https://github.com/settings/tokens)を開く
 3. `Generate new token` をクリック
 4. noteにトークンのわかりやすい名前を記入
-5. 権限を設定 （[repo] だけ選択しとけばよい）
+5. 権限を設定 （ `repo` だけ選択しとけばよい）
 6. [Generate token] をクリック
 7. トークンをコピー （ページを離れると参照不可になるので注意）
 8. パスワードの代わりに使用する
