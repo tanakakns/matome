@@ -62,7 +62,7 @@ git コマンドを打つ度に認証情報を聞かれるのは煩わしい。
 ### 2.1. osxkeychain
 
 `credential helper` の `osxkeychain helper` を利用する方法。  
-`git credential-osxkeychain` が使えるかを確認する。
+`git credential-osxkeychain` コマンドで使えるかを確認できる。
 
 ```zsh
 % git credential-osxkeychain
@@ -88,15 +88,26 @@ Mac では認証情報は「キーチェーンアクセス」に保存される�
 
 Windows の場合は `Git-Credential-Manager-for-Windows` を利用する。
 
-```dos
-choco install git-credential-manager-for-windows
+```cmd
+> choco install git-credential-manager-for-windows
+```
+
+また、自動で設定できるという噂もあるが、以下の設定を確認・実施する。
+
+```cmd
+# 確認
+> git config --global --list
+# credential.helper=manager っていうのがあればよい、なければ以下実施
+
+# 設定
+> git config --global credential.helper manager
 ```
 
 初回パスワード入力時に Internet Explorer などと同じ場所にアクセストークンが保存され、以後はパスワード入力が不要になる。
 
 ### 2.3. .netrc
 
-パスワードを素で記述するためいい方法ではないが、一応書いておく。
+パスワードを素で記述するためアレだが、一応書いておく。
 
 ```zsh
 % cat >> ~/.netrc <<EOF
