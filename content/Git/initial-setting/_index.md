@@ -55,20 +55,11 @@ git コマンドを打つ度に認証情報を聞かれるのは煩わしい。
 ここでは認証情報の設定方法について記載する。  
 なお、 ssh ではなく https 前提とする。
 
-### 2.1. .netrc
+2.1. osxkeychain（Macの場合）  
+2.2. Git-Credential-Manager-for-Windows（Windowsの場合）  
+2.3. .netrc（Linuxの場合）
 
-個人的には使わないけど一応書いておく。
-
-```zsh
-% cat >> ~/.netrc <<EOF
-machine github.com
-login <githubアカウント>
-password <パスワード>
-EOF
-% chmod 600 ~/.netrc
-```
-
-### 2.2. osxkeychain
+### 2.1. osxkeychain
 
 `credential helper` の `osxkeychain helper` を利用する方法。  
 `git credential-osxkeychain` が使えるかを確認する。
@@ -91,7 +82,30 @@ usage: git credential-osxkeychain <get|store|erase>
 % https://<username>@<domain>/<repository-username>/<repository-name>.git
 ```
 
-Mac の場合、認証情報は「キーチェーンアクセス」に保存される。
+Mac では認証情報は「キーチェーンアクセス」に保存される。
+
+### 2.2. Git-Credential-Manager-for-Windows
+
+Windows の場合は `Git-Credential-Manager-for-Windows` を利用する。
+
+```dos
+choco install git-credential-manager-for-windows
+```
+
+初回パスワード入力時に Internet Explorer などと同じ場所にアクセストークンが保存され、以後はパスワード入力が不要になる。
+
+### 2.3. .netrc
+
+パスワードを素で記述するためいい方法ではないが、一応書いておく。
+
+```zsh
+% cat >> ~/.netrc <<EOF
+machine github.com
+login <githubアカウント>
+password <パスワード>
+EOF
+% chmod 600 ~/.netrc
+```
 
 ## 3. Github の認証
 
