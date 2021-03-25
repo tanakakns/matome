@@ -401,7 +401,7 @@ func main() {
 }
 ```
 
-## 3.4. 型変換
+### 3.4. 型変換
 
 従来の **キャスト** とほぼ同じ。
 
@@ -934,7 +934,7 @@ func main() {
 }
 ```
 
-## 12.2. チャネル（ channel ）
+### 12.2. チャネル（ channel ）
 
 ！！！[Go の channel 処理パターン集](https://hori-ryota.com/blog/golang-channel-pattern/)！！！
 
