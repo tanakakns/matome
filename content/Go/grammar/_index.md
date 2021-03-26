@@ -38,13 +38,14 @@ func main() {
 }
 ```
 
+[ideone.com](https://ideone.com/vPpbZ5)
+
 ```zsh
 % go run hello.go
 Hello, 世界
 ```
 
 なお、[The Go Playground](https://play.golang.org/) というサービスを使うと Web でお試し実行できる。  
-[他](http://interprism.hatenablog.com/entry/2014/03/04/132551) にもいろいろあるみたい。  
 以降は、[A Tour of Go](https://go-tour-jp.appspot.com/list) を読みつつも、**自分向けに** 補足したり省略したりしてまとめたもの。
 
 ## 1. パッケージ
@@ -65,7 +66,7 @@ import "fmt"
 import "math"
 ```
 
-インポートしたら `fmt.Println` とかインポート名で使用できる。  
+インポートしたら `fmt.Println` のようなインポート名、 `rand.Intn(100)` のような一番後ろのパッケージ名で使用できる。  
 また、インポート名を変更もできる。（ `f.Println` ）
 
 ```go
@@ -84,7 +85,7 @@ import (
 
 ### 1.2. パッケージ外からの参照
 
-Go では、最初の文字が **大文字で始まる名前** は、外部のパッケージから参照できる公開された名前( **exported name** )。  
+Go では、最初の文字が **大文字で始まる名前** の変数・関数は、外部のパッケージから参照できる公開された名前( **exported name** )。  
 例えば、 `Pi` は `math` パッケージでエクスポートされている。  
 `pi` （小文字）ではないことに注意。
 
@@ -184,7 +185,7 @@ import "fmt"
 func adder() func(int) int {
 	sum := 0
 	return func(x int) int {
-		sum += x   
+		sum += x
 		return sum
 	}
 }
@@ -215,7 +216,7 @@ package main
 import "fmt"
 
 func main() {
-	defer fmt.Println("world")
+	defer fmt.Println("world") // main 関数の終わりまで実行が遅延される
 
 	fmt.Println("hello")
 }
@@ -346,16 +347,16 @@ func main() {
 
 - `bool`
 - `string`
-- `int` `int8` `int16` `int32` `int64`
-- `uint` `uint8` `uint16` `uint32` `uint64` `uintptr`
+- `int` 、 `int8` 、 `int16` 、 `int32` 、 `int64`
+- `uint` 、 `uint8` 、 `uint16` 、 `uint32` 、 `uint64` 、 `uintptr`
 - `byte`
     - `uint8` の別名
 - `rune`
     - `int32` の別名
     - Unicode のコードポイントを表す
 	- rune とは古代文字を表す言葉( runes )、 Go では文字そのものを表すためにruneという言葉を使う
-- `float32` `float64`
-- `complex64` `complex128`
+- `float32` 、 `float64`
+- `complex64` 、 `complex128`
 
 ```go
 package main
@@ -377,6 +378,21 @@ func main() {
 	fmt.Printf("Type: %T Value: %v\n", z, z)
 }
 ```
+
+`int` や `uint` は OS や CPU などの実装系に依存して、 `int32` になったり `int64` になったりする。
+
+|型|サイズ(bit)|符号|最小値|最大値|
+|:---|:---|:---|:---|:---|
+|int8|8|あり|-128|127|
+|int16|16|あり|-32768|32767|
+|int32|32|あり|-2147483648|2147483647|
+|int64|64|あり|-9223372036854775808|9223372036854775807|
+|uint8(byte)|8|なし|0|255|
+|uint16|16|なし|0|65535|
+|uint32|32|なし|0|4294967295|
+|uint64|64|なし|0|18446744073709551615|
+
+また、 Go の小数は浮動小数点数の `float32` 、 `float64` 、 `math.BitFloat` が用意されてりるが、 `float` や固定小数点数は存在しない。
 
 ### 3.3. ゼロ値
 
@@ -621,11 +637,11 @@ func main() {
 - `make(T)`
   - 対象の型：`slice` 、 `map` 、 `channel`
   - 初期化：初期化する
-  - 返り値： `T`
+  - 返り値： `T` （値）
 - `new(T)`
   - 対象の型：任意の型
   - 初期化：初期化しない(ゼロ値になる)
-  - 返り値： `*T`
+  - 返り値： `*T` （ポインタ）
 
 `make` は `list := make([]int, len, cap)` のようにサイズを指定できる。  
 `len` は長さでゼロ値が存在する値の場合は実態を作成。 `cap` （省略可）はメモリだけ確保し、各要素の実態作成は行われない。  
@@ -789,8 +805,41 @@ func main() {
 
 ### 11.1. 型定義
 
-`type` で作成する。  
-構造体やインターフェースも型定義しているのと同じ。
+`type` で作成する。
+
+```go
+type 識別子 型
+```
+
+「識別子」は，ここで宣言する型の名前、「型」は，型名または型リテラル。（ ex. `type Hex int` ）  
+構造体やインターフェースも型定義しているのと同じ。  
+型リテラルは以下のような型をリテラルで書いたもの。（リテラル ＝ ソースコードの中に直接書きこんである文字とか数字とかのこと）
+
+```go
+// 配列型
+[10]int
+
+// 構造体型
+struct {}
+
+// ポインタ型
+*int
+
+// 関数型
+func(s string) int
+
+// インタフェース型
+interface {}
+
+// スライス型
+[]int
+
+// マップ型
+map[string]int
+
+// チャネル型
+chan bool
+```
 
 ### 11.2. メソッド
 
@@ -935,8 +984,6 @@ func main() {
 ```
 
 ### 12.2. チャネル（ channel ）
-
-！！！[Go の channel 処理パターン集](https://hori-ryota.com/blog/golang-channel-pattern/)！！！
 
 Go では **チャネル** （ **channel** ）を用いて goroutine 間のデータの送受信およびブロックを実現する。  
 チャネルは `make` で作成（ `c := make(chan int)` ）し、送受信するデータの型を指定する。  
