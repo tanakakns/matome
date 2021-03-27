@@ -31,6 +31,9 @@ Go らしい書き方や処理パターンについて記載する。
 |gocode|コード補完|
 |errcheck|エラー処理チェッカ|
 
+- `go get -u github.com/kisielk/errcheck`
+  - `errcheck ./...`
+
 ### 1.2 コメント
 
 コメントは、記述されているものの名​​前で始まり、ピリオドで終わる必要がある。

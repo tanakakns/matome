@@ -39,26 +39,10 @@ https://golang.org/doc/install/source#environment
 `.zshenv` （ bash の場合は `.bash_profile` ）に以下を追記。
 
 ```zsh
+export GOROOT=`go env GOROOT`
 export GOPATH=`go env GOPATH`
-export PATH=$PATH:$GOPATH/bin
-export GO111MODULE=on
-```
-
->教科書敵には以下。
->```zsh
-export GOROOT=`go env GOROOT` # 個人的にはこれは不要
-export GOPATH=`go env GOPATH`
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-```
-
-[anyenv](https://github.com/anyenv/anyenv) および [goenv](https://github.com/syndbg/goenv) を利用する場合の `.zshenv` は以下。
-
-```zsh
-export GOENV_DISABLE_GOPATH=1 # これがポイント？
-export PATH="$HOME/.anyenv/bin:$PATH"
-
-export GOPATH=`go env GOPATH`
-export PATH=$PATH:$GOPATH/bin
+export PATH=$GOPATH/bin:$PATH
+# export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 export GO111MODULE=on
 ```
 
@@ -94,7 +78,7 @@ $GOPATH
     ├─GitHubアカウント名
     │  └─GitHubレポジトリ名/
     │    └─LICENSEとか`*.go`とかREADMEとか
-    └─<あなたのGitHubユーザ名>
+    └─<あなたのGitHubユーザ名> # Go Modules OFF の場合
       └─GitHubレポジトリ名/ # プロジェクトディレクトリ（複数）
         ├─go.mod
         ├─go.sum
