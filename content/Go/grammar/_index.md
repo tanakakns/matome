@@ -10,18 +10,19 @@ weight: 2
 
 基本文法についてメモる。
 
-1. パッケージ
-2. 関数
-3. 変数
-4. ループ
-5. 条件分岐
-6. 配列とスライス
-7. map
-8. ポインタ
-9. 構造体
-10. インターフェース
-11. 型
-12. 並列処理
+1. [パッケージ](#1-パッケージ)
+2. [関数](#2-関数)
+3. [変数](#3-変数)
+4. [ループ](#4-ループ)
+5. [条件分岐](#5-条件分岐)
+6. [配列とスライス](#6-配列とスライス)
+7. [map](#7-map)
+8. [ポインタ](#8-ポインタ)
+9. [構造体](#9-構造体)
+10. [インターフェース](#10-インターフェース)
+11. [型](#11-型)
+12. [並列処理](#12-並列処理)
+13. [埋め込み](#13-埋め込み)
 
 <!--more-->
 
@@ -815,31 +816,19 @@ type 識別子 型
 構造体やインターフェースも型定義しているのと同じ。  
 型リテラルは以下のような型をリテラルで書いたもの。（リテラル ＝ ソースコードの中に直接書きこんである文字とか数字とかのこと）
 
-```go
-// 配列型
-[10]int
+型リテラル|型 Type
+---|---
+ []int|スライス型 SliceType
+[10]int|配列型 ArrayType
+*int|ポインタ型 PointerType
+map[Key]Value|マップ型 MapType
+interface {SomeMethod()}<br>interface {}|インターフェース型 InterfaceType
+struct {ID int}|構造体型 StructType
+func(s string) int|関数型 FunctionType
+chan int|チャネル型 ChannelType
 
-// 構造体型
-struct {}
-
-// ポインタ型
-*int
-
-// 関数型
-func(s string) int
-
-// インタフェース型
-interface {}
-
-// スライス型
-[]int
-
-// マップ型
-map[string]int
-
-// チャネル型
-chan bool
-```
+なお、型リテラルは「定義された型（defined type）」ではないので、コンバート・キャスト（ `t := T(x)` ）することはできない。  
+基本型や `type` で定義した型は「定義された型（defined type）」なので、コンバート・キャストすることができる。
 
 ### 11.2. メソッド
 
@@ -1162,6 +1151,194 @@ func main() {
 ```
 
 上記はロック機構によりきちんと 10 単位でカウントアップ・表示されている。
+
+## 13. 埋め込み
+
+構造体・インターフェースは以下の関係の通り、埋め込み(embedding)が可能。
+
+1. インターフェースに　インターフェースを　**埋め込み可能**
+2. インターフェースに　構造体を　　　　　　埋め込み不可能
+3. 構造体に　　　　　　インターフェースを　**埋め込み可能**
+4. 構造体に　　　　　　構造体を　　　　　　**埋め込み可能**
+
+インターフェースにはシグネチャ（メソッドの定義）を与えるものなので、インターフェースに具体的な構造体を埋め込むことはできない。  
+インターフェースにインターフェースを埋め込むサンプルコードは以下。
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+type Flyer interface {
+    Fly() string
+}
+
+type Runner interface {
+    Run() string
+}
+
+// 1. インターフェースにインターフェースを埋め込む
+type FlyingRunner interface {
+    Flyer
+    Runner
+}
+
+// 3. 構造体にインターフェースを埋め込む
+type ToriJin struct { // 鳥人
+    FlyingRunner
+}
+
+// 4. 構造体に構造体を埋め込む
+type ShinJinrui struct { // 新人類
+    *ToriJin
+}
+
+// FlyingRunnerインターフェースを実装する型
+type RealToriJin struct{}
+
+func (r RealToriJin) Fly() string { return "Fly!" }
+
+func (r RealToriJin) Run() string { return "Run!" }
+
+func main() {
+    aRealToriJin := &RealToriJin{}
+    // 3. 構造体 ToriJin にインターフェース FlyingRunner を
+    // 実装している RealToriJin の変数を埋め込む
+    aToriJin := &ToriJin{
+        FlyingRunner: aRealToriJin,
+    }
+    // 4. 構造体 ShinJinrui に構造体 Torijin の変数を埋め込む
+    aShinJinrui := &ShinJinrui{
+        ToriJin: aToriJin,
+    }
+    fmt.Println(aShinJinrui.Fly()) // Fly!
+    fmt.Println(aShinJinrui.Run()) // Run!
+}
+```
+
+### 埋め込みのメリット
+
+埋め込みを行うことによって、わざわざ自身の型でメソッドを実装しなくても *借り物* のメソッドを使うことができる。（DRY）  
+以下のサンプルは、`ShinJinrui2` という構造体が `*grasshopper` 型の `HighJump` メソッドをそのまま借りることで `HighJumpRunner` インターフェースを実装できていることを示している。
+
+```go
+package main
+
+import "fmt"
+
+type HighJumpRunner interface {
+    HighJump() string
+    Run() string
+}
+
+// grasshopper はバッタのこと
+// 高く飛ぶ能力がある
+type grasshopper struct{}
+
+func (g *grasshopper) HighJump() string {
+    return "High Jump!"
+}
+
+// ShinJinrui2 は*grasshopperの能力を
+// 構造体埋め込み(③)により"そのまま"借りる
+type ShinJinrui2 struct { // 新人類2
+    *grasshopper
+}
+
+func main() {
+    aGrassHopper := &grasshopper{}
+    aShinJinrui2 := &ShinJinrui2{
+        grasshopper: aGrassHopper,
+    }
+    if _, ok := interface{}(aShinJinrui2).(HighJumpRunner); ok {
+		// *grasshopper に Run() が実装されていないので出力されない
+        fmt.Println("ShinJinrui2はHighJumpRunnerインターフェースを実装しています。")
+    }
+    fmt.Println(aShinJinrui2.HighJump()) // High Jump!
+}
+```
+
+以下のように埋め込まない(そのまま借りない)場合、型 `ShinJinrui2` のメソッドとして `HighJump` を定義し、その中で `*grasshopper` のものを呼ぶ実装を作る必要がある。
+
+```go
+type ShinJinrui2 struct { // 新人類2
+    ghopper *grasshopper
+}
+func (sj *ShinJinrui2) HighJump() string {
+    return sj.grasshopper.HighJump()
+}
+```
+
+### 埋め込みはサブクラス化・継承とは異なる
+
+埋め込みはあくまでも *借りているだけ* で埋め込み元のオブジェクトのメソッドとして実行される。  
+これは埋め込み先の構造体が埋め込み元のメソッドを実行しても埋め込み先オブジェクトには影響を与えないことを意味している。  
+*埋め込み* であって *継承* ではないということ。（そして Go 言語には継承がない。)
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+// Status は健康状態を意味する
+type Status int
+
+const (
+    // Good is 良好 status
+    Good Status = iota
+    // Tired is 疲れている status
+    Tired
+)
+
+func (s Status) String() string {
+    switch s {
+    case Good:
+        return "Good!"
+    case Tired:
+        return "Tired..."
+    default:
+        return ""
+    }
+}
+
+type poorGrasshopper struct {
+    status Status // poorGrasshopperには健康状態がある
+}
+
+func (g *poorGrasshopper) HighJump() {
+    fmt.Println("High Jump!")
+    g.status = Tired // 飛ぶと疲れてしまう
+}
+
+type ShinJinrui3 struct { // 新人類3
+    status           Status // ShinJinrui3も健康状態がある
+    *poorGrasshopper        // 構造体の埋め込み(4.)
+}
+
+func main() {
+    aPoorGrasshopper := &poorGrasshopper{
+        status: Good,
+    }
+    aShinJinrui3 := &ShinJinrui3{
+        status:          Good,
+        poorGrasshopper: aPoorGrasshopper,
+    }
+    aShinJinrui3.HighJump()
+    // poorGrasshopperの方はステータスが変わるが
+    // メソッドを借りているだけの Shinjirui3 のステータスは影響されない
+    fmt.Println("aPoorGrasshopper is", aPoorGrasshopper.status) // Tired
+    fmt.Println("aShinJinrui3 is", aShinJinrui3.status)         // Good
+}
+```
+
+### 埋め込み元と埋め込み先のメソッド名重複時の挙動
+
+埋め込み元と埋め込み先に同じ名前のメソッド・フィールド名が存在するとき、コンパイルエラーにはならず埋め込み先のメソッド・フィールドが優先されて呼ばれる。
+
 
 ## 参考
 
