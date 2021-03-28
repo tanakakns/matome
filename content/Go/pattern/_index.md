@@ -31,8 +31,15 @@ Go らしい書き方や処理パターンについて記載する。
 |gocode|コード補完|
 |errcheck|エラー処理チェッカ|
 
-- `go get -u github.com/kisielk/errcheck`
-  - `errcheck ./...`
+VS Code などのエディタ・IDE を利用する場合は保存時などに勝手に実行されるものが多いが、以下のコマンドの実行は意識しておいたほうがいい。
+
+- `go fmt` （ = `gofmt -w -l` ）
+    - VS Code ではコード保存時に勝手に実行してくれる
+- `go vet ./...`
+- `golint ./...`
+    - これは VS Code が教えてくれたりもするが、コマンド叩くと一覧表示されるのでコマンドを併用してもいい
+- `errcheck ./...`
+    - `go get -u github.com/kisielk/errcheck`
 
 ### 1.2 コメント
 

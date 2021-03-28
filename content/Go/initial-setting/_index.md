@@ -10,16 +10,15 @@ weight: 1
 
 Go言語の初期設定周りについて。
 
-1. 環境変数
-2. Go Modules
-3. プロジェクトの作成
-4. VS Code の設定
-5. docker によるマルチステージビルド
-6. デバッグ環境作成
+1. [環境変数](#1-環境変数)
+2. [Go Modules](#2-go-modules)
+3. [プロジェクトの作成](#3-プロジェクトの作成)
+4. [VS Code](#4-vs-code)
+5. [docker によるマルチステージビルド](#5-docker-によるマルチステージビルド)
 
 <!--more-->
 
-## 1. 環境変数の設定
+## 1. 環境変数
 
 https://golang.org/doc/install/source#environment
 
@@ -124,23 +123,25 @@ Go v1.11 から導入 Go v1.12 から正式リリースされている依存関�
 go: creating new go.mod: module github.com/<あなたのGithubアカウント名>/<golangプロジェクト>
 % ls
 go.mod
-% touch app.go             # 依存ライブラリ含め好きなコード書く
+% touch main.go             # 依存ライブラリ含め好きなコード書く
 % go mod tidy              # 依存ライブラリの解決
-% go run app.go            # ビルド+実行
-% go build app.go          # ビルド
-% ./app
+% go run main.go            # ビルド+実行
+% go build main.go          # ビルド
+% ./main
 ```
 
 基本的にはどこのディレクトリで開発しようとも **module-aware mode** で開発することになると思う。
 
-## 4. VS Code の設定
+## 4. VS Code
+
+### 4.1. 拡張機能
 
 VS Code には Go の各種ツールと連携する拡張機能があり、 VS Code 内ターミナルから以下のようにコマンドラインツールを導入することにより自動で拡張機能インストールの案内をしてくれる。  
 Go の拡張機能をインストールしてから、VSCode でコマンドパレット(Cmd+Shift+P)を開いて `GO: Install/Update tools` で検索した後、全チェックしてインストールしてもいいし、以下で 1 つずつ入れてもいい。
 
 - goimports
     - 過不足のimportの自動補完
-	- `go get golang.org/x/tools/cmd/goimports`
+    - `go get golang.org/x/tools/cmd/goimports`
 - gocode
     - ヘルパー機能
 	- `go get -u -v github.com/nsf/gocode`
@@ -166,10 +167,25 @@ Go の拡張機能をインストールしてから、VSCode でコマンドパ�
     - `go get -u -v golang.org/x/tools/cmd/guru`
 - gotests
     - `go get -u -v github.com/cweill/gotests/...`
+- gomodifytags
+    - Go Struct Tags の自動生成
+    - `go get github.com/fatih/gomodifytags`
 
-## 4.1. .editorconfig
+以下の静的解析についてはコマンドを実行する必要がある。
 
-```
+- `go fmt` （ = `gofmt -w -l` ）
+    - VS Code ではコード保存時に勝手に実行してくれる
+- `go vet ./...`
+- `golint ./...`
+    - これは VS Code が教えてくれたりもするが、コマンド叩くと一覧表示されるのでコマンドを併用してもいい
+- `errcheck ./...`
+    - `go get -u github.com/kisielk/errcheck`
+
+### 4.2. .editorconfig
+
+VS Code に `EditorConfig for VS Code` をインストールして、プロジェクトルートに以下の `.editorconfig` を配置する。
+
+```txt
 root = true
 
 [*]
@@ -186,26 +202,9 @@ indent_size = 4
 trim_trailing_whitespace = true
 ```
 
-## 5. docker によるマルチステージビルド
+Go のインデントは **ハードタブ** が推奨される。
 
-```
-FROM golang:1.13.3-alpine3.10 as build
-WORKDIR /build
-COPY go.mod .
-COPY go.sum .
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build main.go
-
-FROM alpine:3.10
-RUN apk add --no-cache tzdata
-ENV TZ Asia/Tokyo
-COPY --from=build /build/main /usr/local/bin/main
-EXPOSE 8080
-ENTRYPOINT ["/usr/local/bin/main"]
-```
-
-## 6. デバッグ環境作成
+### 4.3. デバッグ実行
 
 デバッガとして **Delve** を導入する。
 
@@ -234,3 +233,22 @@ ENTRYPOINT ["/usr/local/bin/main"]
 `syscall.Write()` などでシステムコールされているのがわかる。（ Win だと別コード）  
 今回はデバッガのステップインでコードを掘っていったが、カーソルがあたっている位置の関数で `Go to Definition` （ `F12` ）しても関数の定義に飛ぶ。  
 また、カーソルがあたっている位置の関数や変数で `Find All Reference` （ `Shift+F12` ） すれば、使われている位置がリストされる。
+
+## 5. docker によるマルチステージビルド
+
+```dockerfile
+FROM golang:1.13.3-alpine3.10 as build
+WORKDIR /build
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build main.go
+
+FROM alpine:3.10
+RUN apk add --no-cache tzdata
+ENV TZ Asia/Tokyo
+COPY --from=build /build/main /usr/local/bin/main
+EXPOSE 8080
+ENTRYPOINT ["/usr/local/bin/main"]
+```
