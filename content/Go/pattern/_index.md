@@ -10,11 +10,12 @@ weight: 4
 
 Go らしい書き方や処理パターンについて記載する。
 
-1. Go らしいコード
-2. エラー処理
-3. インターフェース
-4. channel
-5. その他
+1. [Go らしいコード](#1-go-らしいコード)
+2. [エラー処理](#2-エラー処理)
+3. [インターフェース](#3-インターフェース)
+4. [channel](#4-channel)
+5. [その他パターン](#5-その他パターン)
+6. [小技](#6-小技)
 
 <!--more-->
 
@@ -275,7 +276,7 @@ func main() {
 }
 ```
 
-## 5. その他
+## 5. その他パターン
 
 ### 5.1. 設計単位
 
@@ -306,3 +307,66 @@ func New(w io.Writer) Tracer {
 ```
 
 なお、 `interface` は必須ではない。
+
+## 6. 小技
+
+### 6.1. NoMethod イディオム
+
+例えば、JSON上では時刻を「unixtime形式」で表現し、プログラム中では「time.Time型」として表現することで、プログラム中で時刻の比較や計算をしやすくしたい、といったケースがあったとする。  
+その際 `encoding/json` パッケージには、 `Marshaler` と `Unmarshaler` インターフェースが用意されており、以下のようにカスタマイズの実装ができる。
+
+```go
+// 対象の構造体
+type Resource struct {
+        ID        int64     `json:"id"`
+        Timestamp time.Time `json:"-"`
+}
+
+func (r *Resource) MarshalJSON() ([]byte, error) {
+        type Alias Resource
+        
+        // `timestamp`についてはunixtime形式に変換
+        return json.Marshal(&struct {
+                *Alias
+                AliasTimestamp int64 `json:"timestamp"`
+        }{
+                Alias:          (*Alias)(r),
+                AliasTimestamp: r.Timestamp.Unix(),
+        })
+}
+
+func (r *Resource) UnmarshalJSON(b []byte) error {
+        type Alias Resource
+
+        // JSONからデコード
+        aux := &struct {
+                *Alias
+                AliasTimestamp int64 `json:"timestamp"`
+        }{
+                Alias: (*Alias)(r),
+        }
+        if err := json.Unmarshal(b, &aux); err != nil {
+                return err
+        }
+
+        // `Timestamp`については`time.Time`型に変換
+        r.Timestamp = time.Unix(aux.AliasTimestamp, 0)
+        return nil
+}
+```
+
+この時、たままたメソッド定義が被って `Marshaler` と `Unmarshaler` インターフェースに対応してしまっている（ `MarshalJSON()` / `UnmarshalJSON()` を実装してしまっている）が、上記のようなカスタマイズの実装を適用したくないとする。  
+その際は以下のようにメソッド定義の無い型として再定義することによって回避することができる。
+
+```go
+type Resource struct{}
+
+func (r *Resource) MarshalJSON() ([]byte, error) {
+    type NoMethod Resource   // メソッド定義の無い型に再定義（中身は同じ）
+    r.MarshalJSON()          // 行いたい処理（たまたまメソッド定義が被ってしまった処理）
+    raw := NoMethod(*r)      // メソッド定義が無い型へキャスト
+    return json.Marshal(raw) // メソッド定義が無い型へキャストして渡したので、カスタマイズとして実行されない
+}
+```
+
+[参考](https://qiita.com/weloan/items/def3d8b8b484f5f18dbf)

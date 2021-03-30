@@ -436,6 +436,91 @@ var u uint = uint(f)
 定数は、文字(character)、文字列(string)、boolean、数値(numeric)のみで使える。  
 なお、定数は `:=` を使って宣言できない。
 
+### 3.6. スコープとブロック
+
+Go の **スコープ** は「 *変数の宣言以降、宣言したブロックの終端まで* 」。  
+そして、 **ブロック** で最もわかりやすいのは、記号 `{` ... `}` でくくられたステートメント群のこと。そして、これを **明示的ブロック** と言う。  
+この明示的ブロックは唐突に記載することもできる。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	{ // 唐突に明示的ブロック、でも動く
+		s := "Hello, World!"
+		fmt.Println(s)
+	}
+	// fmt.Println(s) // <-スコープ外のためコンパイルエラー
+}
+// 標準出力
+// Hello, World!
+```
+
+明示的ブロックに対して **暗黙のブロック** というものもあり、それは以下の 5 つ。
+
+1. ユニバースブロック: 全てのGoのソースコードの外側を包んでいる仮想的なブロック
+2. パッケージブロック: 1パッケージ内の全ソースコードを包含するブロック
+3. ファイルブロック: 1ファイル内の全ソースコードを包含するブロック
+4. `if`, `for`, `switch` ブロック: `if`, `for`, `switch` 文それ自体がブロックとなる
+5. `switch`, `select` における節ブロック: `case` 節や `default` 節自体がブロックとなる
+
+なお、暗黙のブロックは、記号 `{` ... `}` に関係なくスコープを形成する。  
+例えば以下は、「 `if` から `}` まで」が暗黙のブロックで、「 `{` から `}` まで」が明示的ブロックとなる。
+
+```go
+// if から } までが1個のブロック
+if x := 1; x == 1 {
+    // { から } まで はさらにもう1個のブロック
+    var x int
+    println(x) // => 0
+}
+```
+
+`swtich` 文中の `case` 節や `default` 節は暗黙プロックの **節ブロック** で、 `{` ... `}` を書いてなくてもブロックを構成する。  
+以下は、 `case` 節と `default` 節は別々のブロックなので、識別子 `x` をそれぞれ独自に宣言することができる。
+
+```go
+	switch "foo" {
+	case "a":
+		var x int = 1
+		println(x)
+	case "b":
+		var x float64 = 2.0
+		println(x)
+	default:
+		var x string = "3"
+		println(x)
+	}
+```
+
+なお、同名の識別子の場合は最も直近の狭いスコープが優先される。  
+例えば以下はファイルブロックと `main` 関数ブロックにそれぞれ識別子 `global` があるが、 `main` 関数 2 行目に `:=` が利用されているため新たに識別子 `global` を宣言していることになりファイルブロックの `global` とは異なる。  
+その結果、ファイルスコープの `global` ではなく、 `main` 関数ブロックの `global` の値が標準出力される。
+
+```go
+var global string // スコープはファイルブロック
+
+func main(){
+    global = "initial state"
+    global ,err := double() // global のスコープは main 関数
+    if err != nil{}
+    mistake()
+    fmt.Println(global)
+}
+
+func double()(string,error){
+    return "double",nil
+}
+func mistake(){
+    global = "mistake" // ファイルブロックスコープの global
+}
+// 標準出力
+// double
+```
+
+
 ## 4. ループ
 
 ### 4.1. 繰り返し for
