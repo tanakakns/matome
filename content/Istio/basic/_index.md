@@ -1,9 +1,6 @@
 ---
 title: "入門"
 date: 2021-01-30T15:26:01+09:00
-tags:
-- Kubernetes
-- Istio
 draft: false
 hide:
 - toc
