@@ -1,24 +1,28 @@
 ---
-title: "Compute Engine"
+title: "コンピューティングとホスティング"
 date: 2021-01-30T15:26:01+09:00
 draft: false
 hide:
 - toc
 - nextpage
 subpage: false
-weight: 2
+weight: 4
 ---
+
+1. Compute Engine
+
+<!--more-->
+
+## 1. Compute Engine
 
 **Compute Engine** は Google のインフラストラクチャ上に仮想マシンを構築するサービス。
 
 1. [リージョンとゾーン](#1-リージョンとゾーン)
 2. [インスタンス作成](#2-インスタンス作成)
 
-<!--more-->
-
 （教材メモ：https://www.qwiklabs.com/focuses/3563?parent=catalog）
 
-## 1. リージョンとゾーン
+### 1.1. リージョンとゾーン
 
 一部の Compute Engine リソースは、リージョン内またはゾーン内にのみ存在する。  
 **リージョン** とはリソースを実行できる特定の地理的な場所で、各リージョンには、1 つまたは複数の **ゾーン**がある。  
@@ -30,9 +34,9 @@ weight: 2
 
 - [リージョンとゾーン](https://cloud.google.com/compute/docs/regions-zones/)
 
-## 2. インスタンス作成
+### 1.2. インスタンス作成
 
-### 2.1. Cloud Console から新しいインスタンスを作成する
+#### 1.2.1. Cloud Console から新しいインスタンスを作成する
 
 Cloud Console のナビゲーションメニューで、「Compute Engine」-> 「VM インスタンス」 の順にクリック。（最初に初期化する際は 1 分ほどかかる）  
 新しいインスタンスを作成するには、「作成」 をクリック。  
@@ -53,8 +57,7 @@ Cloud Console のナビゲーションメニューで、「Compute Engine」-> �
 
 SSH を使用して仮想マシンに接続するには、該当するマシンの行で「SSH」をクリックする。
 
-#### 2.1.1. NGINX ウェブサーバーをインストールする
-
+次に、NGINX ウェブサーバーをインストールする  
 SSH ターミナルで、root アクセス権を取得。
 
 ```bash
@@ -81,7 +84,7 @@ $ ps auwx | grep nginx
 
 ウェブページを表示するために、Cloud Console に戻って該当するマシンの行の 「外部 IP」（ External IP ） のリンクをクリックする。
 
-### 2.2. gcloud で新しいインスタンスを作成する
+#### 1.2.2. gcloud で新しいインスタンスを作成する
 
 Cloud Shell で、コマンドラインから gcloud を使用して新しい仮想マシン インスタンスを作成する。
 
