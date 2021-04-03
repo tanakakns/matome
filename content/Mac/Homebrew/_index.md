@@ -13,6 +13,7 @@ Mac のパッケージマネージャである [Homebrew](http://brew.sh/index_j
 1. 環境設定  
 2. brew tap  
 3. brew cask
+4. おすすめ
 
 <!--more-->
 
@@ -113,3 +114,11 @@ brewやbrew tapでソフトウェアをインストールする際、目的の�
 
 Homebrew 本体に統合され、インストール不要になった。  
 `--cask` オプションで `brew cask` コマンドは代替可能。
+
+## 4. おすすめ
+
+- `brew install iterm2 --cask`
+- `brew install visual-studio-code --cask`
+- `brew install google-chrome --cask`
+- `brew install zoom`
+- `brew install hugo`

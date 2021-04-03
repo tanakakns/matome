@@ -20,7 +20,7 @@ weight: 1
 ### 1.1. インストール
 
 ```zsh
-% brew instal docker --cask
+% brew install docker --cask
 ```
 
 アプリケーションとしてインストールされるので手動で起動してから以下で確認。
