@@ -121,4 +121,6 @@ Homebrew 本体に統合され、インストール不要になった。
 - `brew install visual-studio-code --cask`
 - `brew install google-chrome --cask`
 - `brew install zoom`
+- `brew install microsoft-teams --cask`
+- `brew install mattermost --cask`
 - `brew install hugo`

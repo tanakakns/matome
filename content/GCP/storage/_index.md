@@ -10,3 +10,6 @@ weight: 5
 ---
 
 <!--more-->
+
+- [Google Cloud オンライン ストレージ プロダクト](https://cloud.google.com/products/storage)
+    - [永続ディスク](https://cloud.google.com/compute/docs/disks/add-persistent-disk)

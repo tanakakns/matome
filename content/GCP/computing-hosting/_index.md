@@ -13,6 +13,9 @@ weight: 4
 
 <!--more-->
 
+- [Google Cloud のコンピューティング プロダクト](https://cloud.google.com/products/compute)
+    - それぞれの違いなど
+
 ## 1. Compute Engine
 
 [公式ガイド](https://cloud.google.com/compute/docs/how-to?hl=ja)
@@ -143,6 +146,11 @@ https://cloud.google.com/compute/docs/nodes/provisioning-sole-tenant-vms?hl=ja
   --min-nodes min-nodes
 ```
 
+#### 1.5. インスタンスへの接続
+
+```zsh
+% gcloud compute ssh --project=PROJECT_ID --zone=ZONE VM_NAME
+````
 
 
 #### メモ
