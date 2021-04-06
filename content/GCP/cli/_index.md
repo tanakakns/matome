@@ -15,6 +15,9 @@ weight: 3
 
 ## 1. gcloud
 
+- [gcloud コマンドライン ツールの概要](https://cloud.google.com/sdk/gcloud)
+- [gcloud リファレンス](https://cloud.google.com/sdk/gcloud/reference/?hl=ja)
+
 ### 1.1. 設定
 
 ```zsh
@@ -94,8 +97,6 @@ core 2021.03.26
 gsutil 4.60
 ```
 
-上記のインストール方法では、デフォルトの Cloud SDK コンポーネント `gcloud` 、`gsutil` 、`bq` コマンドライン ツールが含まれる。
-
 ### 1.2. 使い方
 
 ```zsh
@@ -108,7 +109,8 @@ gcloud GROUP | COMMAND [--account=ACCOUNT]
     [--trace-token=TRACE_TOKEN] [--no-user-output-enabled]
 ````
 
-GROUP は `gcloud` コマンドで管理できるリソースを指し、以下がある。
+GROUP は `gcloud` コマンドで管理できるリソースを指し、以下がある。  
+ただし、 GROUP は階層的になっており、以下から数段続く場合がある。
 
 |GROUP|description|
 |:---|:---|
@@ -187,3 +189,13 @@ GROUP は `gcloud` コマンドで管理できるリソースを指し、以下�
 |topic|gcloud supplementary help.|
 |workflows|Manage your Cloud Workflows resources.|
 |workspace-add-ons|Manage Google Workspace Add-ons resources.|
+
+COMMAND は GROUP によって異なるが、共通的なものに以下がある。
+
+|COMMAND|description|
+|:---|:---|
+|list|リソース一覧を表示|
+|describe|指定したリソースの詳細を表示|
+|create|指定したリソースを作成|
+|update|指定したリソースを更新|
+|delete|指定したリソースを削除|
