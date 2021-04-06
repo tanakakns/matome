@@ -12,7 +12,8 @@ weight: 1
 1. [コンセプト](#1-コンセプト)
 2. [ツール](#2-ツール)
 3. [リソース階層とアクセス制御](#3-リソース階層とアクセス制御)
-4. [Google Cloud サービス](#4-google-cloud-サービス)
+4. リソースの管理
+5. [Google Cloud サービス](#4-google-cloud-サービス)
 
 <!--more-->
 
@@ -222,7 +223,53 @@ compute.instance.setMachineType
 - システムイベント監査ログ
     - Google システムによって生成される管理アクション
 
-## 4. Google Cloud サービス
+## 4. リソースの管理
+
+ここまでで出たリソースを管理してみる。  
+基本 `gcloud` コマンドでの管理とする。
+
+### 4.1. プロジェクト
+
+```bash
+$ gcloud projects COMMAND [GCLOUD_WIDE_FLAG ...]
+
+$ gcloud projects --help # コマンドの help
+```
+
+`gcloud projects` コマンドには「プロジェクトに対する CRUD」と「プロジェクトの IAMに関する操作」を実施できる。  
+[Qwiklabs と Google Cloud の概要](https://www.qwiklabs.com/focuses/2794?parent=catalog) のラボ環境 Cloud Shell などを利用して実際に実行してみる。
+
+```bash
+# プロジェクトの作成
+$ gcloud projects create [PROJECT_ID]
+
+# プロジェクトの一覧を取得 # プロジェクトが作成されていることを確認する
+$ gcloud projects list
+PROJECT_ID                    NAME                          PROJECT_NUMBER
+qwiklabs-gcp-02-eac86d9938ef  qwiklabs-gcp-02-eac86d9938ef  264608401336 # これが作成したプロジェクトとする
+
+# プロジェクトの IAM ポリシーを取得 # 権限毎にユーザ・グループ・サービスアカウントが表示される
+$ gcloud projects get-iam-policy qwiklabs-gcp-02-eac86d9938ef
+bindings:
+- members:
+  - serviceAccount:qwiklabs-gcp-02-eac86d9938ef@qwiklabs-gcp-02-eac86d9938ef.iam.gserviceaccount.com
+  - user:student-02-843d65d5d79e@qwiklabs.net # 現在のユーザ
+  role: roles/editor
+- members:
+  - serviceAccount:qwiklabs-gcp-02-eac86d9938ef@qwiklabs-gcp-02-eac86d9938ef.iam.gserviceaccount.com
+  role: roles/owner
+- members:
+  - serviceAccount:qwiklabs-gcp-02-eac86d9938ef@qwiklabs-gcp-02-eac86d9938ef.iam.gserviceaccount.com
+  - user:student-02-843d65d5d79e@qwiklabs.net # 現在のユーザ
+  role: roles/viewer
+etag: BwW_ToiGehg=
+version: 1
+
+# メンバーにプロジェクトの権限を付与する # なお、リソースはプロジェクトなのでロールは基本ロールの「'roles/browser'」「'roles/editor'」「'roles/owner'」のみ
+gcloud projects add-iam-policy-binding [PROJECT_ID] --member=MEMBER --role=ROLE
+```
+
+## 5. Google Cloud サービス
 
 Cloud Console から Google Cloud が提供するサービスを利用することができ、以下のカテゴリで構成される。（[詳細](https://cloud.google.com/docs/overview/cloud-platform-services#top_of_page)）
 
