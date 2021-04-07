@@ -18,7 +18,9 @@ weight: 3
 - [gcloud コマンドライン ツールの概要](https://cloud.google.com/sdk/gcloud)
 - [gcloud リファレンス](https://cloud.google.com/sdk/gcloud/reference/?hl=ja)
 
-### 1.1. 設定
+### 1.1. インストール
+
+Mac へのインストールは以下。
 
 ```zsh
 % asdf plugin add gcloud
@@ -97,7 +99,135 @@ core 2021.03.26
 gsutil 4.60
 ```
 
-### 1.2. 使い方
+### 1.2. 環境・構成の管理
+
+アカウント情報系の設定？ -> https://qiita.com/sonots/items/906798c408132e26b41c
+
+#### 1.2.1 Google Cloud SDK
+
+```bash
+# Google Cloud SDK のプロパティを見る
+$ gcloud config list
+
+# すべてのプロパティを見る
+$ gcloud config list --all
+
+# Google Cloud SDK のコンポーネントのリストを取得
+$ gcloud components list
+
+Your current Cloud SDK version is: 334.0.0
+The latest available version is: 335.0.0
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                   Components                                                  │
+├──────────────────┬──────────────────────────────────────────────────────┬──────────────────────────┬──────────┤
+│      Status      │                         Name                         │            ID            │   Size   │
+├──────────────────┼──────────────────────────────────────────────────────┼──────────────────────────┼──────────┤
+│ Update Available │ Cloud SDK Core Libraries                             │ core                     │ 17.8 MiB │
+│ Update Available │ gcloud app Java Extensions                           │ app-engine-java          │ 53.1 MiB │
+│ Deprecated       │ Kind                                                 │ kind                     │          │
+│ Not Installed    │ Appctl                                               │ appctl                   │ 21.0 MiB │
+│ Not Installed    │ Cloud Firestore Emulator                             │ cloud-firestore-emulator │ 41.9 MiB │
+│ Not Installed    │ Cloud SQL Proxy                                      │ cloud_sql_proxy          │  7.6 MiB │
+│ Not Installed    │ Cloud Spanner Emulator                               │ cloud-spanner-emulator   │ 21.8 MiB │
+│ Not Installed    │ Emulator Reverse Proxy                               │ emulator-reverse-proxy   │ 14.5 MiB │
+│ Not Installed    │ Google Container Registry's Docker credential helper │ docker-credential-gcr    │  1.8 MiB │
+│ Not Installed    │ Kustomize                                            │ kustomize                │ 25.9 MiB │
+│ Not Installed    │ Nomos CLI                                            │ nomos                    │ 22.9 MiB │
+│ Not Installed    │ anthos-auth                                          │ anthos-auth              │ 16.4 MiB │
+│ Not Installed    │ config-connector                                     │ config-connector         │ 43.6 MiB │
+│ Not Installed    │ kubectl                                              │ kubectl                  │  < 1 MiB │
+│ Not Installed    │ kubectl-oidc                                         │ kubectl-oidc             │ 16.4 MiB │
+│ Not Installed    │ pkg                                                  │ pkg                      │          │
+│ Installed        │ App Engine Go Extensions                             │ app-engine-go            │  4.9 MiB │
+│ Installed        │ BigQuery Command Line Tool                           │ bq                       │  < 1 MiB │
+│ Installed        │ Cloud Bigtable Command Line Tool                     │ cbt                      │  7.7 MiB │
+│ Installed        │ Cloud Bigtable Emulator                              │ bigtable                 │  6.6 MiB │
+│ Installed        │ Cloud Datalab Command Line Tool                      │ datalab                  │  < 1 MiB │
+│ Installed        │ Cloud Datastore Emulator                             │ cloud-datastore-emulator │ 18.4 MiB │
+│ Installed        │ Cloud Pub/Sub Emulator                               │ pubsub-emulator          │ 60.4 MiB │
+│ Installed        │ Cloud Storage Command Line Tool                      │ gsutil                   │  3.9 MiB │
+│ Installed        │ Google Cloud Build Local Builder                     │ cloud-build-local        │  6.3 MiB │
+│ Installed        │ Minikube                                             │ minikube                 │ 23.9 MiB │
+│ Installed        │ On-Demand Scanning API extraction helper             │ local-extract            │ 13.5 MiB │
+│ Installed        │ Skaffold                                             │ skaffold                 │ 16.6 MiB │
+│ Installed        │ gcloud Alpha Commands                                │ alpha                    │  < 1 MiB │
+│ Installed        │ gcloud Beta Commands                                 │ beta                     │  < 1 MiB │
+│ Installed        │ gcloud app Python Extensions                         │ app-engine-python        │  6.1 MiB │
+│ Installed        │ gcloud app Python Extensions (Extra Libraries)       │ app-engine-python-extras │ 27.1 MiB │
+│ Installed        │ kpt                                                  │ kpt                      │ 12.5 MiB │
+└──────────────────┴──────────────────────────────────────────────────────┴──────────────────────────┴──────────┘
+To install or remove components at your current SDK version [334.0.0], run:
+  $ gcloud components install COMPONENT_ID
+  $ gcloud components remove COMPONENT_ID
+To update your SDK installation to the latest version [335.0.0], run:
+  $ gcloud components update
+```
+
+#### 1.2.2. プロジェクト
+
+```bash
+# プロジェクト一覧
+$ gcloud projects list
+
+# プロジェクト切り替え
+$ gcloud config set project <your-project-id>
+```
+
+#### 1.2.3. リージョン・ゾーン
+
+リージョン・ゾーンなどの設定情報の取得は以下。
+
+```bash
+# USAGE
+$ gcloud compute project-info describe --project <your_project_ID>
+
+# 具体例
+$ gcloud compute project-info describe --project qwiklabs-gcp-00-97e14e7c9a36
+commonInstanceMetadata:
+  fingerprint: e-kQ-2nHXX0=
+  items:
+  - key: ssh-keys
+    value: student-00-76522ecf0729:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC499dU9Bd3DvUOav+TicjmG5p0S6ip2z4gCpjiKjiqxTeeAT233lGxBbZ0MHrBGoZRWkD9OSMJ2Bpt//DFUmXDKI57ueSF7w0DiiKZ
+/aMd3uVC2BNk8yUcCgK5PMXCs/tOvUHDgffXPoxYYJFiUeVqvBhfSKiF9GnARJegPDFB+ox7QGhW2vfPvUiOEl5fyu/qKBu5IG0lNnLC/24J6+ogF/Ri3nUjt8PtuBUKRjlJyky0LQ+c5gnqM2g2cRqgCB15T5DO8w3edOPyrre3qMT
+ZFNQjEqpx9NU3ABlLM/0LVPeksmXr/FgyT7nZDrkrvryd9YnkaN58gnndhwAsBz49
+      student-00-76522ecf0729@qwiklabs.net
+  - key: enable-oslogin
+    value: 'true'
+  - key: google-compute-default-zone   # デフォルトのゾーン
+    value: us-central1-a
+  - key: google-compute-default-region # デフォルトのリージョン
+    value: us-central1
+  kind: compute#metadata
+creationTimestamp: '2021-04-05T00:24:25.019-07:00'
+defaultNetworkTier: PREMIUM
+defaultServiceAccount: 123007011495-compute@developer.gserviceaccount.com
+id: '8530956731357267399'
+kind: compute#project
+name: qwiklabs-gcp-00-97e14e7c9a36
+quotas:
+- limit: 1000.0
+  metric: SNAPSHOTS
+（省略）
+- limit: 15.0
+  metric: INTERNAL_TRAFFIC_DIRECTOR_FORWARDING_RULES
+  usage: 0.0
+selfLink: https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-00-97e14e7c9a36
+xpnProjectStatus: UNSPECIFIED_XPN_PROJECT_STATUS
+```
+
+以下のコマンドのデフォルトリージョンの設定。
+
+```bash
+$ gcloud config set compute/region <REGION>
+```
+
+以下のコマンドのデフォルトゾーンの設定。（なお、ゾーンにリージョン情報も含まれるため、ゾーンリソースの場合はこれだけでもいいかも）
+
+```bash
+$ gcloud config set compute/zone <ZONE>
+```
+
+### 1.3. 使い方
 
 ```zsh
 gcloud GROUP | COMMAND [--account=ACCOUNT]

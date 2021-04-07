@@ -9,8 +9,9 @@ subpage: false
 weight: 4
 ---
 
-1. サービス一覧
-2. Compute Engine
+1. [サービス一覧](#1-サービス一覧)
+2. [Compute Engine](#2-compute-engine)
+3. [Google Kubernetes Engine](#3-google-kubernetes-engine)
 
 <!--more-->
 
@@ -33,8 +34,10 @@ weight: 4
 
 **Compute Engine** は Google のインフラストラクチャ上に仮想マシンを構築するサービス。
 
-1. [コンセプト](#1-コンセプト)
-2. [インスタンス作成](#2-インスタンス作成)
+1. [コンセプト](#2-1-コンセプト)
+2. [インスタンス作成](#2-2-インスタンス作成)
+3. [単一テナントノードにインスタンス作成](#2-3-単一テナントノードにインスタンス作成)
+4. [インスタンスへの接続](#2-4-インスタンスへの接続)
 
 （教材メモ：https://www.qwiklabs.com/focuses/3563?parent=catalog）
 
@@ -143,16 +146,96 @@ $ gcloud compute instance-templates create example-template-custom \
 
 #### 2.2.1. デフォルト値の設定
 
-`gcloud` コマンドのデフォルトリージョンの設定。
+まずは、デフォルト値を以下のコマンドで確認する。
+
+```bash
+# USAGE
+$ gcloud compute project-info describe --project <your_project_ID>
+
+# 具体例
+$ gcloud compute project-info describe --project qwiklabs-gcp-00-97e14e7c9a36
+commonInstanceMetadata:
+  fingerprint: e-kQ-2nHXX0=
+  items:
+  - key: ssh-keys
+    value: student-00-76522ecf0729:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC499dU9Bd3DvUOav+TicjmG5p0S6ip2z4gCpjiKjiqxTeeAT233lGxBbZ0MHrBGoZRWkD9OSMJ2Bpt//DFUmXDKI57ueSF7w0DiiKZ
+/aMd3uVC2BNk8yUcCgK5PMXCs/tOvUHDgffXPoxYYJFiUeVqvBhfSKiF9GnARJegPDFB+ox7QGhW2vfPvUiOEl5fyu/qKBu5IG0lNnLC/24J6+ogF/Ri3nUjt8PtuBUKRjlJyky0LQ+c5gnqM2g2cRqgCB15T5DO8w3edOPyrre3qMT
+ZFNQjEqpx9NU3ABlLM/0LVPeksmXr/FgyT7nZDrkrvryd9YnkaN58gnndhwAsBz49
+      student-00-76522ecf0729@qwiklabs.net
+  - key: enable-oslogin
+    value: 'true'
+  - key: google-compute-default-zone   # デフォルトのゾーン
+    value: us-central1-a
+  - key: google-compute-default-region # デフォルトのリージョン
+    value: us-central1
+  kind: compute#metadata
+creationTimestamp: '2021-04-05T00:24:25.019-07:00'
+defaultNetworkTier: PREMIUM
+defaultServiceAccount: 123007011495-compute@developer.gserviceaccount.com
+id: '8530956731357267399'
+kind: compute#project
+name: qwiklabs-gcp-00-97e14e7c9a36
+quotas:
+- limit: 1000.0
+  metric: SNAPSHOTS
+（省略）
+- limit: 15.0
+  metric: INTERNAL_TRAFFIC_DIRECTOR_FORWARDING_RULES
+  usage: 0.0
+selfLink: https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-00-97e14e7c9a36
+xpnProjectStatus: UNSPECIFIED_XPN_PROJECT_STATUS
+```
+
+以下のコマンドのデフォルトリージョンの設定。
 
 ```bash
 $ gcloud config set compute/region <REGION>
 ```
 
-`gcloud` コマンドのデフォルトゾーンの設定。
+以下のコマンドのデフォルトゾーンの設定。（なお、ゾーンにリージョン情報も含まれるため、ゾーンリソースの場合はこれだけでもいいかも）
 
 ```bash
 $ gcloud config set compute/zone <ZONE>
+```
+
+また、コマンドでの設定ではなく以下の環境変数でも設定可能。
+
+```bash
+$ export PROJECT_ID=<your_project_ID>
+$ export ZONE=<your_zone>
+```
+
+また、現在使用している環境の構成は以下で取得。
+
+```bash
+$ gcloud config list
+
+[component_manager]
+disable_update_check = True
+[compute]
+gce_metadata_read_timeout_sec = 30
+[core]
+account = student-00-76522ecf0729@qwiklabs.net
+disable_usage_reporting = True
+project = qwiklabs-gcp-00-97e14e7c9a36
+[metrics]
+environment = devshell
+Your active configuration is: [cloudshell-5813]
+
+# すべての構成を取得する場合
+$ gcloud config list --all
+
+[accessibility]
+screen_reader (unset)
+[ai]
+region (unset)
+[ai_platform]
+region (unset)
+[app]
+cloud_build_timeout (unset)
+promote_by_default (unset)
+stop_previous_version (unset)
+（省略）
 ```
 
 #### 2.2.2. ブート永続ディスク
@@ -182,10 +265,21 @@ coreos-stable-1911-3-0-v20181106  coreos-cloud  coreos-stable              READY
 
 [gcloud compute instances create](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create?hl=ja)
 
-```zsh
-% gcloud compute instances create INSTANCE_NAMES [INSTANCE_NAMES …] \
+```bash
+# USAGE
+$ gcloud compute instances create INSTANCE_NAMES [INSTANCE_NAMES …] \
     [--image=IMAGE | --image-family=IMAGE_FAMILY] \
     --image-project=IMAGE_PROJECT
+
+# 具体例
+$ gcloud compute instances create gcelab2 --machine-type n1-standard-2 --zone us-central1-c
+
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-03-7b6d0cd2d87a/zones/us-central1-c/instances/gcelab2].
+NAME     ZONE           MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP   STATUS
+gcelab2  us-central1-c  n1-standard-2               10.128.0.3   34.70.76.162  RUNNING
+# default で以下が適用されている
+# - Debian 10 (buster)
+# - インスタンスと同じ名前のルート永続ディスクが自動的にインスタンスに組み込まれる
 ```
 
 - `VM_NAME` ：インスタンス名
@@ -267,9 +361,103 @@ https://cloud.google.com/compute/docs/nodes/provisioning-sole-tenant-vms?hl=ja
   --min-nodes min-nodes
 ```
 
-#### 2.4. インスタンスへの接続
+### 2.4. インスタンスへの接続
 
-```zsh
-% gcloud compute ssh --project=PROJECT_ID --zone=ZONE VM_NAME
-````
+Cloud Console にて「サイドメニュー」->「Compute Engine」->「 VM インスタンス」と選択し、該当インスタンスのレコードで「 SSH 」をクリックするとポップアップしてターミナルが立ち上がる。  
+もしくは、以下のコマンドを実行する。
 
+```bash
+# USEGE
+$ gcloud compute ssh [インスタンス名] --project=PROJECT_ID --zone=ZONE VM_NAME
+
+# 具体例（Pass Phrase は空でいい）
+$ gcloud compute ssh gcelab2 --zone us-central1-c
+```
+
+接続できたら、以下のコマンドの管理者権限になる。
+
+```bash
+$ sudo su -
+```
+
+ちなみに Linux は SSH 、 Windows は RDP で接続する。
+
+## 3. Google Kubernetes Engine
+
+1. [コンセプト](#3-1-コンセプト)
+2. [クラスタ作成](#3-2-クラスタ作成)
+
+### 3.1. コンセプト
+
+### 3.2. クラスタ作成
+
+デフォルトのコンピューティング ゾーンを設定する。
+
+```bash
+$ gcloud config set compute/zone us-central1-a
+
+Updated property [compute/zone].
+```
+
+GKE クラスタを作成する。
+
+```bash
+# USAGE
+$ gcloud container clusters create [CLUSTER-NAME]
+
+# 具体例
+$ gcloud container clusters create my-cluster
+Creating cluster my-cluster in us-central1-a... Cluster is being health-checked (master is healthy)...done.
+Created [https://container.googleapis.com/v1/projects/qwiklabs-gcp-01-47d564cd39d1/zones/us-central1-a/clusters/my-cluster].
+To inspect the contents of your cluster, go to: https://console.cloud.google.com/kubernetes/workload_/gcloud/us-central1-a/my-cluster?project=qwiklabs-gcp-01-47d564cd39d1
+kubeconfig entry generated for my-cluster.
+NAME        LOCATION       MASTER_VERSION   MASTER_IP      MACHINE_TYPE  NODE_VERSION     NUM_NODES  STATUS
+my-cluster  us-central1-a  1.18.16-gke.302  34.67.190.125  e2-medium     1.18.16-gke.302  3          RUNNING
+```
+
+クラスタの認証情報を取得する。（ kubeconfig に設定が追加される）
+
+```bash
+# USAGE
+$ gcloud container clusters get-credentials [CLUSTER-NAME]
+
+# 具体例
+$ gcloud container clusters get-credentials my-cluster
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for my-cluster.
+```
+
+試しに作成したクラスタにコンテナをデプロイする。
+
+```bash
+$ kubectl create deployment hello-server --image=gcr.io/google-samples/hello-app:1.0
+deployment.apps/hello-server created
+
+$ kubectl expose deployment hello-server --type=LoadBalancer --port 8080
+service/hello-server exposed
+
+$ kubectl get service
+NAME           TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)          AGE
+hello-server   LoadBalancer   10.3.245.136   35.238.58.233   8080:30372/TCP   70s
+kubernetes     ClusterIP      10.3.240.1     <none>          443/TCP          10m
+
+$ curl http://35.238.58.233:8080
+Hello, world!
+Version: 1.0.0
+Hostname: hello-server-57684579f-kw54q
+```
+
+クラスタを削除する。
+
+```bash
+# USAGE
+$ gcloud container clusters delete [CLUSTER-NAME]
+
+# 具体例
+$ gcloud container clusters delete my-cluster
+The following clusters will be deleted.
+ - [my-cluster] in [us-central1-a]
+Do you want to continue (Y/n)?  Y
+Deleting cluster my-cluster...done.
+Deleted [https://container.googleapis.com/v1/projects/qwiklabs-gcp-01-47d564cd39d1/zones/us-central1-a/clusters/my-cluster].
+```

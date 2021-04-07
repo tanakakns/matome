@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xl="http://www.w3.org/1999/xlink" viewBox="0 0 1056 853" width="1056" height="853">
+  <defs>
+    <font-face font-family="Roboto" font-size="10" panose-1="2 0 0 0 0 0 0 0 0 0" units-per-em="1000" underline-position="-73.24219" underline-thickness="48.828125" slope="0" x-height="528.3203" cap-height="710.9375" ascent="927.7344" descent="-244.14062" font-weight="400">
+      <font-face-src>
+        <font-face-name name="Roboto-Regular"/>
+      </font-face-src>
+    </font-face>
+    <clipPath id="inner_stroke_clip_path">
+      <path d="M 851 324.87498 L 944.4107 324.87498 L 944.4107 350.8375 L 851 350.8375 Z"/>
+    </clipPath>
+    <font-face font-family="Roboto" font-size="12" panose-1="2 0 0 0 0 0 0 0 0 0" units-per-em="1000" underline-position="-73.24219" underline-thickness="48.828125" slope="0" x-height="528.3203" cap-height="710.9375" ascent="927.7344" descent="-244.14062" font-weight="400">
+      <font-face-src>
+        <font-face-name name="Roboto-Regular"/>
+      </font-face-src>
+    </font-face>
+    <clipPath id="inner_stroke_clip_path_2">
+      <path d="M 851 538.0375 L 944.4107 538.0375 L 944.4107 564 L 851 564 Z"/>
+    </clipPath>
+    <clipPath id="inner_stroke_clip_path_3">
+      <path d="M 851 745.2375 L 944.4107 745.2375 L 944.4107 772.6352 L 851 772.6352 Z"/>
+    </clipPath>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="TreehouseArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -5 10 10" markerWidth="10" markerHeight="10" color="#616161">
+      <g>
+        <path d="M 8 0 L 0 0 M 4 -4 L 8 0 L 4 4" fill="none" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <clipPath id="inner_stroke_clip_path_4">
+      <path d="M 637.74625 608.6 L 769.1422 608.6 L 769.1422 662.6 L 637.74625 662.6 Z"/>
+    </clipPath>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledBox_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -4 8 8" markerWidth="8" markerHeight="8" color="#6041b0">
+      <g>
+        <rect x="0" y="-3" width="6" height="6" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+    <clipPath id="inner_stroke_clip_path_5">
+      <path d="M 78.15651 314.2096 L 190.1565 314.2096 L 190.1565 368.2096 L 78.15651 368.2096 Z"/>
+    </clipPath>
+    <clipPath id="inner_stroke_clip_path_6">
+      <path d="M 72.98463 488.5904 L 184.98463 488.5904 L 184.98463 542.5904 L 72.98463 542.5904 Z"/>
+    </clipPath>
+    <clipPath id="inner_stroke_clip_path_7">
+      <path d="M 230.1565 352.5124 L 351.1454 352.5124 L 351.1454 419.5124 L 230.1565 419.5124 Z"/>
+    </clipPath>
+    <clipPath id="inner_stroke_clip_path_8">
+      <path d="M 230.1565 439.5124 L 350.98464 439.5124 L 350.98464 505.9124 L 230.1565 505.9124 Z"/>
+    </clipPath>
+    <clipPath id="inner_stroke_clip_path_9">
+      <path d="M 371.1454 402.2124 L 523.36415 402.2124 L 523.36415 456.2124 L 371.1454 456.2124 Z"/>
+    </clipPath>
+    <clipPath id="inner_stroke_clip_path_10">
+      <path d="M 543.36415 402.2124 L 637.74625 402.2124 L 637.74625 456.2124 L 543.36415 456.2124 Z"/>
+    </clipPath>
+    <clipPath id="inner_stroke_clip_path_11">
+      <path d="M 638.3462 194.2 L 769.7422 194.2 L 769.7422 248.2 L 638.3462 248.2 Z"/>
+    </clipPath>
+    <clipPath id="inner_stroke_clip_path_12">
+      <path d="M 850.2422 124.13749 L 943.6528 124.13749 L 943.6528 144.13749 L 850.2422 144.13749 Z"/>
+    </clipPath>
+    <clipPath id="inner_stroke_clip_path_13">
+      <path d="M 850.2422 157 L 943.6528 157 L 943.6528 177 L 850.2422 177 Z"/>
+    </clipPath>
+    <clipPath id="inner_stroke_clip_path_14">
+      <path d="M 850.9313 356.0375 L 944.3419 356.0375 L 944.3419 382 L 850.9313 382 Z"/>
+    </clipPath>
+    <clipPath id="inner_stroke_clip_path_15">
+      <path d="M 850.9313 571 L 944.3419 571 L 944.3419 596.9625 L 850.9313 596.9625 Z"/>
+    </clipPath>
+    <clipPath id="inner_stroke_clip_path_16">
+      <path d="M 850.9313 779 L 944.3419 779 L 944.3419 806.3977 L 850.9313 806.3977 Z"/>
+    </clipPath>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.11.2 
+    <dc:date>2019-09-04 18:19:23 +0000</dc:date>
+  </metadata>
+  <g id="Diagram_New_Diagram_for_Load_Balancing_Tutorial" stroke="none" fill="none" stroke-opacity="1" fill-opacity="1" stroke-dasharray="none">
+    <title>Diagram_New Diagram for Load Balancing Tutorial</title>
+    <rect fill="white" x="0" y="0" width="1056" height="853"/>
+    <g id="Diagram_New_Diagram_for_Load_Balancing_Tutorial: Layer 1">
+      <title>Layer 1</title>
+      <g id="Group_285">
+        <g id="Group_283">
+          <g id="Group_236">
+            <g id="Graphic_153">
+              <title>zone external - yellow</title>
+              <rect x="811" y="24" width="173.2732" height="187.2" fill="#fff7e1"/>
+              <text transform="translate(821 39)" fill="#757575">
+                <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">Zone: us-central1-b</tspan>
+              </text>
+            </g>
+            <g id="Graphic_149">
+              <title>zone internal - white</title>
+              <rect x="831" y="64.454895" width="133.27319" height="123.09021" fill="white"/>
+              <rect x="831" y="64.454895" width="133.27319" height="123.09021" stroke="#dedfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+              <text transform="translate(841 79.454895)" fill="#757575">
+                <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">Instance group:</tspan>
+                <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="20">ig-video-us</tspan>
+              </text>
+            </g>
+          </g>
+          <g id="Group_237">
+            <g id="Graphic_243">
+              <title>zone external - yellow</title>
+              <rect x="811" y="231.2" width="173.2732" height="187.2" fill="#fff7e1"/>
+              <text transform="translate(821 246.2)" fill="#757575">
+                <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">Zone: europe-west1-b</tspan>
+              </text>
+            </g>
+            <g id="Group_238">
+              <g id="Graphic_242">
+                <title>zone internal - white</title>
+                <rect x="831" y="275.3098" width="133.27319" height="123.09021" fill="white"/>
+                <rect x="831" y="275.3098" width="133.27319" height="123.09021" stroke="#dedfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                <text transform="translate(841 290.3098)" fill="#757575">
+                  <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">Instance group:</tspan>
+                  <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="20">ig-video-eu</tspan>
+                </text>
+              </g>
+              <g id="Group_239">
+                <g id="Graphic_241">
+                  <title>Rectangle</title>
+                  <rect x="851" y="324.87498" width="93.41066" height="25.96251" fill="white"/>
+                  <rect x="851" y="324.87498" width="93.41066" height="25.96251" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path)"/>
+                </g>
+                <g id="Graphic_240">
+                  <text transform="translate(870.3418 328.80497)" fill="#212121">
+                    <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212121" x="0" y="11">video-eu-01</tspan>
+                  </text>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+        <g id="Group_282">
+          <g id="Group_251">
+            <g id="Graphic_257">
+              <title>zone external - yellow</title>
+              <rect x="811" y="438.4" width="173.2732" height="187.2" fill="#fff7e1"/>
+              <text transform="translate(821 453.4)" fill="#757575">
+                <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">Zone: us-central1-b</tspan>
+              </text>
+            </g>
+            <g id="Group_252">
+              <g id="Graphic_256">
+                <title>zone internal - white</title>
+                <rect x="831" y="482.5098" width="133.27319" height="123.09021" fill="white"/>
+                <rect x="831" y="482.5098" width="133.27319" height="123.09021" stroke="#dedfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                <text transform="translate(841 497.5098)" fill="#757575">
+                  <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">Instance group:</tspan>
+                  <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="20">ig-www-us</tspan>
+                </text>
+              </g>
+              <g id="Group_253">
+                <g id="Graphic_255">
+                  <rect x="851" y="538.0375" width="93.41066" height="25.96251" fill="white"/>
+                  <rect x="851" y="538.0375" width="93.41066" height="25.96251" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_2)"/>
+                </g>
+                <g id="Graphic_254">
+                  <text transform="translate(870.3418 545.4539)" fill="#212121">
+                    <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212121" x="0" y="11">www-us-01</tspan>
+                  </text>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g id="Group_244">
+            <g id="Graphic_250">
+              <title>zone external - yellow</title>
+              <rect x="811" y="645.6" width="173.2732" height="187.2" fill="#fff7e1"/>
+              <text transform="translate(821 660.6)" fill="#757575">
+                <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">Zone: europe-west1-b</tspan>
+              </text>
+            </g>
+            <g id="Group_245">
+              <g id="Graphic_249">
+                <title>zone internal - white</title>
+                <rect x="831" y="689.7098" width="133.27319" height="123.09021" fill="white"/>
+                <rect x="831" y="689.7098" width="133.27319" height="123.09021" stroke="#dedfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                <text transform="translate(841 704.7098)" fill="#757575">
+                  <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">Instance group:</tspan>
+                  <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="20">ig-www-eu</tspan>
+                </text>
+              </g>
+              <g id="Group_246">
+                <g id="Graphic_248">
+                  <rect x="851" y="745.2375" width="93.41066" height="27.397696" fill="white"/>
+                  <rect x="851" y="745.2375" width="93.41066" height="27.397696" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_3)"/>
+                </g>
+                <g id="Graphic_247">
+                  <text transform="translate(870.3418 752.6539)" fill="#212121">
+                    <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212121" x="0" y="11">www-eu-01</tspan>
+                  </text>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+      <g id="Graphic_181">
+        <title>zone external - grey</title>
+        <rect x="209.98463" y="24" width="579.75755" height="808.8" fill="#eaedef"/>
+        <text transform="translate(219.98463 39)" fill="#757575">
+          <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">Load balancer</tspan>
+        </text>
+      </g>
+      <g id="Line_203">
+        <title>path arrow - grey primary</title>
+        <path d="M 590.5552 456.2124 L 590.5552 635.6 L 627.84625 635.6" marker-end="url(#TreehouseArrow_Marker)" stroke="#616161" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_225">
+        <title>path arrow - grey primary</title>
+        <path d="M 590.5552 402.2124 L 590.5552 221.2 L 628.44624 221.2" marker-end="url(#TreehouseArrow_Marker)" stroke="#616161" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Group_205">
+        <g id="Graphic_207">
+          <rect x="637.74625" y="608.6" width="131.39594" height="54" fill="white"/>
+          <rect x="637.74625" y="608.6" width="131.39594" height="54" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_4)"/>
+        </g>
+        <g id="Graphic_206">
+          <text transform="translate(657.71315 628.1)" fill="#212122">
+            <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212122" x="0" y="11">Backend service</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Group_284">
+        <g id="Line_156">
+          <title>path arrow - grey primary</title>
+          <line x1="523.36415" y1="429.2124" x2="533.46415" y2="429.2124" marker-end="url(#TreehouseArrow_Marker)" stroke="#616161" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Line_154">
+          <title>path arrow - grey primary</title>
+          <path d="M 350.98464 472.7124 L 447.2548 472.7124 L 447.2548 466.1124" marker-end="url(#TreehouseArrow_Marker)" stroke="#616161" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Line_155">
+          <title>path arrow - grey primary</title>
+          <path d="M 351.1454 386.0124 L 447.2548 386.0124 L 447.2548 392.3124" marker-end="url(#TreehouseArrow_Marker)" stroke="#616161" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Line_162">
+          <title>path arrow - grey primary</title>
+          <path d="M 190.32317 340.87625 L 225.6565 340.87625 L 225.6565 372.2627" marker-end="url(#TreehouseArrow_Marker)" stroke="#616161" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Group_281">
+          <g id="Line_161">
+            <title>path dash small</title>
+            <line x1="192.86863" y1="385.4596" x2="223.6565" y2="385.4596" marker-end="url(#FilledBox_Marker)" stroke="#6041b0" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+          </g>
+          <g id="Graphic_160">
+            <text transform="translate(132.50026 379.4596)" fill="#757575">
+              <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">IPv4 address</tspan>
+            </text>
+          </g>
+        </g>
+        <g id="Group_280">
+          <g id="Line_159">
+            <title>path dash small</title>
+            <line x1="191.6565" y1="471.94875" x2="223.6565" y2="471.94875" marker-end="url(#FilledBox_Marker)" stroke="#6041b0" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1.0,3.0" stroke-width="1"/>
+          </g>
+          <g id="Graphic_158">
+            <text transform="translate(132.50026 465.94875)" fill="#757575">
+              <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">IPv6 address</tspan>
+            </text>
+          </g>
+        </g>
+        <g id="Line_157">
+          <title>path arrow - grey primary</title>
+          <path d="M 184.98463 515.5904 L 225.6565 515.5904 L 225.6565 485.15604" marker-end="url(#TreehouseArrow_Marker)" stroke="#616161" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+        <g id="Group_178">
+          <g id="Graphic_180">
+            <rect x="78.15651" y="314.2096" width="112" height="54" fill="white"/>
+            <rect x="78.15651" y="314.2096" width="112" height="54" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_5)"/>
+            <text transform="translate(119.1565 334.2096)" fill="#212121">
+              <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212121" x="0" y="11">IPv4 user</tspan>
+            </text>
+          </g>
+          <g id="Graphic_179">
+            <path d="M 108.669 339.7396 C 108.159 337.1521 105.8865 335.2096 103.1565 335.2096 C 100.989 335.2096 99.10651 336.4396 98.16901 338.2396 C 95.91151 338.4796 94.15651 340.3921 94.15651 342.7096 C 94.15651 345.1921 96.17401 347.2096 98.65651 347.2096 L 108.4065 347.2096 C 110.4765 347.2096 112.1565 345.5296 112.1565 343.4596 C 112.1565 341.4796 110.619 339.8746 108.669 339.7396 Z" fill="#616161"/>
+          </g>
+        </g>
+        <g id="Group_175">
+          <g id="Graphic_177">
+            <rect x="72.98463" y="488.5904" width="112" height="54" fill="white"/>
+            <rect x="72.98463" y="488.5904" width="112" height="54" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_6)"/>
+            <text transform="translate(113.98463 508.5904)" fill="#212121">
+              <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212121" x="0" y="11">IPv6 user</tspan>
+            </text>
+          </g>
+          <g id="Graphic_176">
+            <path d="M 103.49713 514.1204 C 102.98713 511.5329 100.71463 509.5904 97.98463 509.5904 C 95.81713 509.5904 93.93463 510.8204 92.99713 512.6204 C 90.73963 512.8604 88.98463 514.7729 88.98463 517.0904 C 88.98463 519.5729 91.00213 521.5904 93.48463 521.5904 L 103.23463 521.5904 C 105.30463 521.5904 106.98463 519.9104 106.98463 517.8404 C 106.98463 515.8604 105.44713 514.2554 103.49713 514.1204 Z" fill="#616161"/>
+          </g>
+        </g>
+        <g id="Group_227">
+          <g id="Graphic_174">
+            <rect x="230.1565" y="352.5124" width="120.9889" height="67" fill="white"/>
+            <rect x="230.1565" y="352.5124" width="120.9889" height="67" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_7)"/>
+          </g>
+          <g id="Graphic_173">
+            <text transform="translate(250.77613 370.67574)" fill="black">
+              <tspan font-family="Roboto" font-size="12" font-weight="400" fill="black" x="28.620117" y="11">IPv4</tspan>
+              <tspan font-family="Roboto" font-size="12" font-weight="400" fill="black" x="0" y="26">forwarding rule</tspan>
+            </text>
+          </g>
+        </g>
+        <g id="Group_228">
+          <g id="Graphic_171">
+            <rect x="230.1565" y="439.5124" width="120.82813" height="66.4" fill="white"/>
+            <rect x="230.1565" y="439.5124" width="120.82813" height="66.4" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_8)"/>
+          </g>
+          <g id="Graphic_170">
+            <text transform="translate(250.77613 457.4124)" fill="black">
+              <tspan font-family="Roboto" font-size="12" font-weight="400" fill="black" x="28.620117" y="11">IPv6</tspan>
+              <tspan font-family="Roboto" font-size="12" font-weight="400" fill="black" x="0" y="26">forwarding rule</tspan>
+            </text>
+          </g>
+        </g>
+        <g id="Group_264">
+          <g id="Graphic_168">
+            <rect x="371.1454" y="402.2124" width="152.21875" height="54" fill="white"/>
+            <rect x="371.1454" y="402.2124" width="152.21875" height="54" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_9)"/>
+          </g>
+          <g id="Graphic_167">
+            <text transform="translate(391.203 421.7124)" fill="#212122">
+              <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212122" x="0" y="11">Target HTTPS proxy</tspan>
+            </text>
+          </g>
+        </g>
+        <g id="Group_163">
+          <g id="Graphic_165">
+            <rect x="543.36415" y="402.2124" width="94.3821" height="54" fill="white"/>
+            <rect x="543.36415" y="402.2124" width="94.3821" height="54" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_10)"/>
+          </g>
+          <g id="Graphic_164">
+            <text transform="translate(563.94625 422.2124)" fill="#212122">
+              <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212122" x="0" y="11">URL map</tspan>
+            </text>
+          </g>
+        </g>
+        <g id="Graphic_232">
+          <text transform="translate(534.9456 475.0124)" fill="#757575">
+            <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">everything </tspan>
+            <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="27.705078" y="21">else</tspan>
+          </text>
+        </g>
+        <g id="Graphic_231">
+          <text transform="translate(552.6558 374.04184)" fill="#757575">
+            <tspan font-family="Roboto" font-size="10" font-weight="400" fill="#757575" x="0" y="9">/video</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Group_261">
+        <g id="Graphic_263">
+          <rect x="638.3462" y="194.2" width="131.39594" height="54" fill="white"/>
+          <rect x="638.3462" y="194.2" width="131.39594" height="54" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_11)"/>
+        </g>
+        <g id="Graphic_262">
+          <text transform="translate(658.3131 213.7)" fill="#212122">
+            <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212122" x="0" y="11">Backend service</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Line_219">
+        <title>path arrow - grey primary</title>
+        <path d="M 704.0442 194.2 L 704.0442 117.6 L 801.1 117.6" marker-end="url(#TreehouseArrow_Marker)" stroke="#616161" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_271">
+        <title>path arrow - grey primary</title>
+        <path d="M 703.4442 608.6 L 703.4442 532 L 801.1 532" marker-end="url(#TreehouseArrow_Marker)" stroke="#616161" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_272">
+        <title>path arrow - grey primary</title>
+        <path d="M 703.4442 662.6 L 703.4442 739.2 L 801.1 739.2" marker-end="url(#TreehouseArrow_Marker)" stroke="#616161" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Line_273">
+        <title>path arrow - grey primary</title>
+        <path d="M 704.0442 248.2 L 704.0442 324.8 L 801.1 324.8" marker-end="url(#TreehouseArrow_Marker)" stroke="#616161" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+      <g id="Group_287">
+        <g id="Graphic_289">
+          <rect x="850.2422" y="124.13749" width="93.41066" height="20" fill="white"/>
+          <rect x="850.2422" y="124.13749" width="93.41066" height="20" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_12)"/>
+        </g>
+        <g id="Graphic_288">
+          <text transform="translate(867 127.43695)" fill="#212121">
+            <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212121" x="0" y="11">video-us-01</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Graphic_294">
+        <rect x="850.2422" y="157" width="93.41066" height="20" fill="white"/>
+        <rect x="850.2422" y="157" width="93.41066" height="20" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_13)"/>
+      </g>
+      <g id="Graphic_293">
+        <text transform="translate(870.5 160.29947)" fill="#212121">
+          <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212121" x="0" y="11">video-us-02</tspan>
+        </text>
+      </g>
+      <g id="Group_295">
+        <g id="Graphic_297">
+          <title>Rectangle</title>
+          <rect x="850.9313" y="356.0375" width="93.41066" height="25.96251" fill="white"/>
+          <rect x="850.9313" y="356.0375" width="93.41066" height="25.96251" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_14)"/>
+        </g>
+        <g id="Graphic_296">
+          <text transform="translate(870.2731 359.9675)" fill="#212121">
+            <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212121" x="0" y="11">video-eu-02</tspan>
+          </text>
+        </g>
+      </g>
+      <g id="Graphic_299">
+        <rect x="850.9313" y="571" width="93.41066" height="25.96251" fill="white"/>
+        <rect x="850.9313" y="571" width="93.41066" height="25.96251" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_15)"/>
+      </g>
+      <g id="Graphic_298">
+        <text transform="translate(870.2731 578.41644)" fill="#212121">
+          <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212121" x="0" y="11">www-us-02</tspan>
+        </text>
+      </g>
+      <g id="Graphic_301">
+        <rect x="850.9313" y="779" width="93.41066" height="27.397696" fill="white"/>
+        <rect x="850.9313" y="779" width="93.41066" height="27.397696" stroke="#dfdfdf" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" clip-path="url(#inner_stroke_clip_path_16)"/>
+      </g>
+      <g id="Graphic_300">
+        <text transform="translate(870.2731 786.4164)" fill="#212121">
+          <tspan font-family="Roboto" font-size="12" font-weight="400" fill="#212121" x="0" y="11">www-eu-02</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>
