@@ -71,6 +71,77 @@ VPC のオプション、相互接続には以下のサービスがある。
     - すべてユーザが作成する必要がある
     - サブネットの IP 範囲は作成後に変更可能であるが、VPC 内の他のサブネットと範囲が重複しないようにする必要があり、且つ、縮小は不可能
 
+### 2.4. ネットワークの作成
+
+Cloud Console では、ナビゲーション メニュー（mainmenu.png） > [VPC ネットワーク] > [VPC ネットワーク]から作成する。  
+コマンドでの VPC 作成は以下。（自動モードではなくカスタムモードを指定）
+
+```bash
+$ gcloud compute networks create privatenet --subnet-mode=custom
+```
+
+先に作成した VPC にサブネットを 2 つ追加する。
+
+```bash
+$ gcloud compute networks subnets create privatesubnet-us --network=privatenet --region=us-central1 --range=172.16.0.0/24
+
+$ gcloud compute networks subnets create privatesubnet-eu --network=privatenet --region=europe-west4 --range=172.20.0.0/20
+```
+
+作成したら、以下のコマンドで VPC およびサブネットを確認する。
+
+```bash
+$ gcloud compute networks list
+NAME           SUBNET_MODE  BGP_ROUTING_MODE  IPV4_RANGE  GATEWAY_IPV4
+default        AUTO         REGIONAL
+managementnet  CUSTOM       REGIONAL
+mynetwork      AUTO         REGIONAL
+privatenet     CUSTOM       REGIONAL
+
+$ gcloud compute networks subnets list --sort-by=NETWORK
+NAME                 REGION                   NETWORK        RANGE
+（省略）
+privatesubnet-us     us-central1              privatenet     172.16.0.0/24
+privatesubnet-eu     europe-west4             privatenet     172.20.0.0/20
+```
+
+ファイアウォールは、Cloud Console で、ナビゲーション メニュー（mainmenu.png） > [VPC ネットワーク] > [ファイアウォール] から作成する。  
+コマンドでは以下。（先ほど作成した VPC に追加）
+
+```bash
+$ gcloud compute firewall-rules create privatenet-allow-icmp-ssh-rdp --direction=INGRESS --priority=1000 --network=privatenet --action=ALLOW --rules=icmp,tcp:22,tcp:3389 --source-ranges=0.0.0.0/0
+
+Creating firewall...⠹Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-00-ed0a2d7fdd5c/global/firewalls/privatenet-allow-icmp-ssh-rdp].
+Creating firewall...done.
+NAME                           NETWORK     DIRECTION  PRIORITY  ALLOW                 DENY  DISABLED
+privatenet-allow-icmp-ssh-rdp  privatenet  INGRESS    1000      icmp,tcp:22,tcp:3389        False
+```
+
+作成したファイアウォールは以下のコマンドで確認する。
+
+```
+$ gcloud compute firewall-rules list --sort-by=NETWORK
+NAME                              NETWORK        DIRECTION  PRIORITY  ALLOW                         DENY  DISABLED
+（省略）
+privatenet-allow-icmp-ssh-rdp     privatenet     INGRESS    1000      icmp,tcp:22,tcp:3389                False
+```
+
+これまで作成した VPC、サブネット に VM インスタンスを作成するコマンドは以下。
+
+```bash
+$ gcloud compute instances create privatenet-us-vm --zone=us-central1-c --machine-type=n1-standard-1 --subnet=privatesubnet-us
+```
+
+作成したら VM インスタンスの存在を確認する。
+
+```bash
+$ gcloud compute instances list --sort-by=ZONE
+NAME                 ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP     STATUS
+（省略）
+privatenet-us-vm     us-central1-c   n1-standard-1               172.16.0.2   35.223.37.245   RUNNING
+```
+
+
 ## 3. Cloud Load Balancing
 
 ### 3.1. 種類
@@ -134,7 +205,14 @@ HTTP(S) ロードバランサ の構成イメージは以下。
 
 ### 3.2. 作成
 
-#### 3.2.1. ネットワークロードバランサの作成
+#### 3.2.1. ネットワークロードバランサのコンセプト
+
+- ターゲットプール
+- 静的外部 IP アドレス
+- レガシー HTTP ヘルスチェック リソース
+- 転送ルール
+
+#### 3.2.2. ネットワークロードバランサの作成
 
 デフォルトのリージョンとゾーンを設定する。
 
@@ -297,10 +375,26 @@ $ while true; do curl -m1 35.232.6.132; done
 # www1/2/3 が不規則に出る
 ```
 
-#### 3.2.2. HTTP(S) ロードバランサの作成
+#### 3.2.3. HTTP(S) ロードバランサのコンセプト
 
-**ロードバランサテンプレート**　を作成する。  
-（実態は、インスタンステンプレートじゃない？？？）
+- インスタンステンプレート
+    - VM インスタンス や マネージドインスタンスグループ（ MIG ）を作成するために使用できるリソース
+    - マシンタイプ、ブートディスク イメージまたはコンテナ イメージ、ラベル、その他のインスタンス プロパティを定義できる
+- [マネージドインスタンスグループ（ MIG ）](https://cloud.google.com/compute/docs/instance-groups?hl=ja)
+    - 単一のエンティティとして管理できる VM インスタンスのグループ
+    - 自動スケーリング、自動修復、リージョン（マルチゾーン）デプロイメント、自動更新などの自動化 MIG サービスを活用できる
+    - 負荷分散のためヘルスチェック ではなく、 マネージド インスタンス グループのヘルスチェック があり、自動修復の基準となる
+    - `gcloud compute instance-groups managed create`
+- グローバル静的外部 IP アドレス
+- ヘルスチェエク
+- バックエンドサービス
+- URL マップ
+- ターゲット HTTP プロキシ
+- グローバル転送ルール
+
+#### 3.2.4. HTTP(S) ロードバランサの作成
+
+負荷分散ターゲットの基となる インスタンステーンプレート　を作成する。
 
 ```bash
 $ gcloud compute instance-templates create lb-backend-template \
@@ -396,7 +490,7 @@ NAME                 BACKENDS  PROTOCOL
 web-backend-service            HTTP
 ```
 
-MIG をバックエンドとしてバックエンド サービスに追加。
+MIG をバックエンドとしてバックエンドサービスに追加。
 
 ```bash
 $ gcloud compute backend-services add-backend web-backend-service \

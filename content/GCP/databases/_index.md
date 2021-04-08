@@ -27,3 +27,20 @@ weight: 6
     - [Memorystore](https://cloud.google.com/memorystore/docs) ：キャッシュ、超低レイテンシ、非永続化
 - その他
     - [BigQuery](https://cloud.google.com/bigquery/docs?hl=ja) ：大規模なデータアナリティクス
+
+## Cloud SQL
+
+[Cloud SQL](https://cloud.google.com/sql/docs) はクラウド上の PostgreSQL と MySQL のリレーショナル データベースを簡単に設定、維持、運用、管理できるようにするフルマネージド データベース サービス。  
+Cloud SQL が対応しているデータ形式には、ダンプファイル（.sql）と CSV ファイル（.csv）。
+
+以下のコマンドで Cloud SQL に接続できる。
+
+```bash
+$ gcloud sql connect qwiklabs-demo --user=root
+```
+
+## BigQuery
+
+[BigQuery](https://cloud.google.com/bigquery/docs) は Google Cloud Platform 上で動作する、ペタバイト規模のフルマネージド データ ウェアハウス。  
+データ アナリストやデータ サイエンティストは、サーバーを設定、管理することなく、大規模なデータセットに対するクエリ（ SQL ）やフィルタの実行、結果の集計、複雑な操作の実行が可能。  
+コマンドライン ツール（ `bq` ）またはウェブ コンソールを使用して、GCP プロジェクトに格納されているデータを管理、照会できる。

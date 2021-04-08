@@ -38,8 +38,9 @@ weight: 4
 2. [インスタンス作成](#2-2-インスタンス作成)
 3. [単一テナントノードにインスタンス作成](#2-3-単一テナントノードにインスタンス作成)
 4. [インスタンスへの接続](#2-4-インスタンスへの接続)
+5. Cloud Monitoring
 
-（教材メモ：https://www.qwiklabs.com/focuses/3563?parent=catalog）
+※ [Compute Engine のリージョン選択に関するベスト プラクティス](https://cloud.google.com/solutions/best-practices-compute-engine-region-selection?hl=ja)
 
 ### 2.1. コンセプト
 
@@ -382,6 +383,37 @@ $ sudo su -
 
 ちなみに Linux は SSH 、 Windows は RDP で接続する。
 
+### 2.5. Cloud Monitoring
+
+Cloud Monitoring では、クラウドで実行されるアプリケーションのパフォーマンスや稼働時間、全体的な動作状況を確認できる。  
+Google Cloud、Amazon Web Services、ホストされた稼働時間プローブ、アプリケーション インストゥルメンテーション、よく使われるさまざまなアプリケーション コンポーネント（Cassandra、Nginx、Apache ウェブサーバー、Elasticsearch など）から、指標、イベント、メタデータを収集する。  
+これらのデータを取り込んでダッシュボード、グラフ、アラートを介して分析情報を提供する。  
+Cloud Monitoring のアラート機能を Slack、PagerDuty、HipChat、Campfire などに組み込むこともできる。
+
+インスタンスから情報を収集する VM に [Monitoring エージェント](https://cloud.google.com/monitoring/agent) と Logging エージェントをインストールすることで収集可能となる。  
+対象の VM インスタンスに SSH した後、以下のコマンドでインストールする。
+
+```bash
+# Monitoring エージェントのインストール
+$ curl -sSO https://dl.google.com/cloudagents/add-monitoring-agent-repo.sh
+$ sudo bash add-monitoring-agent-repo.sh
+$ sudo apt-get update
+$ sudo apt-get install stackdriver-agent
+
+# Logging エージェント
+$ curl -sSO https://dl.google.com/cloudagents/add-logging-agent-repo.sh
+$ sudo bash add-logging-agent-repo.sh
+$ sudo apt-get update
+$ sudo apt-get install google-fluentd
+```
+
+また、Monitoring ワークスペースを作成する必要がある。
+
+Cloud Console で、ナビゲーション メニュー > [モニタリング] をクリックすると、ワークスペースがプロビジョニングされる。  
+左側のメニューで [稼働時間チェック] をクリックし、[稼働時間チェックの作成] をクリック。  
+左側のメニューで [アラート]、[Create Policy] の順にクリック。  
+ナビゲーション メニュー > [Logging] > [ログビューア] 。
+
 ## 3. Google Kubernetes Engine
 
 1. [コンセプト](#3-1-コンセプト)
@@ -460,4 +492,331 @@ The following clusters will be deleted.
 Do you want to continue (Y/n)?  Y
 Deleting cluster my-cluster...done.
 Deleted [https://container.googleapis.com/v1/projects/qwiklabs-gcp-01-47d564cd39d1/zones/us-central1-a/clusters/my-cluster].
+```
+
+### 3.3. デプロイ管理
+
+#### 3.3.1. Deployment オブジェクトの詳細
+
+`kubectl explain` コマンドを使用すると、Deployment などのオブジェクトに関する情報が取得できる。
+
+```bash
+$ kubectl explain deployment
+
+# 全てのフィールドを確認する場合
+$ kubectl explain deployment --recursive
+
+# 特定のフィールドを確認する場合
+$ kubectl explain deployment.metadata.name
+```
+
+#### 3.3.2. Deployment の作成
+
+Google 提供の資材を使って、Cloud Console の Cloud Shell 上で実施していく。  
+まずはクラスタを作成する。
+
+```bash
+# デフォルトのゾーンを設定
+$ gcloud config set compute/zone us-central1-a
+
+# サンプルコードを入手
+$ gsutil -m cp -r gs://spls/gsp053/orchestrate-with-kubernetes .
+$ cd orchestrate-with-kubernetes/kubernetes
+
+# 5 つの n1-standard-1 ノードを含むクラスタを作成
+$ gcloud container clusters create bootcamp --num-nodes 5 --scopes "https://www.googleapis.com/auth/projecthosting,storage-rw"
+
+NAME      LOCATION       MASTER_VERSION   MASTER_IP     MACHINE_TYPE  NODE_VERSION     NUM_NODES  STATUS
+bootcamp  us-central1-a  1.18.16-gke.302  35.238.203.7  e2-medium     1.18.16-gke.302  5          RUNNING
+```
+
+`deployments/auth.yaml` の `image` を以下のように変更する。
+
+```yaml
+…
+containers:
+- name: auth
+  image: kelseyhightower/auth:1.0.0
+...
+```
+
+Deployment でレプリカが 1 つ作成され、バージョン 1.0.0 の auth コンテナが使用される。  
+`kubectl create` を使用して Deployment オブジェクトを作成する。
+
+```bash
+$ kubectl create -f deployments/auth.yaml
+
+# 確認
+$ kubectl get deployments
+$ kubectl get replicasets
+$ kubectl get pods
+```
+
+次に、auth デプロイ用のサービスを作成する。
+
+```bash
+$ kubectl create -f services/auth.yaml
+```
+
+ここまでで `auth` を作成したが、 `hello` 、 `frontend` も作成していく。
+
+```bash
+# hello
+$ kubectl create -f deployments/hello.yaml
+$ kubectl create -f services/hello.yaml
+
+# frontend
+$ kubectl create secret generic tls-certs --from-file tls/
+$ kubectl create configmap nginx-frontend-conf --from-file=nginx/frontend.conf
+$ kubectl create -f deployments/frontend.yaml
+$ kubectl create -f services/frontend.yaml
+```
+
+`frontend` の外部 IP を確認して `curl` で動確する。
+
+```bash
+$ kubectl get services frontend
+NAME       TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)         AGE
+frontend   LoadBalancer   10.115.243.177   34.66.110.111   443:31848/TCP   46s
+
+$ curl -ks https://34.66.110.111
+{"message":"Hello"}
+```
+
+#### 3.3.3. スケールアウト・イン
+
+Deployment をスケーリングするには、 `spec.replicas` フィールドを更新する。  
+`kubectl explain` コマンドで、このフィールドの説明を確認してみる。
+
+```bash
+$ kubectl explain deployment.spec.replicas
+KIND:     Deployment
+VERSION:  apps/v1
+FIELD:    replicas <integer>
+DESCRIPTION:
+     Number of desired pods. This is a pointer to distinguish between explicit
+     zero and not specified. Defaults to 1.
+```
+
+`kubectl scale` コマンドでスケールアウト・インする。
+
+```bash
+# Pod 数を 5 へスケールアウト
+$ kubectl scale deployment hello --replicas=5
+
+# 確認
+$ kubectl get pods | grep hello- | wc -l
+5
+
+# Pod 数を 3 へスケールイン
+$ kubectl scale deployment hello --replicas=3
+
+# 確認
+$ kubectl get pods | grep hello- | wc -l
+3
+```
+
+#### 3.3.3. ローリング アップデート
+
+ReplicaSet が新たに作成され、古い ReplicaSet のレプリカ数が減少するにつれて、新しい ReplicaSet のレプリカ数が徐々に増加する形で実行される。  
+Deployment を更新するには、次のコマンドを実行してマニフェストを編集する。
+
+```bash
+$ kubectl edit deployment hello
+# image を「kelseyhightower/hello:1.0.0」から「kelseyhightower/hello:2.0.0」へ変更
+```
+
+新しい ReplicaSet の確認、および、ロールアウト履歴にも新しいエントリがあるか確認する。
+
+```bash
+$ kubectl get replicaset
+NAME                  DESIRED   CURRENT   READY   AGE
+auth-7cffdb8677       1         1         1       14m
+frontend-7b4b97c4dc   1         1         1       12m
+hello-687bb4b8f4      0         0         0       13m
+hello-d99c798f        3         3         3       60s
+
+$ kubectl rollout history deployment/hello
+deployment.apps/hello
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+```
+
+ロールアウトの状況は以下のコマンドで確認できる。
+
+```bash
+$ kubectl rollout status deployment/hello
+
+# もしくは
+
+$ kubectl get pods -o jsonpath --template='{range .items[*]}{.metadata.name}{"\t"}{"\t"}{.spec.containers[0].image}{"\n"}{end}'
+```
+
+ロールアウトの状況が芳しくない場合、以下のコマンドで停止・再開ができる。
+
+
+```bash
+# ロールアウト停止
+$ kubectl rollout pause deployment/hello
+
+# ロールアウト再開
+$ kubectl rollout resume deployment/hello
+```
+
+なお、なんらか問題が発生して、ロールバックが必要な場合は以下のコマンドで実施できる。
+
+```bash
+# ロールバック
+$ kubectl rollout undo deployment/hello
+
+# ロールアウト履歴確認
+$ kubectl rollout history deployment/hello
+deployment.apps/hello
+REVISION  CHANGE-CAUSE
+2         <none>
+3         <none>
+
+# マニフェストを確認（2.0.0 -> 1.0.0 にもどってる
+$ kubectl edit deployment hello
+
+# 全ての Pod がもどっているか確認
+$ kubectl get pods -o jsonpath --template='{range .items[*]}{.metadata.name}{"\t"}{"\t"}{.spec.containers[0].image}{"\n"}{end}'
+```
+
+#### 3.3.4. カナリア デプロイ
+
+カナリア デプロイでは、一部のユーザーに変更をリリースすることで、新しいリリースに伴うリスクを軽減する手法。  
+新しいバージョンの Deployment を作成する。
+
+```bash
+$ kubectl create -f deployments/hello-canary.yaml
+
+# 確認
+$ kubectl get deployments
+NAME           READY   UP-TO-DATE   AVAILABLE   AGE
+auth           1/1     1            1           28m
+frontend       1/1     1            1           26m
+hello          3/3     3            3           27m
+hello-canary   0/1     1            0           8s  # 新しい hello
+```
+
+この状態だと、単純に新しい別の Deployment を作成しただけに見えるが、 hello-canary の Label に `app:hello` が設定されており、これは hello service のセレクタになっているため、リクエストがルーティングされ、カナリアデプロイされた状態になっている。  
+以下のコマンドを何度が実行していると、レスポンスが異なっており、カナリアデプロイされていることがわかる。
+
+```bash
+$ curl -ks https://`kubectl get svc frontend -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"`/version
+# {"version":"1.0.0"} or {"version":"2.0.0"}
+```
+
+ユーザーをいずれかのデプロイに「固定」したい場合、 **セッション アフィニティ** を指定してサービスを作成することで実現できる。  
+以下の例では Client の IP でルーティングを固定している。
+
+```yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: "hello"
+spec:
+  sessionAffinity: ClientIP
+  selector:
+    app: "hello"
+  ports:
+    - protocol: "TCP"
+      port: 80
+      targetPort: 80
+```
+
+#### 3.3.5. Blue / Green デプロイ
+
+Kubernetes は、古い「Blue」バージョン用と新しい「Green」バージョン用に 2 つの異なるデプロイを作成することでこれを実現します。  
+このデプロイには、ルータとして機能するサービスを介してアクセスする。  
+新しい「Green」バージョンが稼働したら、サービスを更新してそのバージョンを使用するように切り替えることにより実現する。
+
+既存の hello サービスを、`app:hello` 、 `version: 1.0.0` のセレクタを持つように更新する。（元々は `app:hello` だけ）
+
+```bash
+$ kubectl apply -f services/hello-blue.yaml
+# resource service/hello is missing という警告は無視
+```
+
+Green の Deployment をデプロイする。（元々の hello は Blue の扱いで image のバージョンは 1.0.0）
+
+```bash
+$ kubectl create -f deployments/hello-green.yaml
+```
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-green
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+        track: stable
+        version: 2.0.0
+    spec:
+      containers:
+        - name: hello
+          image: kelseyhightower/hello:2.0.0
+          ports:
+            - name: http
+              containerPort: 80
+            - name: health
+              containerPort: 81
+          resources:
+            limits:
+              cpu: 0.2
+              memory: 10Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 81
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 15
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 81
+              scheme: HTTP
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+```
+
+現状は Blue （つまり 1.0.0）であることを確認する。
+
+```bash
+$ curl -ks https://`kubectl get svc frontend -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"`/version
+# 何度叩いても 1.0.0
+```
+
+次に新しいバージョン（つまり Green ）を指定するようにサービスを更新する。（ セレクタが `version: 2.0.0` になっている）
+
+```bash
+$ kubectl apply -f services/hello-green.yaml
+```
+
+`curl` で確認すると今度は `2.0.0` しか返ってこない。（つまり、 Blue -> Green になった！）
+
+```bash
+$ curl -ks https://`kubectl get svc frontend -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"`/version
+```
+
+ロールバックしたいときは再度 service を Blue に戻せばいい。（つまり、セレクタを `version: 1.0.0` にするだけ）
+
+```bash
+$ kubectl apply -f services/hello-blue.yaml
+
+# 確認
+$ curl -ks https://`kubectl get svc frontend -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"`/version
+# 1.0.0 しか返ってこない
 ```

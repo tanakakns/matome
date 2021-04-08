@@ -95,7 +95,8 @@ Pod の管理・制御を行うリソース（オブジェクト）を **コン�
 
 #### Service
 
-Service は以下の種類の L4 ロードバランサを提供する。
+Service は以下の種類の L4 ロードバランサを提供する。  
+実質、ClusterIP、NodePort、LoadBalancer の 3 種類。
 
 - ClusterIP
     - k8s **クラスタ内からのみ疎通可能な IP** となる Service （なので、「Cluster」IP
@@ -113,6 +114,7 @@ Service は以下の種類の L4 ロードバランサを提供する。
     - type 自体は `ClusterIP` で、 `externalIPs` （ノードのIP）を指定する
     - 「ノードのIPアドレス」で通信を受信する（ポートの指定はない）
 - NodePort
+    - クラスタ内の各ノードに外部からアクセス可能な IP を与える
     - ExternalIP に類似したサービス
     - 違いは「ノードのIPアドレス:ポート」で通信を受信する点
         - 厳密には「0.0.0.0:ポート」でバインドされ、k8s クラスタ内の全ノードの IP アドレスを意味する
@@ -123,6 +125,7 @@ Service は以下の種類の L4 ロードバランサを提供する。
     - k8s クラスタ外部（例えばロードバランサ）から疎通性のある仮想 IP を払い出せる
     - ExternalIP や NodePort と異なり、ノードIP非依存である点で使い勝手がよい
     - type は `LoadBalancer`
+    - クラウド利用の場合、サービスからのトラフィックをクラスタ内のノードに転送するクラウドプロバイダが提供するロードバランサが実態
 - Headless（None）
     - ロードバランシングする仮想 IP アドレスが払い出されない DNS ラウンドロビンのエンドポイントを提供する Service
     - type 自体は `ClusterIP` だが、 `clusterIP` が `None`
@@ -130,6 +133,8 @@ Service は以下の種類の L4 ロードバランサを提供する。
     - k8s クラスタ内部から外部へアクセスするための Service
 - None-Selector
     - ？？
+
+サービスのセレクタの設定が正しく Pod を捉えているかどうかは `kubectl get pods -l "app=monolith,secure=enabled"` などのコマンドで対象の Pod を取得できるか、で検査できる。
 
 #### Ingress
 
