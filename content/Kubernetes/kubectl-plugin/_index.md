@@ -5,7 +5,7 @@ draft: false
 hide:
 - toc
 - nextpage
-weight: 4
+weight: 3
 ---
 
 kubectlのプラグイン機構 と **Krew** についてまとめる。
