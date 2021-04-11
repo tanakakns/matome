@@ -124,13 +124,19 @@ KubeDNS is running at https://127.0.0.1:50584/api/v1/namespaces/kube-system/serv
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 ```
 
+### context
+
+`kubecnfig` に含まれる設定は `contexts` `clusters` `users` の 3 種類で、 `contexts` に `cluster` （接続先クラスタ情報）と `users` （ credential 情報）が含まれる。
+
 基本設定でも特に `context` 設定については以下だけ覚えておく。
 
 ```zsh
+% kubectl config view            # kubeconfig の表示
+
 % kubectl config current-context # 現在の context を取得
 % kubectl config get-contexts    # context の一覧を取得
-% kubectl config set-context     # context を設定
-% kubectl config view            # kubeconfig の表示
+% kubectl config set-context     # context をエントリ
+% kubectl config use-context     # 現在の context に設定
 ```
 
 なお、以降のコマンドで `-o yaml --dry-run=client` をつけるとマニフェストを確認できるので試してみるといい。
@@ -186,6 +192,16 @@ Pod 以外の大体のリソースは `kubectl create` で作れる。[参考](h
 # PodとServiceを同時に作成
 % kubectl run nginx --image=nginx --port=80 --expose
 ```
+
+## `kubectl apply`
+
+マニフェストを適用するコマンド。  
+`kubectl create` でもマニフェスト適用できるが、 `kubectl apply` を利用すること。  
+理由は以下の通り。
+
+- `kubectl apply` は差分を適用するため、差分が無い場合は何もしない
+- `kubectl apply` は「前回適用したマニフェスト」「現在クラスタに登録されているリソースの状態」「今回適用するマニフェスト」の 3 種類から差分が算出される
+- `kubectl create` は「前回適用したマニフェスト」として保存されない
 
 ## `kubectl label`
 

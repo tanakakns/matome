@@ -15,7 +15,9 @@ weight: 2
 
 <!--more-->
 
-[公式](https://kubernetes.io/ja/docs/home/)
+- [公式](https://kubernetes.io/ja/docs/home/)
+- [Kubernetes The Hard Way](https://github.com/kelseyhightower/kubernetes-the-hard-way)
+    - Kubernetesクラスタ構築のチュートリアルとして有名なドキュメント
 
 ## サーバ構成
 

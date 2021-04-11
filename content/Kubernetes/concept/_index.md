@@ -95,7 +95,7 @@ Pod の管理・制御を行うリソース（オブジェクト）を **コン�
 
 #### Service
 
-Service は以下の種類の L4 ロードバランサを提供する。  
+Service は以下の種類の **L4** ロードバランサを提供する。  
 実質、ClusterIP、NodePort、LoadBalancer の 3 種類。
 
 - ClusterIP
@@ -103,19 +103,19 @@ Service は以下の種類の L4 ロードバランサを提供する。
         - k8s クラスタ内でのみ疎通可能な仮想 IP
     - k8s クラスタ外から通信を受け付ける必要のない箇所のロードバランサ
     - 各 Pod は IP を持つが個々にアクセスしていては負荷分散できないのでそれを 1 つの IP に束ねる
-    - name がホスト名として機能し、 DNS により名前解決される
+    - name がホスト名として機能し、 クラスタ内部 DNS により名前解決される
         - `<name>.<namespace>.svc.cluster.local`
         - `svc` は Service の略
     - 各ノードの `kube-proxy` 通信の転送を行う
     - type は `ClusterIP`
-- ExternalIP
+- ExternalIP（ ClusterIP の一種）
     - 特定のノードの IP アドレスで受信した通信をコンテナに転送する Service
     - k8s クラスタ外部からの通信を受け付ける
-    - type 自体は `ClusterIP` で、 `externalIPs` （ノードのIP）を指定する
-    - 「ノードのIPアドレス」で通信を受信する（ポートの指定はない）
+    - type 自体は `ClusterIP` で、 `spec.externalIPs` （ノードのIP）を指定する
+    - `spec.externalIPs` の IP は自分でノードの IP を調べて記載する必要があり、 `spec.ports[].port` の port で受け、該当セレクタの `spec.ports[].targetPort` へ流す
 - NodePort
     - クラスタ内の各ノードに外部からアクセス可能な IP を与える
-    - ExternalIP に類似したサービス
+    - ExternalIP に類似したサービスだが、ノードの IP を指定する必要がなく、全ノードが対応する
     - 違いは「ノードのIPアドレス:ポート」で通信を受信する点
         - 厳密には「0.0.0.0:ポート」でバインドされ、k8s クラスタ内の全ノードの IP アドレスを意味する
     - デフォルトで利用できるノードポートの範囲は「30000〜32767」であり、クラスタ内でユニークなポートでなければならないことに注意
@@ -126,6 +126,7 @@ Service は以下の種類の L4 ロードバランサを提供する。
     - ExternalIP や NodePort と異なり、ノードIP非依存である点で使い勝手がよい
     - type は `LoadBalancer`
     - クラウド利用の場合、サービスからのトラフィックをクラスタ内のノードに転送するクラウドプロバイダが提供するロードバランサが実態
+        - そのため、基盤が LoadBalancer Service に対応している必要がある
 - Headless（None）
     - ロードバランシングする仮想 IP アドレスが払い出されない DNS ラウンドロビンのエンドポイントを提供する Service
     - type 自体は `ClusterIP` だが、 `clusterIP` が `None`
@@ -138,14 +139,30 @@ Service は以下の種類の L4 ロードバランサを提供する。
 
 #### Ingress
 
-Service とは異なり、 L7 ロードバランサを提供する。  
+Service とは異なり、 **L7** ロードバランサを提供する。  
 `kind: Service` ではなく、 `kind: Ingress` で提供される。  
 大きく以下の種類がある。
 
 - k8s クラスタ外の LB を利用した Ingress
+    - ex. GKE Ingress Controller
 - k8s クラスタ内に Ingress 用の Pod をデプロイする Ingress
+    - ex. Nginx Ingress Controller
 
-まだよくわかってない。
+Ingress はその実態である GKE/Nginx Ingress Controller とその設定である Ingress Resource からなる。  
+Ingress は L7 とあるように、例えば gRPC のロードバランシングの際に必要となり、構成は以下のようになる。
+
+```
+例）
+  grpc client
+   ↓
+  AWS ELB(classic)
+   ↓
+  kubernetes(service)
+   ↓
+  nginx-ingress(on k8s) ...  -> Ingress Resouce の設定を参照する
+  ↓                 ↓
+grpc server1    grpc server2
+```
 
 ### Config＆Storage リソース
 
