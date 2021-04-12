@@ -414,10 +414,81 @@ Cloud Console で、ナビゲーション メニュー > [モニタリング] �
 左側のメニューで [アラート]、[Create Policy] の順にクリック。  
 ナビゲーション メニュー > [Logging] > [ログビューア] 。
 
+### 2.6. チャレンジクエスト
+
+#### 2.6.1. Apache の VM インスタンスを作成
+
+- Linux 仮想マシン インスタンスの作成
+- VM インスタンスへの公開アクセスの有効化
+- 基本的な Apache ウェブサーバーの実行
+- サーバーのテスト
+
+```bash
+# ゾーンの設定
+$ gcloud config set compute/zone us-central1-a
+
+# インスタンスの作成
+$ gcloud compute instances create apache --machine-type n1-standard-2
+
+# インスタンスへタグ追加
+$ gcloud compute instances add-tags apache --tags=http-server
+
+# ファイアウォールルールの作成
+$ gcloud compute firewall-rules create allow-http \
+    --action=allow \
+    --direction=ingress \
+    --source-ranges=0.0.0.0/0 \
+    --target-tags=http-server \
+    --rules=tcp:80
+
+# SSH して apache インストール
+$ gcloud compute ssh apache
+$ sudo su -
+$ apt-get update
+$ apt-get install apache2 -y
+$ service apache2 restart
+```
+
+### 2.6.2. Apache の VM インスタンスを作成（起動スクリプト利用）
+
+```bash
+# ゾーンの設定
+$ gcloud config set compute/zone us-central1-a
+
+# Cloud Storage バケットの作成
+$ gsutil mb -c regional -l us-central1 gs://challenge-quest-12345
+# Cloud Console でスクリプトをアップロード
+
+# インスタンスの作成
+$ gcloud compute instances create apache --scopes storage-ro \
+  --metadata startup-script-url=gs://challenge-quest-12345/resources-install-web.sh
+
+# ファイアウォールルールの作成
+$ gcloud compute firewall-rules create allow-http \
+    --action=allow \
+    --direction=ingress \
+    --source-ranges=0.0.0.0/0 \
+    --target-tags=http-server \
+    --rules=tcp:80
+
+# インスタンスへタグ追加
+$ gcloud compute instances add-tags apache --tags=http-server
+```
+
+ちなみに `resources-install-web.sh` は以下。
+
+```bash
+#!/bin/bash
+apt-get update
+apt-get install -y apache2
+```
+
 ## 3. Google Kubernetes Engine
 
 1. [コンセプト](#3-1-コンセプト)
 2. [クラスタ作成](#3-2-クラスタ作成)
+3. [デプロイ管理](#3-3-デプロイ管理)
+4. Spinnaker と Kubernetes Engine を使用した継続的デリバリー パイプライン
 
 ### 3.1. コンセプト
 
@@ -820,3 +891,343 @@ $ kubectl apply -f services/hello-blue.yaml
 $ curl -ks https://`kubectl get svc frontend -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"`/version
 # 1.0.0 しか返ってこない
 ```
+
+### 3.4. Spinnaker と Kubernetes Engine を使用した継続的デリバリー パイプライン
+
+まずは環境を設定する。
+
+```bash
+# ゾーンの設定
+$ gcloud config set compute/zone us-central1-f
+
+# プロジェクトを確認して環境変数へ
+$ gcloud config list project
+[core]
+project = qwiklabs-gcp-04-4ceec88343aa
+$ export PROJECT=qwiklabs-gcp-04-4ceec88343aa
+
+# クラスタ作成
+$ gcloud container clusters create spinnaker-tutorial \
+    --machine-type=n1-standard-2
+```
+
+Spinnaker 用のサービスアカウントを作成して Cloud Storage にデータを保存できるようにする。
+
+```bash
+# Spinnaker 用のサービスアカウントの作成
+$ gcloud iam service-accounts create spinnaker-account \
+    --display-name spinnaker-account
+
+# サービスアカウントのメールアドレスを環境変数に格納
+$ export SA_EMAIL=$(gcloud iam service-accounts list \
+    --filter="displayName:spinnaker-account" \
+    --format='value(email)')
+# 取得できるメールアドレスはこんな「spinnaker-account@qwiklabs-gcp-00-c0fdab7fa347.iam.gserviceaccount.com」感じ
+
+# サービスアカウントに Cloud Storage の権限を付与
+$ gcloud projects add-iam-policy-binding $PROJECT \
+    --role roles/storage.admin \
+    --member serviceAccount:$SA_EMAIL
+
+# サービスアカウントキーのダウンロード
+$ gcloud iam service-accounts keys create spinnaker-sa.json \
+     --iam-account $SA_EMAIL
+```
+
+Container Registry からの通知に使用する Cloud Pub/Sub トピックを作成する。
+
+```bash
+$ gcloud pubsub topics create projects/$PROJECT/topics/gcr
+```
+
+イメージの push についての通知を受け取れるように、Spinnaker から読み取ることができるサブスクリプションを作成する。
+
+```bash
+$ gcloud pubsub subscriptions create gcr-triggers \
+    --topic projects/${PROJECT}/topics/gcr
+```
+
+Spinnaker のサービス アカウントに、gcr-triggers サブスクリプションからの読み取り権限を付与する。
+
+```bash
+$ export SA_EMAIL=$(gcloud iam service-accounts list \
+    --filter="displayName:spinnaker-account" \
+    --format='value(email)')
+
+$ gcloud beta pubsub subscriptions add-iam-policy-binding gcr-triggers \
+    --role roles/pubsub.subscriber --member serviceAccount:$SA_EMAIL
+```
+
+Spinnaker をデプロイするために Helm を準備する。
+
+```bash
+# helm バイナリ取得・展開
+$ wget https://get.helm.sh/helm-v3.1.1-linux-amd64.tar.gz
+$ tar zxfv helm-v3.1.1-linux-amd64.tar.gz
+$ cp linux-amd64/helm .
+
+# Helm にクラスタの cluster-admin ロールを付与
+$ kubectl create clusterrolebinding user-admin-binding \
+    --clusterrole=cluster-admin --user=$(gcloud config get-value account)
+
+# Spinnaker に cluster-admin ロールを付与し、すべての名前空間にリソースをデプロイできるようにする
+$ kubectl create clusterrolebinding --clusterrole=cluster-admin \
+    --serviceaccount=default:default spinnaker-admin
+
+# Helm の使用可能なリポジトリに stable チャートのデプロイを追加（Spinnaker も含まれている）
+$ ./helm repo add stable https://charts.helm.sh/stable
+$ ./helm repo update
+```
+
+Spinnaker を作成する。
+
+```bash
+# 環境変数の準備
+$ export PROJECT=$(gcloud info \
+    --format='value(config.project)')
+$ export BUCKET=$PROJECT-spinnaker-config
+
+# Cloud Storage バケットの作成
+$ gsutil mb -c regional -l us-central1 gs://$BUCKET
+```
+
+`spinnaker-config.yaml` ファイルの作成。
+
+```bash
+$ export SA_JSON=$(cat spinnaker-sa.json)
+$ export PROJECT=$(gcloud info --format='value(config.project)')
+$ export BUCKET=$PROJECT-spinnaker-config
+$ cat > spinnaker-config.yaml <<EOF
+gcs:
+  enabled: true
+  bucket: $BUCKET
+  project: $PROJECT
+  jsonKey: '$SA_JSON'
+
+dockerRegistries:
+- name: gcr
+  address: https://gcr.io
+  username: _json_key
+  password: '$SA_JSON'
+  email: 1234@5678.com
+
+# デフォルトのストレージ バックエンドである minio を無効にします
+minio:
+  enabled: false
+
+# GCP サービスを有効にするように Spinnaker を構成します
+halyard:
+  spinnakerVersion: 1.19.4
+  image:
+    repository: us-docker.pkg.dev/spinnaker-community/docker/halyard
+    tag: 1.32.0
+    pullSecrets: []
+  additionalScripts:
+    create: true
+    data:
+      enable_gcs_artifacts.sh: |-
+        \$HAL_COMMAND config artifact gcs account add gcs-$PROJECT --json-path /opt/gcs/key.json
+        \$HAL_COMMAND config artifact gcs enable
+      enable_pubsub_triggers.sh: |-
+        \$HAL_COMMAND config pubsub google enable
+        \$HAL_COMMAND config pubsub google subscription add gcr-triggers \
+          --subscription-name gcr-triggers \
+          --json-path /opt/gcs/key.json \
+          --project $PROJECT \
+          --message-format GCR
+EOF
+```
+
+Spinnaker チャートをデプロイする。
+
+```bash
+$ ./helm install -n default cd stable/spinnaker -f spinnaker-config.yaml \
+           --version 2.0.0-rc9 --timeout 10m0s --wait
+```
+
+ポートフォワードして Spinnaker の管理画面を確認する。
+
+```bash
+$ export DECK_POD=$(kubectl get pods --namespace default -l "cluster=spin-deck" \
+    -o jsonpath="{.items[0].metadata.name}")
+$ kubectl port-forward --namespace default $DECK_POD 8080:9000 >> /dev/null &
+```
+
+Cloud Shell ウィンドウの最上部で [ウェブでプレビュー] をクリックし、[ポート 8080 でプレビュー] をクリックすると Spinnaker の管理画面が見れる。  
+次に Docker イメージを作成する。
+
+```bash
+# サンプルアプリの取得・展開
+$ gsutil -m cp -r gs://spls/gsp114/sample-app.tar .
+$ mkdir sample-app
+$ tar xvf sample-app.tar -C ./sample-app
+$ cd sample-app
+
+# git リポジトリの作成
+$ gcloud source repos create sample-app
+
+# git 用アカウント情報設定・初回コミット・Push
+$ git config --global user.email "$(gcloud config get-value core/account)"
+$ git config --global user.name "[USERNAME]"
+$ export PROJECT=$(gcloud info --format='value(config.project)')
+$ git init
+$ git add .
+$ git commit -m "Initial commit"
+$ git config credential.helper gcloud.sh
+$ git remote add origin https://source.developers.google.com/p/$PROJECT/r/sample-app
+$ git push origin master
+```
+
+次にビルドトリガーを構成する。  
+Git タグが リポジトリに push されるたびに Docker イメージをビルドして push するように Container Builder を構成する。  
+Container Builder はソースコードを自動的にチェックアウトして、リポジトリ内の Dockerfile から Docker イメージをビルドし、そのイメージを Google Cloud Container Registry に push する。
+
+- Cloud Platform Console で、ナビゲーション メニュー > [Cloud Build] > [トリガー] をクリック
+- [トリガーを作成] をクリック
+- 次のトリガー設定を指定
+    - 名前: sample-app-tags
+    - イベント: 新しいタグを push する
+    - 新しく作成した sample-app リポジトリを選択
+    - タグ: v1.*
+    - ビルド構成: Cloud Build 構成ファイル（yaml または json）
+    - Cloud Build 構成ファイルの場所: /cloudbuild.yaml
+
+これ以降、文字 "v" が先頭に付いている Git タグをソースコード リポジトリに push すると、Container Builder が自動的にアプリケーションをビルドして、Docker イメージとして Container Registry に push する。
+
+Spinnaker で使用するために Kubernetes マニフェストを準備する。
+
+```bash
+$ export PROJECT=$(gcloud info --format='value(config.project)')
+$ gsutil mb -l us-central1 gs://$PROJECT-kubernetes-manifests
+$ gsutil versioning set on gs://$PROJECT-kubernetes-manifests
+$ sed -i s/PROJECT/$PROJECT/g k8s/deployments/*
+$ git commit -a -m "Set project ID"
+```
+
+Git タグを作成してイメージをビルドしてみる。
+
+```bash
+$ git tag v1.0.0
+$ git push --tags
+Enumerating objects: 14, done.
+Counting objects: 100% (14/14), done.
+Delta compression using up to 2 threads
+Compressing objects: 100% (8/8), done.
+Writing objects: 100% (8/8), 778 bytes | 778.00 KiB/s, done.
+Total 8 (delta 5), reused 0 (delta 0)
+remote: Resolving deltas: 100% (5/5)
+To https://source.developers.google.com/p/qwiklabs-gcp-00-c0fdab7fa347/r/sample-app
+ * [new tag]         v1.0.0 -> v1.0.0
+```
+
+Spinnaker を管理する spin CLI をインストールする。
+
+```bash
+$ curl -LO https://storage.googleapis.com/spinnaker-artifacts/spin/1.14.0/linux/amd64/spin
+$ chmod +x spin
+```
+
+spin を使用して、Spinnaker 内に sample という名前のアプリを作成。
+
+```bash
+$ ./spin application save --application-name sample \
+                        --owner-email "$(gcloud config get-value core/account)" \
+                        --cloud-providers kubernetes \
+                        --gate-endpoint http://localhost:8080/gate
+```
+
+sample-app ソースコード ディレクトリから次のコマンドを実行します。これにより、サンプル パイプラインが Spinnaker インスタンスにアップロードされます。
+
+```bash
+$ export PROJECT=$(gcloud info --format='value(config.project)')
+$ sed s/PROJECT/$PROJECT/g spinnaker/pipeline-deploy.json > pipeline.json
+$ ./spin pipeline save --gate-endpoint http://localhost:8080/gate -f pipeline.json
+```
+
+パイプラインの実行を手動でトリガーして確認する。
+
+- Spinnaker UI で、画面の上部にある [Applications] -> sampleをクリック。
+- 上部にある [パイプライン] をクリックして、アプリケーションのパイプラインのステータスを表示。
+- パイプラインを初めてトリガーするために、[Start Manual Execution] をクリック -> RUN 。
+- [Execution Details] をクリックして、パイプラインの進行状況の詳細を表示。
+- 進行状況バーで、デプロイメント パイプラインのステータスとそのステップを確認できる。
+- ステージをクリックして、その詳細を表示します。
+- 3～5 分後に統合テストフェーズが完了すると、パイプラインがデプロイメントの続行を手動で承認するよう求めてくる。
+- 黄色の「人物」アイコンにカーソルを合わせ、[Continue] をクリック。
+    - ロールアウトが本番環境フロントエンドと本番環境バックエンドのデプロイメントに進みます。これは数分後に完了します。
+- Spinnaker UI の上部で [Infrastructure] > [Load Balancers] をクリックして、アプリを表示。
+- ロードバランサのリストを下にスクロールし、[service sample-frontend-production] の下の [Default] をクリックするとロードバランサの詳細がページの右側に表示される。
+- 右側の詳細ペインをスクロール ダウンし、Ingress IP のクリップボード ボタンをクリックしてアプリの IP アドレスをコピーする。
+- コピーしたアドレスを新しいブラウザタブに貼り付けて、アプリケーションを表示
+    - canary バージョンが表示される場合があるが、画面を更新すると production バージョンも表示される
+- アプリケーションをビルド、テスト、デプロイするためのパイプラインを手動でトリガーした。
+
+次に、コードの変更によるパイプラインのトリガーを行う。
+
+```bash
+# sample-app ディレクトリから次のコマンドを実行して、アプリの色をオレンジ色から青色に変更
+$ sed -i 's/orange/blue/g' cmd/gke-info/common-service.go
+
+# 変更にタグを付け、ソースコード リポジトリに push
+$ git commit -a -m "Change color to blue"
+$ git tag v1.0.1
+$ git push --tags
+```
+
+- GCP Console で [Cloud Build] > [履歴] を開き、新しいビルドが表示されるまで数分待つ。（必要であればページを更新）  
+- 新しいビルドが完了するまで待ってから次のステップに進む。
+- Spinnaker UI に戻り、[Pipelines] をクリックして、イメージのデプロイを開始するパイプラインの動作を監視する。
+    - 自動的にトリガーされたパイプラインは、表示されるまでに数分かかる。（必要であればページを更新）
+
+次に、カナリア デプロイメントを観察する。
+
+- デプロイが一時停止し、本番環境へのロールアウトを待機している間に、実行中のアプリケーションを表示しているウェブページに戻る。
+    - アプリが表示されているタブを繰り返し更新。バックエンドのうちの 4 つがアプリの以前のバージョンを実行しており、カナリアを実行しているバックエンドは 1 つだけ。
+    - 5 回更新するごとにアプリの新しい青色バージョンが表示されるはず。
+- パイプラインが完了すると、アプリは以下のようになる。（コードを変更したため、色は青色。また、[バージョン] フィールドには canary ）
+    - Backend that serviced this request
+        - Pod Name: sample-backend-canary-xxxx
+        - Node Name: gke-spinnaker-tutorial-default-pool-xxxx
+        - Version: Canary
+        - Zone: project/xxxx/zones/us-central1-f
+        - Project: qwiklabs-gcp-00-xxxx
+        - Node Internal IP: 10.128.0.4
+        - Node External IP: 146.148.80.155
+    - Frontend that handled this request
+        - Frontend IP:PORT: 10.40.2.14.48884
+        - Request to Backend: GET /metadata....
+        - Error: None
+- 必要に応じて前回の commit を元に戻し、この変更をロールバックできる。ロールバックすると新しいタグ　(v1.0.2）が追加され、v1.0.1 をデプロイするときに使用したのと同じパイプラインを通してタグが戻される。
+    - `git revert v1.0.1`
+    - Ctrl + O、ENTER、CTRL + X を押す
+    - `git tag v1.0.2`
+    - `git push --tags`
+- ビルドとパイプラインが完了したら、ロールバックを確認する
+    - [INFRASTRUCTURE] > [LOAD BALANCERS] の順にクリックしてから、[service sample-frontend-production] の [DEFAULT] をクリックして Ingress IP アドレスをコピー。このアドレスを新しいタブに貼り付け。
+    - アプリがオレンジ色に戻り、production バージョン番号を確認できる。
+
+### 3.5. Cloud Monitoring APM によるサイトの信頼性のトラブルシューティング
+
+Monitoring ワークスペースを作成して監視を行う。
+
+- Cloud Console で、ナビゲーション メニュー > [モニタリング] をクリック
+- ワークスペースがプロビジョニングされるまで待つ
+
+次に、SLO と SLI を作成する。
+
+- サービスレベル指標（SLI）
+    - 例）リクエストのレイテンシ（リクエストに対してレスポンスを返すのにかかる時間）、エラー率、システム スループット（一般的には 1 秒あたりのリクエスト数）、可用性（サービスが使用可能な時間の割合）、耐久性（データが長期間にわたって保持される可能性）
+- サービスレベル目標（SLO）
+- サービスレベル契約（SLA）
+
+例えば、SLO、SLI は以下のようなものである。
+
+|SLI|指標|説明|SLO|
+|---|---|---|---|
+|リクエストのレイテンシ|フロントエンドのレイテンシ|ユーザーがページの読み込みを待機している時間。|過去 60 分間で 99% のリクエストが 3 秒以内に処理されている|
+|エラー率|フロントエンドのエラー率|ユーザーが経験したエラー率。|過去 60 分間のエラー数が 0|
+|エラー率|チェックアウトのエラー率|チェックアウト サービスを呼び出す他のサービスが経験したエラー率。|過去 60 分間のエラー数が 0|
+|エラー率|通貨サービスのエラー率|通貨サービスを呼び出す他のサービスが経験したエラー率。|過去 60 分間のエラー数が 0|
+|可用性|フロントエンドの成功率|サービスの可用性の判断基準として、成功したリクエストの割合。|過去 60 分間で 99% のリクエストが成功している|
+
+Cloud Platform Console の Cloud モニタリング（ナビゲーション メニュー > [モニタリング]）で、左側のメニューにある [アラート]、[CREATE POLICY] の順にクリックし、SLO を監視するアラートを作成する。
