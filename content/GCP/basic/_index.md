@@ -190,6 +190,11 @@ compute.instance.setMachineType
 |閲覧者（ `roles/viewer` ）|全リソースへの読み取りアクセス権。状態に影響しない読み取り専用アクションに必要な権限。|
 |参照者（ `roles/browser` ）| GCP リソースを参照するためのアクセス権。プロジェクトのリソースを表示する権限はない。|
 
+Identity and Access Management API または gcloud コマンドライン ツールを使用して、プロジェクトのメンバーにオーナーロールを付与することはできない。オーナーは、 **Cloud Console を使用することによってのみ** プロジェクトに追加できます。
+
+事前定義ロールおよびカスタムロールのメタデータを確認する場合、 `gcloud iam roles describe ROLE_ID` コマンドで確認する。  
+[事前定義ロールの一覧](https://cloud.google.com/iam/docs/understanding-roles?hl=ja#predefined_roles)
+
 ### 3.5. リソース階層/「何に対して」
 
 リソースは「 **組織 > フォルダ > プロジェクト > リソース** 」のような階層構造にまとめることができる。

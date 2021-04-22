@@ -85,14 +85,30 @@ $ gcloud compute instance-templates create example-template-custom \
 #### 1.1.2. マネージドインスタンスグループ（ MIG ）
 
 インスタンステンプレートからインスタンスを起動・グループ化することにより、負荷分散やオートスケール、ヘルスチェックによる自動復旧を可能にする。  
-可用性の観点から **マルチゾーン MIG** にすることが推奨される。
+なお、 MIG には **ゾーン MIG** と **リージョン（マルチゾーン） MIG** の 2 種類あり、可用性の観点から後者にすることが推奨される。
 
 ```bash
 $ gcloud compute instance-groups managed create [インスタンスグループ名] \
     --base-instance-name=[作成されるインスタンス名] \
     --size=[インスタンス数] \
     --template=[インスタンステンプレート名] \
+    --zome=[ゾーン名] \ # カンマ区切りで複数指定した場合、マルチゾーン MIG になる
+    --region=[リージョン名] \ # リージョン（マルチゾーン） MIG になる
 ```
+
+- [クールダウン期間](https://cloud.google.com/compute/docs/autoscaler?hl=ja#cool_down_period) （初期化期間）
+    - 新しく作成されたインスタンスを自動スケーリングの判断に含めない時間
+    - スケールアップを遅らせ、必要以上に多くのインスタンスが作成されないように設定する（アプリの初期化時間をテストすることを推奨）
+    - これを適切に設定しないと永遠にスケールされてしまう、、、
+- [安定化期間](https://cloud.google.com/compute/docs/autoscaler?hl=ja#stabilization_period)
+    - オートスケーラは直近(1分ではなく)10分間におけるピーク負荷に基づいてターゲットサイズを計算
+    - ピーク負荷後のスケールダウンに10分の余裕を持たせることで、頻繁なスケールアップ/ダウンの繰り返しを回避する
+    - この 10 分を安定化期間という
+- 初期遅延
+    - 自動修復のためのヘルスチェックが新しく作成したインスタンスを対象にしない時間
+    - 初期化完了前にUnhealthyと判断され、無駄な再作成を防ぐ目的で設定する
+- [オートスケーラーによる判断の理解](https://cloud.google.com/compute/docs/autoscaler/understanding-autoscaler-decisions?hl=ja)
+- [ヘルスチェックと自動修復の設定](https://cloud.google.com/compute/docs/instance-groups/autohealing-instances-in-migs?hl=ja)
 
 ### 1.2. マシンタイプ
 
@@ -393,8 +409,8 @@ $ gcloud compute firewall-rules create allow-http \
     --rules=tcp:80
 ```
 
-なお、ファイアウォールルールはインスタンスに付与された **タグ** によって適用され、上記の `--target-tags` オプションで設定された値と対応する。  
-インスタンス作成時（ `gcloud compute instances create` ）に `--tags` オプションを用いてタグを付与できるが、以下のコマンドで既存インスタンスにタグ付けすることもできる。
+なお、ファイアウォールルールはインスタンスに付与された **ネットワークタグ** や **サービスアカウント** によって適用され、上記の `--target-tags` や `--target-service-accounts` オプションで設定された値と対応する。  
+インスタンス作成時（ `gcloud compute instances create` ）に `--tags` オプションを用いてネットワークタグを付与できるが、以下のコマンドで既存インスタンスにタグ付けすることもできる。
 
 ```bash
 $ gcloud compute instances add-tags INSTANCE_NAME --tags=http-server
