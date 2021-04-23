@@ -163,6 +163,27 @@ To update your SDK installation to the latest version [335.0.0], run:
   $ gcloud components update
 ```
 
+[コンポーネント](https://cloud.google.com/sdk/docs/components) は、個別にインストール可能な SDK の構成要素で、マンドライン ツール（gcloud、bq、gsutil）、アルファ版 / ベータ版リリースレベルの gcloud CLI コマンドや、SDK の特定のツールとの依存関係を含むパッケージなどがある。  
+以下のようなコマンドで管理できる。
+
+```bash
+# コンポーネント一覧
+$ gcloud components list
+
+# コンポーネントのインストール
+$ gcloud components install COMPONENT_ID
+# インストール例
+$ gcloud components install kubectl
+
+# コンポーネントの更新
+$ gcloud components update
+# 指定バージョンへの変更
+$ gcloud components update --version VERSION
+
+# コンポーネントの削除
+$ gcloud components remove COMPONENT_ID
+```
+
 #### 1.2.2. プロジェクト
 
 ```bash
