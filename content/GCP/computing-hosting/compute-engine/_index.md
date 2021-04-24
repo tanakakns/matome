@@ -17,7 +17,8 @@ weight: 1
 4. [ファイアウォールルールの作成](#4-ファイアウォールルールの作成)
 5. [インスタンスへの接続](#3-インスタンスへの接続)
 6. [Cloud Monitoring](#4-cloud-monitoring)
-7. コマンド整理
+7. サービスアカウント
+8. コマンド整理
 
 <!--more-->
 
@@ -468,9 +469,46 @@ Cloud Console で、ナビゲーション メニュー > [モニタリング] �
 左側のメニューで [アラート]、[Create Policy] の順にクリック。  
 ナビゲーション メニュー > [Logging] > [ログビューア] 。
 
-## 7. チャレンジクエスト
+## 7. サービスアカウント
 
-### 7.1. Apache の VM インスタンスを作成
+VM インスタンスにサービスアカウントを付与することによってリソースへのアクセス制御を行う。  
+サービスアカウントは以下のように作成する。
+
+```bash
+# サービスアカウントの作成
+$ gcloud iam service-accounts create SERVICE_ACCOUNT_ID --display-name="DISPLAY_NAME"
+
+# サービスアカウントへのロールの付与
+gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member="serviceAccount:SERVICE_ACCOUNT_ID@PROJECT_ID.iam.gserviceaccount.com" \
+    --role="ROLE_NAME"
+```
+
+VM インスタンス作成時にサービスアカウントを付与するには以下。
+
+```bash
+$ gcloud compute instances create INSTANCE_NAME \
+    --service-account=SERVICE_ACCOUNT_EMAIL \
+    [--scopes=[SCOPES,...]]
+```
+
+既存の VM インスタンスにサービスアカウントを付与するのは以下。
+
+```bash
+$ gcloud compute instances set-service-account INSTANCE_NAME \
+    --service-account=SERVICE_ACCOUNT \
+    [--scopes=[SCOPE,...]
+```
+
+- [ベストプラクティス](https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances?hl=ja#best_practices)
+    - Compute Engine のデフォルトのサービス アカウントを使用せずに、新しいサービス アカウントを作成
+    - 必要なリソースについてのみ、このサービス アカウントに IAM ロールを付与
+    - このサービス アカウントとして実行するようにインスタンスを構成
+    - インスタンスの https://www.googleapis.com/auth/cloud-platform スコープにすべての Google Cloud APIs への完全アクセス権を与えるには、インスタンスの IAM 権限をサービス アカウントの IAM のロールで完全に決定するようにする
+
+## 8. コマンド整理
+
+### 8.1. Apache の VM インスタンスを作成
 
 - Linux 仮想マシン インスタンスの作成
 - VM インスタンスへの公開アクセスの有効化
@@ -503,7 +541,7 @@ $ apt-get install apache2 -y
 $ service apache2 restart
 ```
 
-## 7.2. Apache の VM インスタンスを作成（起動スクリプト利用）
+## 8.2. Apache の VM インスタンスを作成（起動スクリプト利用）
 
 ```bash
 # ゾーンの設定

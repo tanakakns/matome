@@ -17,6 +17,7 @@ weight: 2
 2. [クラスタ作成](#3-2-クラスタ作成)
 3. [デプロイ管理](#3-3-デプロイ管理)
 4. Spinnaker と Kubernetes Engine を使用した継続的デリバリー パイプライン
+5. 監視
 
 ### 3.1. コンセプト
 
@@ -759,3 +760,10 @@ Monitoring ワークスペースを作成して監視を行う。
 |可用性|フロントエンドの成功率|サービスの可用性の判断基準として、成功したリクエストの割合。|過去 60 分間で 99% のリクエストが成功している|
 
 Cloud Platform Console の Cloud モニタリング（ナビゲーション メニュー > [モニタリング]）で、左側のメニューにある [アラート]、[CREATE POLICY] の順にクリックし、SLO を監視するアラートを作成する。
+
+## 5. 監視
+
+GKE 用の監視機能がある。
+
+- GKE 用 Google Cloud オペレーション スイートの概要
+    - https://cloud.google.com/stackdriver/docs/solutions/gke?hl=ja#skm-howto

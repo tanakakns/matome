@@ -9,15 +9,11 @@ subpage: false
 weight: 3
 ---
 
-**App Engine** は Google のインフラストラクチャ上に仮想マシンを構築するサービス。
+**App Engine** は Google の PaaS 。
 
 1. [コンセプト](#1-コンセプト)
-2. [インスタンス作成](#2-インスタンス作成)
-3. [ディスクの作成とアタッチ](#3-ディスクの作成とアタッチ)
-4. [ファイアウォールルールの作成](#4-ファイアウォールルールの作成)
-5. [インスタンスへの接続](#3-インスタンスへの接続)
-6. [Cloud Monitoring](#4-cloud-monitoring)
-7. コマンド整理
+2. [App Engine の作成](#2-app-engine-の作成)
+3. [スケールリングタイプ](#3-スケーリングタイプ)
 
 <!--more-->
 
@@ -47,8 +43,23 @@ weight: 3
 - 各設定ファイルは `gcloud app deploy xxxx.yaml` で適用する
 - `gcloud app deploy --no-promote` で新しいバージョンをデプロイしますが、トラフィックが新しいバージョンに自動的にルーティングされない（テストできる）
 - `gcloud app logs tail` でログ確認
-- 新しいバージョンへのトラフィックの移行する場合、以下の方法がある
+- 新しいバージョンへの **トラフィック移行** する場合、以下の方法がある
     - `gcloud app services set-traffic [MY_SERVICE] --splits [MY_VERSION]=1` ：トラフィックの即時移行
     - `gcloud app services set-traffic [MY_SERVICE] --splits [MY_VERSION]=1 --migrate` ：トラフィックの段階的移行
-- また、移行だけでなく、A/B Testing などトラフィック分割も可能
+- また、移行だけでなく、A/B Testing など **トラフィック分割** も可能
     - `gcloud app services set-traffic [MY_SERVICE] --splits [MY_VERSION1]=[VERSION1_WEIGHT],[MY_VERSION2]=[VERSION2_WEIGHT] --split-by [IP_OR_COOKIE]`
+
+## 3. スケーリングタイプ
+
+[スケーリングタイプ](https://cloud.google.com/appengine/docs/standard/python/how-instances-are-managed?hl=ja#scaling_types) は以下の 3 種類ある。
+
+- 自動スケーリング
+    - リクエスト率、レスポンスのレイテンシなどのアプリケーションの指標に基づいてインスタンスを作成
+    - それぞれの指標のしきい値、および常時稼働する最小数のインスタンスを指定できる
+- 基本スケーリング
+    - アプリケーションがリクエストを受信したときに、インスタンスが作成される
+    - 各インスタンスは、アプリケーションがアイドル状態になるとシャットダウン
+    - 断続的な処理やユーザーのアクティビティに応じて動作する処理に適している
+- 手動スケーリング
+    - 負荷レベルに関係なく、常に実行されるインスタンスの数を指定
+    - 複雑な初期化などのタスクや、時間の経過に伴うメモリの状態に依存するアプリケーションが実行できるようになる

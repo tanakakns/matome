@@ -13,7 +13,9 @@ weight: 1
 2. [ツール](#2-ツール)
 3. [リソース階層とアクセス制御](#3-リソース階層とアクセス制御)
 4. リソースの管理
-5. [Google Cloud サービス](#4-google-cloud-サービス)
+5. 監視
+6. コスト管理
+7. [Google Cloud サービス](#4-google-cloud-サービス)
 
 <!--more-->
 
@@ -120,7 +122,20 @@ Cloud Shell には固有のコマンドラインツールがあらかじめ実�
 
 Google Cloud API は、ビジネス管理から機械学習にまで及ぶさまざまな分野の API が 200 以上用意されており、サービスと同様に、すべて Google Cloud プロジェクト / アプリケーションと簡単に統合できる。  
 [API 設計ガイド](https://cloud.google.com/apis/design/) で説明されているリソース指向の設計原則が適用されている。  
-なお、 Cloud API を利用する際は、各自で有効に設定する必要がある。（サイドメニュー「API とサービス」 -> 「ライブラリ」から APIを検索して「有効にする」）
+なお、 Cloud API を利用する際は、各自で有効に設定する必要がある。（サイドメニュー「API とサービス」 -> 「ライブラリ」から APIを検索して「有効にする」）  
+以下のコマンドでも API の有効化が可能。
+
+```bash
+# API 有効化
+$ gloucd services enable SERVICE_NAME
+
+# 現在のプロジェクトで有効になっているAPIの一覧を表示
+gcloud services list
+# 現在のプロジェクトで有効にできるサービスの一覧を表示
+gcloud services list --available
+```
+
+なお、アカウントに対して、いかにロールで権限を与えようが、 **API を有効化しないと利用できない** ことに注意。
 
 - [Google APIs Explorer](https://developers.google.com/apis-explorer/#p/)
 
@@ -128,7 +143,7 @@ Google Cloud API は、ビジネス管理から機械学習にまで及ぶさま
 
 ### 3.1. Cloud Identity and Access Management（Cloud IAM）
 
-[Cloud Identity and Access Management（Cloud IAM）](https://cloud.google.com/iam/) は、「誰が」「どういう操作を」「何に対して」行う権限を持つかを管理するサービス。
+[Cloud Identity and Access Management（Cloud IAM）](https://cloud.google.com/iam/docs/how-to?hl=ja) は、「誰が」「どういう操作を」「何に対して」行う権限を持つかを管理するサービス。
 
 |制御内容|具体例|
 |:---|:---|
@@ -225,54 +240,19 @@ Identity and Access Management API または gcloud コマンドライン ツー
 
 ### 3.6. アクセス制御のベストプラクティス
 
+[ベストプラクティス](https://cloud.google.com/iam/docs/resource-hierarchy-access-control?hl=ja#best_practices)
+
 - **最小権限の原則** （より細かいロールで必要最低限の権限のみ付与する）に従って Cloud IAM のロールを付与する
 - **事前定義ロール** を使用する（適切な事前定義ロールがない場合のみ **カスタムロール** を使用する）
 - リソースレベルではなく、 **組織またはプロジェクト** レベルでポリシーを設定する
 - 個々のユーザではなく、 **グループ** にロールを付与する
+    - `gcloud iam roles copy` コマンドを利用して既存プロジェクトのロールをグループにコピーして使ったりする
 - ラベルを使って、リソースのアノテーションをつけ、グループ化・フィルタリングを行う
 - 異なる権限を必要とする複数サービスがある場合は、サービス毎に個別のサービスアカウントを作成し、必要な権限のみ付与する
 
-### 3.7. 監査ログ
+### 3.7. [リソースへのアクセス権の付与、変更、取り消し](https://cloud.google.com/iam/docs/granting-changing-revoking-access?hl=ja)
 
-権限管理された上で、オペレーションを監視するログに以下の種類がある。
-
-- 管理アクティビティ監査ログ
-    - リソース構成やメタデータ変更オペレーションが記録される
-    - デフォルトで有効で無効にできない
-- データアクセス監査ログ
-    - リソース構成やメタデータ読み取り API 操作が記録される
-    - デフォルトは無効
-- システムイベント監査ログ
-    - Google システムによって生成される管理アクション
-
-#### 3.7.1. Cloud Logging
-
-Cloud Logging は IAM を使用して Google Cloud リソースのロギングデータへの [アクセス制御](https://cloud.google.com/logging/docs/access-control?hl=ja#permissions_and_roles) を実施する。
-
-- `roles/logging.viewer`（ログビューア）（＝ `roles/viewer` ）
-    - アクセスの透明性ログとデータアクセス監査ログ以外のすべての Logging 機能に対する読み取り専用権限
-- `roles/logging.privateLogViewer`（プライベート ログビューア）
-    - `roles/logging.viewer` に加え、アクセスの透明性ログとデータアクセス監査ログの読み取り権限
-    - このロールは、_Required バケットと _Default バケットにのみ適用される
-- `roles/logging.logWriter`（ログ書き込み）
-    - サービスアカウントに付与して、ログの書き込みに十分な権限のみをアプリケーションに付与できる
-    - ただし、閲覧権限はない
-- `roles/logging.bucketWriter`（ログバケット書き込み）
-    - サービス アカウントに付与すると、ログバケットにログを書き込むための十分な権限を Cloud Logging に付与できる
-    - このロールを特定のバケットに制限するには、IAM 条件を使用する
-- `roles/logging.configWriter`（ログ構成書き込み）は
-    - ログベースの指標、除外、バケット、ビューを作成し、シンクをエクスポートする権限
-    - これらのアクションに Logs Explorer（コンソール）を使用するには、 `roles/logging.viewer` を追加する
-- `roles/logging.admin`（Logging 管理者）
-    - Logging に関連するすべての権限
-- `roles/logging.viewAccessor`（ログ表示アクセス者）
-    - ビュー内のログを読み取るための権限
-    - このロールを特定のバケット内のビューに制限するには、IAM 条件を使用
-- `roles/editor`（プロジェクト編集者）
-    - roles/logging.viewer の権限、ログエントリの書き込み権限、ログの削除権限、ログベースの指標の作成権限が含まれる
-    - この役割では、エクスポート シンクの作成や、アクセスの透明性ログまたはデータアクセス監査ログの読み取りを行うことはできない
-- `roles/owner`（プロジェクト オーナー）
-    - Logging に対する完全アクセス権（アクセスの透明性ログとデータアクセス監査ログ）
+ToDo
 
 ## 4. リソースの管理
 
@@ -320,7 +300,64 @@ version: 1
 gcloud projects add-iam-policy-binding [PROJECT_ID] --member=MEMBER --role=ROLE
 ```
 
-### 4.2. Cloud Monitoring
+## 5. 監視
+
+[Google Cloud のオペレーション スイート](https://cloud.google.com/products/operations?hl=ja)
+
+- Cloud Logging
+    - リアルタイムでログを管理して分析する、大規模なフルマネージドサービス
+    - アプリケーションとシステムのログデータのほか、GKE 環境、VM、Google Cloud サービスからのカスタム ログデータも取り込める
+    - 選択したログを分析でき、アプリケーションのトラブルシューティングが加速する
+- Cloud Monitoring
+    - 組み込みの大規模な指標オブザーバビリティ
+    - クラウドで実行されるアプリケーションのパフォーマンスや稼働時間、全体的な動作状況を確認できる
+    - メトリクス・イベント・メタデータを収集し、チャートやダッシュボードで可視化してアラート管理できる
+
+### 5.1. Cloud Logging
+
+Cloud Logging は IAM を使用して Google Cloud リソースのロギングデータへの [アクセス制御](https://cloud.google.com/logging/docs/access-control?hl=ja#permissions_and_roles) を実施できる。
+
+- `roles/logging.viewer`（ログビューア）（＝ `roles/viewer` ）
+    - アクセスの透明性ログとデータアクセス監査ログ以外のすべての Logging 機能に対する読み取り専用権限
+- `roles/logging.privateLogViewer`（プライベート ログビューア）
+    - `roles/logging.viewer` に加え、アクセスの透明性ログとデータアクセス監査ログの読み取り権限
+    - このロールは、_Required バケットと _Default バケットにのみ適用される
+- `roles/logging.logWriter`（ログ書き込み）
+    - サービスアカウントに付与して、ログの書き込みに十分な権限のみをアプリケーションに付与できる
+    - ただし、閲覧権限はない
+- `roles/logging.bucketWriter`（ログバケット書き込み）
+    - サービス アカウントに付与すると、ログバケットにログを書き込むための十分な権限を Cloud Logging に付与できる
+    - このロールを特定のバケットに制限するには、IAM 条件を使用する
+- `roles/logging.configWriter`（ログ構成書き込み）は
+    - ログベースの指標、除外、バケット、ビューを作成し、シンクをエクスポートする権限
+    - これらのアクションに Logs Explorer（コンソール）を使用するには、 `roles/logging.viewer` を追加する
+- `roles/logging.admin`（Logging 管理者）
+    - Logging に関連するすべての権限
+- `roles/logging.viewAccessor`（ログ表示アクセス者）
+    - ビュー内のログを読み取るための権限
+    - このロールを特定のバケット内のビューに制限するには、IAM 条件を使用
+- `roles/editor`（プロジェクト編集者）
+    - roles/logging.viewer の権限、ログエントリの書き込み権限、ログの削除権限、ログベースの指標の作成権限が含まれる
+    - この役割では、エクスポート シンクの作成や、アクセスの透明性ログまたはデータアクセス監査ログの読み取りを行うことはできない
+- `roles/owner`（プロジェクト オーナー）
+    - Logging に対する完全アクセス権（アクセスの透明性ログとデータアクセス監査ログ）
+
+#### 5.1.1. 監査ログ
+
+権限管理された上で、オペレーションを監視するログに以下の種類がある。（ [Cloud Audit Logs](https://cloud.google.com/logging/docs/audit) ）
+
+- 管理アクティビティ監査ログ
+    - リソース構成やメタデータ変更オペレーションが記録される
+    - デフォルトで有効で無効にできない
+- データアクセス監査ログ
+    - リソース構成やメタデータ読み取り API 操作が記録される
+    - デフォルトは無効
+- システムイベント監査ログ
+    - Google システムによって生成される管理アクション
+- ポリシー拒否監査ログ
+    - セキュリティ ポリシー違反のため Google Cloud サービスがユーザーまたはサービス アカウントへのアクセスを拒否したときに、ポリシー拒否監査ログを記録する
+
+### 5.2. Cloud Monitoring
 
 - [ワークスペース](https://cloud.google.com/monitoring/workspaces?hl=ja#accounts) は、1 つ以上の Google Cloud プロジェクトまたは AWS アカウントに含まれるリソースをモニタリングするためのツール
     - 各ワークスペースには、Google Cloud プロジェクトや AWS アカウントなど、1～100 個のモニタリング対象プロジェクトを作成できる
@@ -333,8 +370,22 @@ gcloud projects add-iam-policy-binding [PROJECT_ID] --member=MEMBER --role=ROLE
     - 新しい空白の Google Cloud プロジェクトを使用してワークスペースをホストしてから、モニタリングするプロジェクトと AWS アカウントをワークスペースに追加するのがよい
         - ホスト プロジェクトと Workspace の名前を自由に選択でき、ワークスペース間でモニタリング対象プロジェクトを柔軟に移動できる
 
+## 6. コスト管理
 
-## 5. Google Cloud サービス
+### 6.1. コスト算出
+
+[Google Cloud Pricing Calculator](https://cloud.google.com/products/calculator/?hl=ja) で各サービスに適した算出が可能。  
+ただし、 BigQuery など一部特殊なものもある。  
+[Cloud Billing データを BigQuery にエクスポートする](https://cloud.google.com/billing/docs/how-to/export-data-bigquery?hl=ja#differences_between_exported_data_and_invoices)
+
+### 6.2. 請求
+
+- プロジェクトの請求設定の変更
+    - https://cloud.google.com/billing/docs/how-to/modify-project
+- 課金のコンセプト
+    - https://cloud.google.com/billing/docs/concepts?hl=ja#billing_account
+
+## 7. Google Cloud サービス
 
 Cloud Console から Google Cloud が提供するサービスを利用することができ、以下のカテゴリで構成される。（[詳細](https://cloud.google.com/docs/overview/cloud-platform-services#top_of_page)）
 
@@ -345,4 +396,13 @@ Cloud Console から Google Cloud が提供するサービスを利用するこ�
 - ビッグデータ
 - 機械学習
 
-[プロダクトとサービスの一覧](https://cloud.google.com/products?hl=ja)
+- [プロダクトとサービスの一覧](https://cloud.google.com/products?hl=ja)
+- [AWS/Azure/GCPサービス比較 2021.04](https://qiita.com/hayao_k/items/906ac1fba9e239e08ae8)
+
+以下、他ページに現状整理し辛いサービスを記載する。
+
+### Cloud Deployment Manager
+
+AWS でいう CloudFormation 。  
+単一の API に対応した **リソース** とそのリソースをまとめた **デプロイメント** などで構成される。  
+`gcloud deployment-manager deployments` コマンドでデプロイメントを管理し、 `gcloud deployment-manager resouces` コマンドでデプロイメントに含まれるリソースを管理する。
