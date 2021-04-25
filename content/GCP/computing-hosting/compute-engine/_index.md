@@ -97,19 +97,20 @@ $ gcloud compute instance-groups managed create [インスタンスグループ�
     --region=[リージョン名] \ # リージョン（マルチゾーン） MIG になる
 ```
 
-- [クールダウン期間](https://cloud.google.com/compute/docs/autoscaler?hl=ja#cool_down_period) （初期化期間）
-    - 新しく作成されたインスタンスを自動スケーリングの判断に含めない時間
-    - スケールアップを遅らせ、必要以上に多くのインスタンスが作成されないように設定する（アプリの初期化時間をテストすることを推奨）
-    - これを適切に設定しないと永遠にスケールされてしまう、、、
-- [安定化期間](https://cloud.google.com/compute/docs/autoscaler?hl=ja#stabilization_period)
-    - オートスケーラは直近(1分ではなく)10分間におけるピーク負荷に基づいてターゲットサイズを計算
-    - ピーク負荷後のスケールダウンに10分の余裕を持たせることで、頻繁なスケールアップ/ダウンの繰り返しを回避する
-    - この 10 分を安定化期間という
-- 初期遅延
-    - 自動修復のためのヘルスチェックが新しく作成したインスタンスを対象にしない時間
-    - 初期化完了前にUnhealthyと判断され、無駄な再作成を防ぐ目的で設定する
-- [オートスケーラーによる判断の理解](https://cloud.google.com/compute/docs/autoscaler/understanding-autoscaler-decisions?hl=ja)
-- [ヘルスチェックと自動修復の設定](https://cloud.google.com/compute/docs/instance-groups/autohealing-instances-in-migs?hl=ja)
+- 自動スケール（スケールイン・アウト）
+    - [クールダウン期間](https://cloud.google.com/compute/docs/autoscaler?hl=ja#cool_down_period) （初期化期間）
+        - 新しく作成されたインスタンスを自動スケーリングの判断に含めない時間
+        - インスタンスが起動しても、サービスが起動していなければヘルスチェック NG になるため、このご検知を発生させないために設定（アプリの初期化時間をテストすることを推奨）
+        - スケールアップの判定を遅らせ、必要以上に多くのインスタンスが作成されないようにするために設定する
+    - [安定化期間](https://cloud.google.com/compute/docs/autoscaler?hl=ja#stabilization_period)
+        - スケールインの判定のため、オートスケーラは直近10分間におけるピーク負荷に基づいてターゲットサイズを計算する（この 10 分を安定化期間という）
+        - ピーク負荷後のスケールダウンに10分の余裕を持たせることで、頻繁なスケールアップ/ダウンの繰り返しを回避する
+    - [オートスケーラーによる判断の理解](https://cloud.google.com/compute/docs/autoscaler/understanding-autoscaler-decisions?hl=ja)
+- ヘルスチェック（自動修復のための）
+    - 初期遅延
+        - 自動修復のためのヘルスチェックが新しく作成したインスタンスを対象にしない時間
+        - 初期化完了前にUnhealthyと判断され、無駄な再作成を防ぐ目的で設定する
+    - [ヘルスチェックと自動修復の設定](https://cloud.google.com/compute/docs/instance-groups/autohealing-instances-in-migs?hl=ja)
 
 ### 1.2. マシンタイプ
 
@@ -184,7 +185,7 @@ coreos-stable-1911-3-0-v20181106  coreos-cloud  coreos-stable              READY
 ### 1.5. スナップショット
 
 - イメージより低コストで保存でき、バックアップに適する
-- ディスクデータを複製できる点でイメージと似ているが、インスタンステンプレートからは起動できない
+- ディスクデータを複製できる点でイメージと似ているが、 **インスタンステンプレートからは起動できない**
 
 ### 1.6. ゲスト環境
 
@@ -304,8 +305,8 @@ INSTANCE_NAME  us-central1-c  n1-standard-2               10.128.0.3   34.70.76.
 なお、プロジェクト毎に `default` という名前のデフォルト VPC ネットワークが作成されており、ネットワークの詳細を指定せずに VM を作成すると、デフォルト VPC ネットワークと同じリージョンにあるサブネットにインスタンスが作成される。  
 以下のオプションを指定することで、対象のネットワークにインスタンスが作成される。
 
-- `--subnet=SUBNET_NAME`: サブネットの名前。ネットワークは指定したサブネットから推測される。
-- `--zone=ZONE_NAME`: VM を作成するゾーン（ `europe-west1-b` など）。リージョンはこのゾーンから推測される。
+- `--subnet=SUBNET_NAME`: サブネットの名前。 VPC は指定したサブネットから推測される。
+- `--zone=ZONE_NAME`: VM を作成するゾーン（ `europe-west1-b` など）。リージョンは指定したゾーンから推測される。
 
 また、以下のようなオプションもある。
 
@@ -438,14 +439,14 @@ $ sudo su -
 
 ちなみに Linux は SSH 、 Windows は RDP で接続する。
 
-## 6. Cloud Monitoring
+## 6. Cloud Monitoring / Cloud Logging 連携
 
 Cloud Monitoring では、クラウドで実行されるアプリケーションのパフォーマンスや稼働時間、全体的な動作状況を確認できる。  
 Google Cloud、Amazon Web Services、ホストされた稼働時間プローブ、アプリケーション インストゥルメンテーション、よく使われるさまざまなアプリケーション コンポーネント（Cassandra、Nginx、Apache ウェブサーバー、Elasticsearch など）から、指標、イベント、メタデータを収集する。  
 これらのデータを取り込んでダッシュボード、グラフ、アラートを介して分析情報を提供する。  
 Cloud Monitoring のアラート機能を Slack、PagerDuty、HipChat、Campfire などに組み込むこともできる。
 
-インスタンスから情報を収集する VM に [Monitoring エージェント](https://cloud.google.com/monitoring/agent) と Logging エージェントをインストールすることで収集可能となる。  
+インスタンスから情報を収集する VM に [Monitoring エージェント](https://cloud.google.com/monitoring/agent) と [Logging エージェント](https://cloud.google.com/logging/docs/agent?hl=ja) をインストールすることで収集可能となる。  
 対象の VM インスタンスに SSH した後、以下のコマンドでインストールする。
 
 ```bash
@@ -464,10 +465,10 @@ $ sudo apt-get install google-fluentd
 
 また、Monitoring ワークスペースを作成する必要がある。
 
-Cloud Console で、ナビゲーション メニュー > [モニタリング] をクリックすると、ワークスペースがプロビジョニングされる。  
-左側のメニューで [稼働時間チェック] をクリックし、[稼働時間チェックの作成] をクリック。  
-左側のメニューで [アラート]、[Create Policy] の順にクリック。  
-ナビゲーション メニュー > [Logging] > [ログビューア] 。
+- Cloud Console で、ナビゲーション メニュー > [モニタリング] をクリックすると、ワークスペースがプロビジョニングされる
+- 左側のメニューで [稼働時間チェック] をクリックし、[稼働時間チェックの作成] をクリック
+- 左側のメニューで [アラート]、[Create Policy] の順にクリック
+- ナビゲーション メニュー > [Logging] > [ログビューア]
 
 ## 7. サービスアカウント
 
@@ -541,7 +542,7 @@ $ apt-get install apache2 -y
 $ service apache2 restart
 ```
 
-## 8.2. Apache の VM インスタンスを作成（起動スクリプト利用）
+### 8.2. Apache の VM インスタンスを作成（起動スクリプト利用）
 
 ```bash
 # ゾーンの設定

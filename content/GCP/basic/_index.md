@@ -257,6 +257,9 @@ Identity and Access Management API または gcloud コマンドライン ツー
 - RESOURCE：対象リソースの名前。
 - MEMBER：ロールを付与する対象となるメンバの識別子。 `member-type:id` の形式。（例： `user:my-user@example.com` ）
 - ROLE_ID：ロールの名前。（ [基本ロール](https://cloud.google.com/iam/docs/understanding-roles?hl=ja#basic) 、 [事前定義ロール](https://cloud.google.com/iam/docs/understanding-roles?hl=ja#predefined_roles) ）
+- FORMAT：json か yaml 。
+- FILE_PATH：ファイルのパス。
+- PROJECT_ID：プロジェクト ID 。
 
 #### 3.6.1. メンバにロールを付与する
 
@@ -304,10 +307,33 @@ $ gcloud projects get-iam-policy my-project --format json > ~/policy.json
 }
 ```
 
+例の通り、ロールとそのロールが付与されたメンバの配列で表現される。
+
 #### 3.6.4. ポリシーの設定
 
+`gcloud projects get-iam-policy` で取得したポリシーの JSON/YAML を編集するなどして、以下のコマンドでポリシーを更新することができる。
+
 ```bash
-$ gcloud projects set-iam-policy project-id filepath
+$ gcloud projects set-iam-policy PROJECT_ID FILE_PATH
+
+# ファイル例
+{
+  "bindings": [
+    {
+      "role": "roles/owner",
+      "members": [
+        "user:fatima@example.com"
+      ]
+    },
+    {
+      "role": "roles/editor",
+      "members": [
+        "serviceAccount:service-account-13@appspot.gserviceaccount.com",
+        "user:wei@example.com"
+      ]
+    }
+  ]
+}
 ```
 
 ## 4. リソースの管理
@@ -418,8 +444,8 @@ Cloud Logging は IAM を使用して Google Cloud リソースのロギング�
 - [ワークスペース](https://cloud.google.com/monitoring/workspaces?hl=ja#accounts) は、1 つ以上の Google Cloud プロジェクトまたは AWS アカウントに含まれるリソースをモニタリングするためのツール
     - 各ワークスペースには、Google Cloud プロジェクトや AWS アカウントなど、1～100 個のモニタリング対象プロジェクトを作成できる
     - ワークスペースの数に制限はありませんが、Google CloudプロジェクトとAWSアカウントを複数のワークスペースでモニタリングすることはできない
-- ホストプロジェクト
-    - すべてのワークスペースには、ホスト プロジェクトがある
+- **ホストプロジェクト**
+    - すべてのワークスペースには、ホストプロジェクトがある
     - ワークスペースの作成に使用した Google Cloud プロジェクトが、ワークスペースのホスト プロジェクト
 - モニタリング対象プロジェクト
     - ホストプロジェクトでワークスペースを作成すると、Google Cloud プロジェクトと AWS アカウントが追加できるようになる
@@ -432,7 +458,7 @@ Cloud Logging は IAM を使用して Google Cloud リソースのロギング�
 
 [Google Cloud Pricing Calculator](https://cloud.google.com/products/calculator/?hl=ja) で各サービスに適した算出が可能。  
 ただし、 BigQuery など一部特殊なものもある。  
-[Cloud Billing データを BigQuery にエクスポートする](https://cloud.google.com/billing/docs/how-to/export-data-bigquery?hl=ja#differences_between_exported_data_and_invoices)
+請求データの分析は [Cloud Billing データを BigQuery にエクスポートする](https://cloud.google.com/billing/docs/how-to/export-data-bigquery?hl=ja#differences_between_exported_data_and_invoices) を参照。
 
 ### 6.2. 請求
 

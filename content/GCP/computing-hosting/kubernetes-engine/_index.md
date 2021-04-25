@@ -21,6 +21,8 @@ weight: 2
 
 ### 3.1. コンセプト
 
+ToDo
+
 ### 3.2. クラスタ作成
 
 デフォルトのコンピューティング ゾーンを設定する。
@@ -98,7 +100,7 @@ Deleted [https://container.googleapis.com/v1/projects/qwiklabs-gcp-01-47d564cd39
 
 #### 3.3.1. Deployment オブジェクトの詳細
 
-`kubectl explain` コマンドを使用すると、Deployment などのオブジェクトに関する情報が取得できる。
+`kubectl explain` コマンドを使用すると、Deployment などのオブジェクトの設定項目に関する情報が取得できる。
 
 ```bash
 $ kubectl explain deployment
@@ -277,7 +279,7 @@ REVISION  CHANGE-CAUSE
 2         <none>
 3         <none>
 
-# マニフェストを確認（2.0.0 -> 1.0.0 にもどってる
+# マニフェストを確認（2.0.0 -> 1.0.0 に戻ってる）
 $ kubectl edit deployment hello
 
 # 全ての Pod がもどっているか確認
@@ -763,7 +765,24 @@ Cloud Platform Console の Cloud モニタリング（ナビゲーション メ�
 
 ## 5. 監視
 
-GKE 用の監視機能がある。
-
 - GKE 用 Google Cloud オペレーション スイートの概要
     - https://cloud.google.com/stackdriver/docs/solutions/gke?hl=ja#skm-howto
+
+GKEには、Cloud Monitoring および Cloud Logging との統合機能が含まれている。（ [Prometheus の使用](https://cloud.google.com/stackdriver/docs/solutions/gke/prometheus?hl=ja) はこちらを参照）  
+`gcloud container clusters create` コマンドでクラスタを作成した場合、デフォルトで有効になっているが、既存のクラスタで有効にする場合は以下のコマンドを実行する。
+
+```bash
+$ gcloud container clusters update [CLUSTER_NAME] --enable-stackdriver-kubernetes
+# ちなみに削除は「-no-enable-stackdriver-kubernetes」オプション
+```
+
+なお、現在はベータ版であるが、「 `--enable-logging-monitoring-system-only` 」オプションでシステムログのみ収集可能になる。（デフォルトは全ログ）  
+システムログとは以下を指す。
+
+- 名前空間 `kube-system` 、 `istio-system` 、 `knative-serving` 、 `gke-system` 、 `config-management-system`  で実行中のすべての Pod
+- コンテナ化されていない重要なサービス:  `docker/containerd` ランタイム、 `kubelet` 、 `kubelet-monitor` 、 `node-problem-detector` 、 `kube-container-runtime-monitor`
+- ノードのシリアルポート出力（VM インスタンスのメタデータ `serial-port-logging-enable` が true に設定されている場合）
+
+アプリケーションログは、 コンテナが STDOUT と STDERR に書き込まれたワークロードのログを収集する。
+
+[GKE ログの管理](http://cloud.google.com/stackdriver/docs/solutions/gke/managing-logs?hl=ja)
