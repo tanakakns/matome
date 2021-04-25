@@ -168,7 +168,7 @@ Cloud Console の 「サイドメニュー」->「 IAM と管理」->「 IAM 」
 - サービスアカウント
     - アプリケーションやサーバのための ID
     - サービスアカウント事態もリソースで、人が「サービスアカウントとして実行」もできる
-    - サービスアカウントにうよって使われるキーは自動的に管理される
+    - サービスアカウントによって使われるキーは自動的に管理される
     - ユーザがキーを作成・ダウンロードすることも可能
     - `gcloud iam service-accounts create SERVICE_ACCOUNT_ID` でサービスアカウントを作成する
     - サービスアカウントには **アクセススコープ** を設定できる（以下、例）
@@ -191,8 +191,6 @@ compute.instance.delete
 compute.instance.start
 compute.instance.setMachineType
 ```
-
-### 3.4. ロールの種類/「どういう操作を」
 
 ロールには以下の種類がある。（ [詳細](https://cloud.google.com/iam/docs/understanding-roles/#primitive%5C_roles) ）
 
@@ -218,9 +216,9 @@ Identity and Access Management API または gcloud コマンドライン ツー
 事前定義ロールおよびカスタムロールのメタデータを確認する場合、 `gcloud iam roles describe ROLE_ID` コマンドで確認する。  
 [事前定義ロールの一覧](https://cloud.google.com/iam/docs/understanding-roles?hl=ja#predefined_roles)
 
-### 3.5. リソース階層/「何に対して」
+### 3.4. リソース階層/「何に対して」
 
-リソースは「 **組織 > フォルダ > プロジェクト > リソース** 」のような階層構造にまとめることができる。
+[リソース](https://cloud.google.com/billing/docs/concepts#resource_overview) は「 **組織 > フォルダ > プロジェクト > リソース** 」のような階層構造に **まとめる** ことができる。
 
 - 組織
     - Google Cloud リソース階層のルートノード
@@ -236,9 +234,9 @@ Identity and Access Management API または gcloud コマンドライン ツー
 - リソース
     - （省略）
 
-例えば、「アカウント A に compute.instances.get ロールを 組織 X に対して付与」すると、「アカウント A は 組織 X に含まれる全てのフォルダの全てのプロジェクトの VM インスタンス情報を取得できる」ようになる。
+例えば、「アカウント A に compute.instances.get 権限を 組織 X に対して付与」すると、「アカウント A は 組織 X に含まれる全てのフォルダの全てのプロジェクトの VM インスタンス情報を取得できる」ようになる。
 
-### 3.6. アクセス制御のベストプラクティス
+### 3.5. アクセス制御のベストプラクティス
 
 [ベストプラクティス](https://cloud.google.com/iam/docs/resource-hierarchy-access-control?hl=ja#best_practices)
 
@@ -250,9 +248,67 @@ Identity and Access Management API または gcloud コマンドライン ツー
 - ラベルを使って、リソースのアノテーションをつけ、グループ化・フィルタリングを行う
 - 異なる権限を必要とする複数サービスがある場合は、サービス毎に個別のサービスアカウントを作成し、必要な権限のみ付与する
 
-### 3.7. [リソースへのアクセス権の付与、変更、取り消し](https://cloud.google.com/iam/docs/granting-changing-revoking-access?hl=ja)
+### 3.6. [リソースへのアクセス権の付与、変更、取り消し](https://cloud.google.com/iam/docs/granting-changing-revoking-access?hl=ja)
 
-ToDo
+`gcloud` コマンドによるメンバのリソースに対するロールの付与について記載する。  
+以降のパラメータについては下記の通り。
+
+- GROUP： `projects` または `organizations` 。
+- RESOURCE：対象リソースの名前。
+- MEMBER：ロールを付与する対象となるメンバの識別子。 `member-type:id` の形式。（例： `user:my-user@example.com` ）
+- ROLE_ID：ロールの名前。（ [基本ロール](https://cloud.google.com/iam/docs/understanding-roles?hl=ja#basic) 、 [事前定義ロール](https://cloud.google.com/iam/docs/understanding-roles?hl=ja#predefined_roles) ）
+
+#### 3.6.1. メンバにロールを付与する
+
+```bash
+$ gcloud GROUP add-iam-policy-binding RESOURCE --member=MEMBER --role=ROLE_ID
+
+# 例：プロジェクト my-project のユーザー my-user@example.com に閲覧者の役割を付与する
+$ gcloud projects add-iam-policy-binding my-project --member=user:my-user@example.com --role=roles/viewer
+```
+
+#### 3.6.2. メンバからロールを削除する
+
+```bash
+$ gcloud GROUP remove-iam-policy-binding RESOURCE --member=MEMBER --role=ROLE_ID
+
+# 例：プロジェクト my-project のユーザー my-user@example.com から閲覧者のロールを取り消す
+$ gcloud projects remove-iam-policy-binding my-project --member=user:my-user@example.com --role=roles/viewer
+```
+
+#### 3.6.3. ポリシーの取得
+
+```bash
+$ gcloud projects get-iam-policy PROJECT_ID --format=FORMAT > FILE_PATH
+
+# 例
+$ gcloud projects get-iam-policy my-project --format json > ~/policy.json
+{
+  "bindings": [
+    {
+      "role": "roles/owner",
+      "members": [
+        "user:fatima@example.com"
+      ]
+    },
+    {
+      "role": "roles/editor",
+      "members": [
+        "serviceAccount:service-account-13@appspot.gserviceaccount.com",
+        "user:wei@example.com"
+      ]
+    }
+  ],
+  "etag": "BwUjMhCsNvY=",
+  "version": 1
+}
+```
+
+#### 3.6.4. ポリシーの設定
+
+```bash
+$ gcloud projects set-iam-policy project-id filepath
+```
 
 ## 4. リソースの管理
 
@@ -380,10 +436,10 @@ Cloud Logging は IAM を使用して Google Cloud リソースのロギング�
 
 ### 6.2. 請求
 
-- プロジェクトの請求設定の変更
-    - https://cloud.google.com/billing/docs/how-to/modify-project
-- 課金のコンセプト
-    - https://cloud.google.com/billing/docs/concepts?hl=ja#billing_account
+請求先アカウントのリンク（紐付け）を更新するためには、 **請求先アカウント管理者** および **プロジェクト支払い管理者** の権限が必要になる。
+
+- [Cloud Billing のコンセプト](https://cloud.google.com/billing/docs/concepts?hl=ja#billing_account)
+- [プロジェクトの請求設定の変更](https://cloud.google.com/billing/docs/how-to/modify-project)
 
 ## 7. Google Cloud サービス
 
