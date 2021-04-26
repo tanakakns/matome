@@ -14,7 +14,7 @@ weight: 6
 - [Google Cloud データベース](https://cloud.google.com/products/databases)
     - それぞれの違いなど
 - リレーショナル（ SQL ）
-    - [Cloud SQL](https://cloud.google.com/sql/docs) ：小規模、水平スケーラビリティ不要
+    - [Cloud SQL](https://cloud.google.com/sql/docs) ：小規模、水平スケーラビリティ不可
     - [Cloud Spanner](https://cloud.google.com/spanner/docs)　：大規模、水平スケーラビリティ、グローバル分散
     - [Bare Metal Solution](https://cloud.google.com/bare-metal/docs)
 - Key-Value
