@@ -9,6 +9,8 @@ subpage: false
 weight: 1
 ---
 
+<!--more-->
+
 **Compute Engine** は Google のインフラストラクチャ上に仮想マシンを構築するサービス。
 
 1. [コンセプト](#1-コンセプト)
@@ -19,8 +21,6 @@ weight: 1
 6. [Cloud Monitoring](#4-cloud-monitoring)
 7. サービスアカウント
 8. コマンド整理
-
-<!--more-->
 
 - [公式ガイド](https://cloud.google.com/compute/docs/how-to?hl=ja)
 - [Compute Engine のリージョン選択に関するベスト プラクティス](https://cloud.google.com/solutions/best-practices-compute-engine-region-selection?hl=ja)

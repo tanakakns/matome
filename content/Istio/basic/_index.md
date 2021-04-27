@@ -22,7 +22,7 @@ weight: 1
 非常に大規模なハイブリッド・マルチクラウドにおいて、DevOpsチームのオペレータはマイクロサービスを展開・管理する。  
 Istio は **サービスメッシュ** によりオペレータにかかる負荷を軽減し、マイクロサービス間接続・保護・制御・監視をサポートする統一された方法を提供する。
 
-<img src="https://istio.io/latest/docs/ops/deployment/architecture/arch.svg" />
+![arch](https://istio.io/latest/docs/ops/deployment/architecture/arch.svg)
 
 [参考](https://www.1915keke.com/entry/2018/10/06/042621)
 

@@ -9,13 +9,13 @@ subpage: false
 weight: 3
 ---
 
+<!--more-->
+
 **App Engine** は Google の PaaS 。
 
 1. [コンセプト](#1-コンセプト)
 2. [App Engine の作成](#2-app-engine-の作成)
 3. [スケールリングタイプ](#3-スケーリングタイプ)
-
-<!--more-->
 
 ## 1. コンセプト
 

@@ -192,7 +192,7 @@ Cloud Load Balancing の負荷分散の種類には以下がある。
 
 選択方法としては以下のようになる。
 
-<img src="img/choose-lb.svg" />
+![choose-lb](./img/choose-lb.svg)
 
 ネットワークロードバランサ と HTTP(S) ロードバランサ の特徴は以下。
 
@@ -214,7 +214,7 @@ Cloud Load Balancing の負荷分散の種類には以下がある。
 
 HTTP(S) ロードバランサ の構成イメージは以下。
 
-<img src="img/https-load-balancer-diagram.svg" />
+![https-load-balancer-diagram](./img/https-load-balancer-diagram.svg)
 
 ### 3.2. 作成
 

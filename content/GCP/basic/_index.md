@@ -165,6 +165,8 @@ Cloud Console の 「サイドメニュー」->「 IAM と管理」->「 IAM 」
 |G Suite ドメイン|組織のインターネットドメイン名| `example.com` |
 |Cloud Identity ドメイン|組織のインターネットドメイン名（G Suite の機能にはアクセスできない）| `example.com` |
 
+![google_account](./img/google_account.png)
+
 - サービスアカウント
     - アプリケーションやサーバのための ID
     - サービスアカウント事態もリソースで、人が「サービスアカウントとして実行」もできる
