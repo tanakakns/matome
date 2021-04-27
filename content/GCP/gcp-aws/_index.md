@@ -1,15 +1,19 @@
 ---
-title: "GCP と AWS の違い"
+title: "GCP と AWS の比較"
 date: 2021-01-30T15:26:01+09:00
 draft: false
 hide:
 - toc
 - nextpage
 subpage: false
-weight: 2
+weight: 1
 ---
 
 <!--more-->
+
+[AWS/Azure/GCPサービス比較 2021.04](https://qiita.com/hayao_k/items/906ac1fba9e239e08ae8)
+
+## 違い
 
 - IAM
     - Cloud IAMはGoogleアカウントに対してプロジェクト毎にロールを割り当てる。（AWSのように管理者が独自のIAMアカウントを作って管理するわけではない）

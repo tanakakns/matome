@@ -9,11 +9,11 @@ subpage: false
 weight: 7
 ---
 
+<!--more-->
+
 1. コンセプト
 2. VPC
 3. Cloud Load Balancing
-
-<!--more-->
 
 - [Google Cloud ネットワーキング プロダクト](https://cloud.google.com/products/networking)
 - 接続

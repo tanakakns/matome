@@ -1,13 +1,15 @@
 ---
-title: "入門"
+title: "アクセス制御"
 date: 2021-01-30T15:26:01+09:00
 draft: false
 hide:
 - toc
 - nextpage
 subpage: false
-weight: 1
+weight: 3
 ---
+
+<!--more-->
 
 1. [コンセプト](#1-コンセプト)
 2. [ツール](#2-ツール)
@@ -16,8 +18,6 @@ weight: 1
 5. 監視
 6. コスト管理
 7. [Google Cloud サービス](#4-google-cloud-サービス)
-
-<!--more-->
 
 ## 1. コンセプト
 
@@ -44,102 +44,17 @@ weight: 1
     - 複数のプロジェクトを束ねて管理するには [組織](https://cloud.google.com/resource-manager/docs/creating-managing-organization?hl=ja) を使う
     - プロジェクトは **プロジェクト名** （任意のプロジェクト表示名）、 **プロジェクトID** （カスタマイズ可能な識別子）、 **プロジェクト番号** （GCPから割り当てられる識別子）からなる
 
-## 2. ツール
-
-### 2.1. Cloud Console
-
-[Cloud Console](https://cloud.google.com/cloud-console/)は、Google Cloud の開発ツールの中核であるウェブコンソール。  
-ログインするにはユーザー名とパスワードが必要で、後述の[Cloud Identity and Access Management（Cloud IAM）](https://cloud.google.com/iam/)によりアクセス権限（ロール）管理される。
-
-### 2.2. Google Cloud SDK
-
-[Google Cloud SDK](https://cloud.google.com/sdk/docs) は、GCP にホスティングされているリソースとアプリケーションの管理に使用できる一連のツール。  
-以下からなる。
-
-- gcloud CLI： Google Cloud APIs の操作をコマンドラインで実施できる
-- クライアントライブラリ：各プログラミング言語のクライアントライブラリ
-- プロダクト固有のコマンドラインツール
-    - `gsutil` ： Cloud Storage
-    - `bq` ： BigQuery
-    - `kubectl` ： k8s
-
-#### 2.2.1. gcloud
-
-以下のように利用できる CLI ツール。
-
-```bash
-$ gcloud GROUP COMMAND OPTIONS
-```
-
-GROUP は多段になっており、  `gcloud compute images list` （ `compute image` が GROUP で `list` が COMMAND ）のように 2 コ以上続くこともある。  
-COMMAND は GROUP によって異なるが、共通的なものに以下がある。
-
-|COMMAND|description|
-|:---|:---|
-|list|リソース一覧を表示|
-|describe|指定したリソースの詳細を表示|
-|create|指定したリソースを作成|
-|update|指定したリソースを更新|
-|delete|指定したリソースを削除|
-
-たとえば、有効なアカウント名の一覧を取得するコマンドは以下。（ GROUP が 1 段の例）
-
-```bash
-$ gcloud auth list
-
-Credentialed Accounts
-ACTIVE  ACCOUNT
-*       student-00-918550b6c355@qwiklabs.net
-To set the active account, run:
-    $ gcloud config set account `ACCOUNT`
-```
-
-たとえば、プロジェクト ID の一覧を取得するコマンドは以下。（ GROUP が 2 段の例）
-
-```bash
-$ gcloud config list project
-
-[core]
-project = qwiklabs-gcp-44776a13dea667a6
-```
-
-- [gcloud コマンドライン ツールの概要](https://cloud.google.com/sdk/gcloud)
-- [gcloud リファレンス](https://cloud.google.com/sdk/gcloud/reference/?hl=ja)
-
-### 2.3. Cloud Shell
-
-[Cloud Shell](https://cloud.google.com/shell/docs/features) はブラウザで機能するコマンド実行環境。  
-その実態は Debian ベースの仮想マシンで、さまざまな開発ツール（gcloud、git など）や、永続的な 5 GB のホーム ディレクトリが用意されている。  
-ターミナルにコマンドを入力して、Google Cloud プロジェクトのリソースやサービスを管理できる。  
-Cloud Shell を使用すると、Cloud Console を離れずに認証済みで最新のすべてのシェルコマンドを実行できる。  
-Google Cloud Console のタイトルバーで、「Cloud Shell をアクティブにする」 をクリックすることで利用できる。  
-Cloud Shell には固有のコマンドラインツールがあらかじめ実装されおり、メインの Google Cloud ツールキットは [gcloud](https://cloud.google.com/sdk/gcloud/) で、リソース管理やユーザー認証など、プラットフォーム上のさまざまなタスクに使用される。  
-あらかじめインストールされてたツールキットのほかにも、Unix の標準コマンドや、nano などのテキスト エディタも備わっている。
-
-なお、Cloud Shell ホームディレクトリ（ `$HOME` ）の内容は、複数のプロジェクトおよびすべての Cloud Shell セッション間で保持され、仮想マシンを終了して再起動した後でも消えずに残りる。
-
-### 2.4. API とサービス
-
-Google Cloud API は、ビジネス管理から機械学習にまで及ぶさまざまな分野の API が 200 以上用意されており、サービスと同様に、すべて Google Cloud プロジェクト / アプリケーションと簡単に統合できる。  
-[API 設計ガイド](https://cloud.google.com/apis/design/) で説明されているリソース指向の設計原則が適用されている。  
-なお、 Cloud API を利用する際は、各自で有効に設定する必要がある。（サイドメニュー「API とサービス」 -> 「ライブラリ」から APIを検索して「有効にする」）  
-以下のコマンドでも API の有効化が可能。
-
-```bash
-# API 有効化
-$ gloucd services enable SERVICE_NAME
-
-# 現在のプロジェクトで有効になっているAPIの一覧を表示
-gcloud services list
-# 現在のプロジェクトで有効にできるサービスの一覧を表示
-gcloud services list --available
-```
-
-なお、アカウントに対して、いかにロールで権限を与えようが、 **API を有効化しないと利用できない** ことに注意。
-
-- [Google APIs Explorer](https://developers.google.com/apis-explorer/#p/)
-
 ## 3. リソース階層とアクセス制御
+
+- ToDo  
+- 「権限管理」くらいのタイトルで一つの記事に切り出して際整理が必要。
+- ここが全て：https://cloud.google.com/iam/docs/overview?hl=ja
+- 理解の補足
+    - [GCP の IAM をおさらいしよう](https://medium.com/google-cloud-jp/gcp-iam-beginner-b2e1ef7ad9c2)
+    - [Google Cloud のアクセス管理をおさらいしよう 2020アップデート版](https://medium.com/google-cloud-jp/google-cloud-access-management-40963bea0dfc)
+- 関係無いけど読むといいかも記事
+    - [Google Cloud Japan Customer Engineer Advent Calendar 2020](https://medium.com/google-cloud-jp/google-cloud-japan-customer-engineer-advent-calendar-2020-1c78e07e1871)
+    - [Google Cloud Japan Customer Engineer Advent Calendar 2019](https://medium.com/google-cloud-jp/gcp-ce-advent-calendar-2019-1aeb8ebda7b1)
 
 ### 3.1. Cloud Identity and Access Management（Cloud IAM）
 
@@ -159,11 +74,16 @@ Cloud Console の 「サイドメニュー」->「 IAM と管理」->「 IAM 」
 
 |主体|内容|具体例|
 |:---|:---|:---|
-|Google アカウント|Google アカウントに関連づけられているメールアドレス| `@gmail.com` やその他ドメインのメールアドレス|
+|Google アカウント|Gmail アカウントや Google アカウントに関連づけられているメールアドレス| `@gmail.com` やその他ドメインのメールアドレス|
 |Google グループ|Google アカウントとサービスアカウントの名前付きコレクション|グループ固有メールアドレス|
 |サービスアカウント|個々のエンドユーザではなく、アプリケーションのアカウント| `[サービスアカウント]@[プロジェクトID].iam.gserviceaccount.com` |
 |G Suite ドメイン|組織のインターネットドメイン名| `example.com` |
 |Cloud Identity ドメイン|組織のインターネットドメイン名（G Suite の機能にはアクセスできない）| `example.com` |
+
+**Google アカウント** は **個人管理** と **企業管理** のものがある。  
+前者は個人の Gmail アカウントや（こんなことができると知らない人も多いが）任意のメールアドレスを個人利用の Google アカウントとして登録したもの。  
+後者は会社が Google Workspace （旧 G Suite）を導入している場合、そのユーザアカウントをそのまま利用できる。社外のユーザが GCP 環境にアクセスする場合は Cloud Identity を利用してユーザ管理することもできる。  
+**Google グループ** は単に Google アカウントをグループとしてまとめたもの（なので、説明は割愛する）。
 
 ![google_account](./img/google_account.png)
 
@@ -481,7 +401,6 @@ Cloud Console から Google Cloud が提供するサービスを利用するこ�
 - 機械学習
 
 - [プロダクトとサービスの一覧](https://cloud.google.com/products?hl=ja)
-- [AWS/Azure/GCPサービス比較 2021.04](https://qiita.com/hayao_k/items/906ac1fba9e239e08ae8)
 
 以下、他ページに現状整理し辛いサービスを記載する。
 
