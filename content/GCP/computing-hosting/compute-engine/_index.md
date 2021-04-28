@@ -17,10 +17,11 @@ weight: 1
 2. [インスタンス作成](#2-インスタンス作成)
 3. [ディスクの作成とアタッチ](#3-ディスクの作成とアタッチ)
 4. [ファイアウォールルールの作成](#4-ファイアウォールルールの作成)
-5. [インスタンスへの接続](#3-インスタンスへの接続)
-6. [Cloud Monitoring](#4-cloud-monitoring)
-7. サービスアカウント
-8. コマンド整理
+5. [ネットワークインターフェース](#5-ネットワークインターフェース)
+6. [インスタンスへの接続](#6-インスタンスへの接続)
+7. [Cloud Monitoring / Cloud Logging 連携](#7-cloud-monitoring--cloud-logging-連携)
+8. [サービスアカウント](#8-サービスアカウント)
+9. [ケーススタディ](#9-ケーススタディ)
 
 - [公式ガイド](https://cloud.google.com/compute/docs/how-to?hl=ja)
 - [Compute Engine のリージョン選択に関するベスト プラクティス](https://cloud.google.com/solutions/best-practices-compute-engine-region-selection?hl=ja)
@@ -418,7 +419,24 @@ $ gcloud compute firewall-rules create allow-http \
 $ gcloud compute instances add-tags INSTANCE_NAME --tags=http-server
 ```
 
-## 5. インスタンスへの接続
+## 5. ネットワークインターフェース
+
+ネットワークインターフェースの付与は `gcloud compute instances create` コマンド実行時の [`--network-interface`](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create?hl=ja#--network-interface) オプションで実施できる。  
+`--network-interface` オプションを省略したり、 `--network-interface=''` を指定すると `default` ネットワークに `nic0` が作成される。  
+`--network-interface` オプションを複数指定すると、指定した数だけ、指定した順に `nic0` `nic1` ... が作成される。（ [複数のネットワーク インターフェースを持つインスタンスの作成](https://cloud.google.com/vpc/docs/create-use-multiple-interfaces?hl=ja) ）
+
+```bash
+$  gcloud compute instances create vm1 --machine-type=n1-standard-4 \
+    --network-interface='' \
+    --network-interface=network=net1,subnet=net1-subnet-a,private-network-ip=10.128.0.2,address=my-external-address \
+    --network-interface=network=net2,subnet=net2-subnet-b,private-network-ip=10.129.0.2,no-address
+```
+
+- `private-network-ip` を省略すると、エフェメラル（動的） 内部 IP が作成される
+- `address` はあらかじめ作成した外部 IP を指定する必要があるが、 `address=''` を指定するとエフェメラル（動的）外部 IP が作成される
+- `address` ではなく `no-address` を指定すると外部 IP は作成されない
+
+## 6. インスタンスへの接続
 
 Cloud Console にて「サイドメニュー」->「Compute Engine」->「 VM インスタンス」と選択し、該当インスタンスのレコードで「 SSH 」をクリックするとポップアップしてターミナルが立ち上がる。  
 もしくは、以下のコマンドを実行する。
@@ -439,7 +457,7 @@ $ sudo su -
 
 ちなみに Linux は SSH 、 Windows は RDP で接続する。
 
-## 6. Cloud Monitoring / Cloud Logging 連携
+## 7. Cloud Monitoring / Cloud Logging 連携
 
 Cloud Monitoring では、クラウドで実行されるアプリケーションのパフォーマンスや稼働時間、全体的な動作状況を確認できる。  
 Google Cloud、Amazon Web Services、ホストされた稼働時間プローブ、アプリケーション インストゥルメンテーション、よく使われるさまざまなアプリケーション コンポーネント（Cassandra、Nginx、Apache ウェブサーバー、Elasticsearch など）から、指標、イベント、メタデータを収集する。  
@@ -470,7 +488,7 @@ $ sudo apt-get install google-fluentd
 - 左側のメニューで [アラート]、[Create Policy] の順にクリック
 - ナビゲーション メニュー > [Logging] > [ログビューア]
 
-## 7. サービスアカウント
+## 8. サービスアカウント
 
 VM インスタンスにサービスアカウントを付与することによってリソースへのアクセス制御を行う。  
 サービスアカウントは以下のように作成する。
@@ -507,9 +525,14 @@ $ gcloud compute instances set-service-account INSTANCE_NAME \
     - このサービス アカウントとして実行するようにインスタンスを構成
     - インスタンスの https://www.googleapis.com/auth/cloud-platform スコープにすべての Google Cloud APIs への完全アクセス権を与えるには、インスタンスの IAM 権限をサービス アカウントの IAM のロールで完全に決定するようにする
 
-## 8. コマンド整理
+## 9. ケーススタディ
 
-### 8.1. Apache の VM インスタンスを作成
+1. [Apache の VM インスタンスを作成](#91-apache-の-vm-インスタンスを作成)
+2. [踏み台経由の RDP](#92-踏み台経由の-rdp)
+
+### 9.1. Apache の VM インスタンスを作成
+
+要件は以下。
 
 - Linux 仮想マシン インスタンスの作成
 - VM インスタンスへの公開アクセスの有効化
@@ -517,7 +540,8 @@ $ gcloud compute instances set-service-account INSTANCE_NAME \
 - サーバーのテスト
 
 ```bash
-# ゾーンの設定
+# リージョン・ゾーンの設定
+$ gcloud config set compute/region us-central1
 $ gcloud config set compute/zone us-central1-a
 
 # インスタンスの作成
@@ -540,19 +564,22 @@ $ sudo su -
 $ apt-get update
 $ apt-get install apache2 -y
 $ service apache2 restart
+
+# 外部 IP に対して curl を実行し、 Apache ページが見れることを確認
 ```
 
-### 8.2. Apache の VM インスタンスを作成（起動スクリプト利用）
+VM インスタンスへログインして Apache の設定するのは面倒なので、メタデータに設定する起動スクリプトを利用するパターンは以下。
 
 ```bash
-# ゾーンの設定
+# リージョン・ゾーンの設定
+$ gcloud config set compute/region us-central1
 $ gcloud config set compute/zone us-central1-a
 
 # Cloud Storage バケットの作成
 $ gsutil mb -c regional -l us-central1 gs://challenge-quest-12345
-# Cloud Console でスクリプトをアップロード
+# Cloud Console でスクリプト resources-install-web.sh をアップロード
 
-# インスタンスの作成
+# インスタンスの作成（メタデータに Cloud Storage 上の起動スクリプトを設定し、Cloud Storage へのアクセススコープも付与）
 $ gcloud compute instances create apache --scopes storage-ro \
   --metadata startup-script-url=gs://challenge-quest-12345/resources-install-web.sh
 
@@ -566,6 +593,8 @@ $ gcloud compute firewall-rules create allow-http \
 
 # インスタンスへタグ追加
 $ gcloud compute instances add-tags apache --tags=http-server
+
+# 外部 IP に対して curl を実行し、 Apache ページが見れることを確認
 ```
 
 ちなみに `resources-install-web.sh` は以下。
@@ -574,4 +603,89 @@ $ gcloud compute instances add-tags apache --tags=http-server
 #!/bin/bash
 apt-get update
 apt-get install -y apache2
+```
+
+### 9.2. 踏み台経由の RDP
+
+要件は以下。
+
+- 環境は `us-central1` リージョン `us-central1-a` ゾーンに構築する
+- `securenetwork` VPC を作成し、 `default` VPC も利用する
+- `securenetwork` VPC の `us-central1` リージョンに `securenetwork-us` サブネットを作成
+- Windows Server 2016 の VM インスタンスを 2 台作成する
+    - 踏み台サーバ： `vm-bastionhost`
+        - nic0 ： `securenetwork` VPC 、`us-central1` リージョン、`securenetwork-us` サブネット、内部 IP あり、外部 IP あり
+        - nic1 ： `default` VPC 、`us-central1` リージョン、`default` サブネット、内部 IP あり、外部 IP なし
+    - セキュアサーバ： `vm-securehost` 
+        - nic0 ： `securenetwork` VPC 、`us-central1` リージョン、`securenetwork-us` サブネット、内部 IP あり、外部 IP なし
+        - nic1 ： `default` VPC 、`us-central1` リージョン、`default` サブネット、内部 IP あり、外部 IP なし
+- RDP を許可するファイアウォールルールを `securenetwork` VPC に作成し、踏み台サーバ `vm-bastionhost` に適用する
+- 各サーバのログインパスワードをリセットして、踏み台サーバ経由でセキュアサーバに RDP できることを確認する
+
+コマンドベースでの作成は以下。
+
+```bash
+# リージョン・ゾーンの設定
+$ gcloud config set compute/region us-central1
+$ gcloud config set compute/zone us-central1-a
+
+# securenetwork VPC を作成
+$ gcloud compute networks create securenetwork --subnet-mode=custom
+
+# securenetwork VPC の存在確認
+$ gcloud compute networks list
+
+# securenetwork-us サブネットを securenetwork VPC に作成
+$ gcloud compute networks subnets create securenetwork-us --network=securenetwork --region=us-central1 --range=172.16.0.0/24
+
+# securenetwork-us サブネットの存在確認
+$ gcloud compute networks subnets list --sort-by=NETWORK
+
+# 外部からの RDP を許可するファイアウォールルールを securenetwork VPC に作成（ターゲットタグ：allow-rdp）
+$ gcloud compute firewall-rules create securenetwork-allow-rdp --direction=INGRESS --priority=1000 --network=securenetwork --action=ALLOW --rules=tcp:3389 --source-ranges=0.0.0.0/0 --target-tags=allow-rdp
+
+# ファイアウォールルール securenetwork-allow-rdp の存在確認
+$ gcloud compute firewall-rules list | grep securenetwork
+
+# Windows サーバのイメージ検索
+$ gcloud compute images list --project windows-cloud --no-standard-images
+NAME                                                  PROJECT        FAMILY                            DEPRECATED  STATUS
+windows-server-2016-dc-v20210413                      windows-cloud  windows-2016                                  READY
+
+# 踏み台サーバ vm-bastionhost の作成
+$ gcloud compute instances create vm-bastionhost \
+    --image=windows-server-2016-dc-v20210413 --image-project=windows-cloud \
+    --boot-disk-size=50GB --boot-disk-type=pd-balanced --boot-disk-device-name=vm-bastionhost \
+    --zone=us-central1-a \
+    --network-interface=network=securenetwork,subnet=securenetwork-us,address='' \ # nic0
+    --network-interface=network=default,subnet=default,no-address \                # nic1
+    --tags=allow-rdp
+
+# セキュアサーバ vm-securehost の作成
+$ gcloud compute instances create vm-securehost \
+    --image=windows-server-2016-dc-v20210413 --image-project=windows-cloud \
+    --boot-disk-size=50GB --boot-disk-type=pd-balanced --boot-disk-device-name=vm-securehost \
+    --zone=us-central1-a \
+    --network-interface=network=securenetwork,subnet=securenetwork-us,no-address \ # nic0
+    --network-interface=network=default,subnet=default,no-address                  # nic1
+
+# 作成した VM インスタンスの確認（ vm-bastionhost には外部 IP がある）
+$ gcloud compute instances list
+NAME            ZONE           MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP            EXTERNAL_IP    STATUS
+vm-bastionhost  us-central1-a  n1-standard-1               172.16.0.2,10.128.0.3  35.188.38.100  RUNNING
+vm-securehost   us-central1-a  n1-standard-1               172.16.0.3,10.128.0.4                 RUNNING
+
+# vm-bastionhost のログインパスワードのリセット
+$ gcloud compute reset-windows-password vm-bastionhost --user app_admin --zone us-central1-a
+ip_address: 35.188.38.100
+password:   8Q6;6!lTnAo$.G3
+username:   app_admin
+
+# vm-securehost のログインパスワードのリセット
+$ gcloud compute reset-windows-password vm-securehost --user app_admin --zone us-central1-a
+password: [/3xiN(:uvp2CWR
+username: app_admin
+
+# vm-bastionhost の securenetwork の外部 IP で RDP して、 vm-securehost の default ネットワークの内部 IP で RPD する
+# mstsc.exe コマンド
 ```
