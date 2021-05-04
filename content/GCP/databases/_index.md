@@ -46,7 +46,8 @@ Cloud SQL、Cloud Spanner、Bare Metal Solution、Cloud Bigtable、Firestore、M
 「取り込み」 -> 「処理」 -> 「分析」 -> 「可視化」の順で処理をする。
 
 - 取り込み
-    - Cloud Pub/Sub
+    - Cloud Pub/Sub：ストリーミングの場合はこちら
+    - Cloud Storage：ストリーミングではなく一時保存する場合はこちらでも
 - 処理
     - Cloud Dataflow（推奨）： Apache Beam 準拠の ETL 処理、サーバレス
     - Cloud Dataproc：マネージド Hadoop/Spark、クラスタ管理が必要、既存の Hadoop/Sparkジョブがある場合はこちらでも

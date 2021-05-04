@@ -85,6 +85,8 @@ Cloud Console の 「サイドメニュー」->「 IAM と管理」->「 IAM 」
 後者は会社が Google Workspace （旧 G Suite）を導入している場合、そのユーザアカウントをそのまま利用できる。社外のユーザが GCP 環境にアクセスする場合は Cloud Identity を利用してユーザ管理することもできる。  
 **Google グループ** は単に Google アカウントをグループとしてまとめたもの（なので、説明は割愛する）。
 
+ToDo：[Resource Manager](https://cloud.google.com/resource-manager?hl=ja)
+
 ![google_account](./img/google_account.png)
 
 - サービスアカウント
