@@ -20,4 +20,4 @@ Compute Engine、Kubernetes Engine、Cloud Run、App Engine、Cloud Functions
 |Cloud Run|PaaS|コンテナ|コンテナワークロード|Fargate|
 |[App Engine](./app-engine) フレキシブル環境|PaaS|アプリ/コンテナ|HTTPサービス/バックエンドアプリ|Elastic Beanstalk|
 |[App Engine](./app-engine) スタンダード環境|PaaS|アプリ|HTTPサービス/バックエンドアプリ|Elastic Beanstalk|
-|Cloud Functions|FaaS|関数|イベントドリブンな操作|Lambda|
+|[Cloud Functions](./cloud-functions)|FaaS|関数|イベントドリブンな操作|Lambda|
