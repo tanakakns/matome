@@ -9,6 +9,8 @@ subpage: false
 weight: 2
 ---
 
+Cloud Console、Cloud Shell、API とサービス、Google Cloud SDK、Cloud Deployment Manager
+
 <!--more-->
 
 ## 1. Cloud Console
@@ -279,4 +281,8 @@ $ gcloud config set compute/region <REGION>
 $ gcloud config set compute/zone <ZONE>
 ```
 
+## 5. Cloud Deployment Manager
 
+AWS でいう CloudFormation 。  
+単一の API に対応した **リソース** とそのリソースをまとめた **デプロイメント** などで構成される。  
+`gcloud deployment-manager deployments` コマンドでデプロイメントを管理し、 `gcloud deployment-manager resouces` コマンドでデプロイメントに含まれるリソースを管理する。

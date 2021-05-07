@@ -12,14 +12,23 @@ weight: 3
 <!--more-->
 
 1. [コンセプト](#1-コンセプト)
-2. [ツール](#2-ツール)
-3. [リソース階層とアクセス制御](#3-リソース階層とアクセス制御)
-4. リソースの管理
-5. 監視
-6. コスト管理
-7. [Google Cloud サービス](#4-google-cloud-サービス)
+2. [リソース階層とアクセス制御](#3-リソース階層とアクセス制御)
+3. リソースの管理
+4. コスト管理
+5. ユースケース
 
 ## 1. コンセプト
+
+GCP のサービス（ [プロダクトとサービスの一覧](https://cloud.google.com/products?hl=ja) ）は以下のカテゴリで構成される。（[詳細](https://cloud.google.com/docs/overview/cloud-platform-services#top_of_page)）
+
+- コンピューティングとホスティング
+- ストレージ
+- データベース
+- ネットワーキング
+- ビッグデータ
+- 機械学習
+
+基本的な概念は以下の通り。
 
 - [リージョンとゾーン](https://cloud.google.com/compute/docs/regions-zones/) ※[地域とリージョン](https://cloud.google.com/docs/geography-and-regions?hl=ja)
     - 一部の Compute Engine リソースは、リージョン内またはゾーン内にのみ存在する
@@ -44,7 +53,7 @@ weight: 3
     - 複数のプロジェクトを束ねて管理するには [組織](https://cloud.google.com/resource-manager/docs/creating-managing-organization?hl=ja) を使う
     - プロジェクトは **プロジェクト名** （任意のプロジェクト表示名）、 **プロジェクトID** （カスタマイズ可能な識別子）、 **プロジェクト番号** （GCPから割り当てられる識別子）からなる
 
-## 3. リソース階層とアクセス制御
+## 2. リソース階層とアクセス制御
 
 - ToDo  
 - 「権限管理」くらいのタイトルで一つの記事に切り出して際整理が必要。
@@ -56,7 +65,7 @@ weight: 3
     - [Google Cloud Japan Customer Engineer Advent Calendar 2020](https://medium.com/google-cloud-jp/google-cloud-japan-customer-engineer-advent-calendar-2020-1c78e07e1871)
     - [Google Cloud Japan Customer Engineer Advent Calendar 2019](https://medium.com/google-cloud-jp/gcp-ce-advent-calendar-2019-1aeb8ebda7b1)
 
-### 3.1. Cloud Identity and Access Management（Cloud IAM）
+### 2.1. Cloud Identity and Access Management（Cloud IAM）
 
 [Cloud Identity and Access Management（Cloud IAM）](https://cloud.google.com/iam/docs/how-to?hl=ja) は、「誰が」「どういう操作を」「何に対して」行う権限を持つかを管理するサービス。
 
@@ -68,7 +77,7 @@ weight: 3
 
 Cloud Console の 「サイドメニュー」->「 IAM と管理」->「 IAM 」から利用できる。
 
-### 3.2. メンバー/「誰が」
+### 2.2. メンバー/「誰が」
 
 リソースへのアクセスが許可される主体（「誰が」）には以下がある。
 
@@ -103,7 +112,7 @@ ToDo：[Resource Manager](https://cloud.google.com/resource-manager?hl=ja)
         - `https://www.googleapis.com/auth/logging.write` ：Compute Engine ログに対する書き込みアクセス権
     - アクセススコープでは完全な権限(/auth/cloud-platform)を付与し、IAMロールで権限を絞るのがおすすめ
 
-### 3.3. 権限とロール/「どういう操作を」
+### 2.3. 権限とロール/「どういう操作を」
 
 リソースに対する操作の権限は以下の命名規則で表現される。
 
@@ -140,7 +149,7 @@ Identity and Access Management API または gcloud コマンドライン ツー
 事前定義ロールおよびカスタムロールのメタデータを確認する場合、 `gcloud iam roles describe ROLE_ID` コマンドで確認する。  
 [事前定義ロールの一覧](https://cloud.google.com/iam/docs/understanding-roles?hl=ja#predefined_roles)
 
-### 3.4. リソース階層/「何に対して」
+### 2.4. リソース階層/「何に対して」
 
 [リソース](https://cloud.google.com/billing/docs/concepts#resource_overview) は「 **組織 > フォルダ > プロジェクト > リソース** 」のような階層構造に **まとめる** ことができる。
 
@@ -160,7 +169,7 @@ Identity and Access Management API または gcloud コマンドライン ツー
 
 例えば、「アカウント A に compute.instances.get 権限を 組織 X に対して付与」すると、「アカウント A は 組織 X に含まれる全てのフォルダの全てのプロジェクトの VM インスタンス情報を取得できる」ようになる。
 
-### 3.5. アクセス制御のベストプラクティス
+### 2.5. アクセス制御のベストプラクティス
 
 [ベストプラクティス](https://cloud.google.com/iam/docs/resource-hierarchy-access-control?hl=ja#best_practices)
 
@@ -172,7 +181,7 @@ Identity and Access Management API または gcloud コマンドライン ツー
 - ラベルを使って、リソースのアノテーションをつけ、グループ化・フィルタリングを行う
 - 異なる権限を必要とする複数サービスがある場合は、サービス毎に個別のサービスアカウントを作成し、必要な権限のみ付与する
 
-### 3.6. [リソースへのアクセス権の付与、変更、取り消し](https://cloud.google.com/iam/docs/granting-changing-revoking-access?hl=ja)
+### 2.6. [リソースへのアクセス権の付与、変更、取り消し](https://cloud.google.com/iam/docs/granting-changing-revoking-access?hl=ja)
 
 `gcloud` コマンドによるメンバのリソースに対するロールの付与について記載する。  
 以降のパラメータについては下記の通り。
@@ -185,7 +194,7 @@ Identity and Access Management API または gcloud コマンドライン ツー
 - FILE_PATH：ファイルのパス。
 - PROJECT_ID：プロジェクト ID 。
 
-#### 3.6.1. メンバにロールを付与する
+#### 2.6.1. メンバにロールを付与する
 
 ```bash
 $ gcloud GROUP add-iam-policy-binding RESOURCE --member=MEMBER --role=ROLE_ID
@@ -194,7 +203,7 @@ $ gcloud GROUP add-iam-policy-binding RESOURCE --member=MEMBER --role=ROLE_ID
 $ gcloud projects add-iam-policy-binding my-project --member=user:my-user@example.com --role=roles/viewer
 ```
 
-#### 3.6.2. メンバからロールを削除する
+#### 2.6.2. メンバからロールを削除する
 
 ```bash
 $ gcloud GROUP remove-iam-policy-binding RESOURCE --member=MEMBER --role=ROLE_ID
@@ -203,7 +212,7 @@ $ gcloud GROUP remove-iam-policy-binding RESOURCE --member=MEMBER --role=ROLE_ID
 $ gcloud projects remove-iam-policy-binding my-project --member=user:my-user@example.com --role=roles/viewer
 ```
 
-#### 3.6.3. ポリシーの取得
+#### 2.6.3. ポリシーの取得
 
 ```bash
 $ gcloud projects get-iam-policy PROJECT_ID --format=FORMAT > FILE_PATH
@@ -233,7 +242,7 @@ $ gcloud projects get-iam-policy my-project --format json > ~/policy.json
 
 例の通り、ロールとそのロールが付与されたメンバの配列で表現される。
 
-#### 3.6.4. ポリシーの設定
+#### 2.6.4. ポリシーの設定
 
 `gcloud projects get-iam-policy` で取得したポリシーの JSON/YAML を編集するなどして、以下のコマンドでポリシーを更新することができる。
 
@@ -260,12 +269,12 @@ $ gcloud projects set-iam-policy PROJECT_ID FILE_PATH
 }
 ```
 
-## 4. リソースの管理
+## 3. リソースの管理
 
 ここまでで出たリソースを管理してみる。  
 基本 `gcloud` コマンドでの管理とする。
 
-### 4.1. プロジェクト
+### 3.1. プロジェクト
 
 ```bash
 $ gcloud projects COMMAND [GCLOUD_WIDE_FLAG ...]
@@ -306,108 +315,165 @@ version: 1
 gcloud projects add-iam-policy-binding [PROJECT_ID] --member=MEMBER --role=ROLE
 ```
 
-## 5. 監視
+## 4. コスト管理
 
-[Google Cloud のオペレーション スイート](https://cloud.google.com/products/operations?hl=ja)
-
-- Cloud Logging
-    - リアルタイムでログを管理して分析する、大規模なフルマネージドサービス
-    - アプリケーションとシステムのログデータのほか、GKE 環境、VM、Google Cloud サービスからのカスタム ログデータも取り込める
-    - 選択したログを分析でき、アプリケーションのトラブルシューティングが加速する
-- Cloud Monitoring
-    - 組み込みの大規模な指標オブザーバビリティ
-    - クラウドで実行されるアプリケーションのパフォーマンスや稼働時間、全体的な動作状況を確認できる
-    - メトリクス・イベント・メタデータを収集し、チャートやダッシュボードで可視化してアラート管理できる
-
-### 5.1. Cloud Logging
-
-Cloud Logging は IAM を使用して Google Cloud リソースのロギングデータへの [アクセス制御](https://cloud.google.com/logging/docs/access-control?hl=ja#permissions_and_roles) を実施できる。
-
-- `roles/logging.viewer`（ログビューア）（＝ `roles/viewer` ）
-    - アクセスの透明性ログとデータアクセス監査ログ以外のすべての Logging 機能に対する読み取り専用権限
-- `roles/logging.privateLogViewer`（プライベート ログビューア）
-    - `roles/logging.viewer` に加え、アクセスの透明性ログとデータアクセス監査ログの読み取り権限
-    - このロールは、_Required バケットと _Default バケットにのみ適用される
-- `roles/logging.logWriter`（ログ書き込み）
-    - サービスアカウントに付与して、ログの書き込みに十分な権限のみをアプリケーションに付与できる
-    - ただし、閲覧権限はない
-- `roles/logging.bucketWriter`（ログバケット書き込み）
-    - サービス アカウントに付与すると、ログバケットにログを書き込むための十分な権限を Cloud Logging に付与できる
-    - このロールを特定のバケットに制限するには、IAM 条件を使用する
-- `roles/logging.configWriter`（ログ構成書き込み）は
-    - ログベースの指標、除外、バケット、ビューを作成し、シンクをエクスポートする権限
-    - これらのアクションに Logs Explorer（コンソール）を使用するには、 `roles/logging.viewer` を追加する
-- `roles/logging.admin`（Logging 管理者）
-    - Logging に関連するすべての権限
-- `roles/logging.viewAccessor`（ログ表示アクセス者）
-    - ビュー内のログを読み取るための権限
-    - このロールを特定のバケット内のビューに制限するには、IAM 条件を使用
-- `roles/editor`（プロジェクト編集者）
-    - roles/logging.viewer の権限、ログエントリの書き込み権限、ログの削除権限、ログベースの指標の作成権限が含まれる
-    - この役割では、エクスポート シンクの作成や、アクセスの透明性ログまたはデータアクセス監査ログの読み取りを行うことはできない
-- `roles/owner`（プロジェクト オーナー）
-    - Logging に対する完全アクセス権（アクセスの透明性ログとデータアクセス監査ログ）
-
-#### 5.1.1. 監査ログ
-
-権限管理された上で、オペレーションを監視するログに以下の種類がある。（ [Cloud Audit Logs](https://cloud.google.com/logging/docs/audit) ）
-
-- 管理アクティビティ監査ログ
-    - リソース構成やメタデータ変更オペレーションが記録される
-    - デフォルトで有効で無効にできない
-- データアクセス監査ログ
-    - リソース構成やメタデータ読み取り API 操作が記録される
-    - デフォルトは無効
-- システムイベント監査ログ
-    - Google システムによって生成される管理アクション
-- ポリシー拒否監査ログ
-    - セキュリティ ポリシー違反のため Google Cloud サービスがユーザーまたはサービス アカウントへのアクセスを拒否したときに、ポリシー拒否監査ログを記録する
-
-### 5.2. Cloud Monitoring
-
-- [ワークスペース](https://cloud.google.com/monitoring/workspaces?hl=ja#accounts) は、1 つ以上の Google Cloud プロジェクトまたは AWS アカウントに含まれるリソースをモニタリングするためのツール
-    - 各ワークスペースには、Google Cloud プロジェクトや AWS アカウントなど、1～100 個のモニタリング対象プロジェクトを作成できる
-    - ワークスペースの数に制限はありませんが、Google CloudプロジェクトとAWSアカウントを複数のワークスペースでモニタリングすることはできない
-- **ホストプロジェクト**
-    - すべてのワークスペースには、ホストプロジェクトがある
-    - ワークスペースの作成に使用した Google Cloud プロジェクトが、ワークスペースのホスト プロジェクト
-- モニタリング対象プロジェクト
-    - ホストプロジェクトでワークスペースを作成すると、Google Cloud プロジェクトと AWS アカウントが追加できるようになる
-    - 新しい空白の Google Cloud プロジェクトを使用してワークスペースをホストしてから、モニタリングするプロジェクトと AWS アカウントをワークスペースに追加するのがよい
-        - ホスト プロジェクトと Workspace の名前を自由に選択でき、ワークスペース間でモニタリング対象プロジェクトを柔軟に移動できる
-
-## 6. コスト管理
-
-### 6.1. コスト算出
+### 4.1. コスト算出
 
 [Google Cloud Pricing Calculator](https://cloud.google.com/products/calculator/?hl=ja) で各サービスに適した算出が可能。  
 ただし、 BigQuery など一部特殊なものもある。  
 請求データの分析は [Cloud Billing データを BigQuery にエクスポートする](https://cloud.google.com/billing/docs/how-to/export-data-bigquery?hl=ja#differences_between_exported_data_and_invoices) を参照。
 
-### 6.2. 請求
+### 4.2. 請求
 
 請求先アカウントのリンク（紐付け）を更新するためには、 **請求先アカウント管理者** および **プロジェクト支払い管理者** の権限が必要になる。
 
 - [Cloud Billing のコンセプト](https://cloud.google.com/billing/docs/concepts?hl=ja#billing_account)
 - [プロジェクトの請求設定の変更](https://cloud.google.com/billing/docs/how-to/modify-project)
 
-## 7. Google Cloud サービス
+## 5. ユースケース
 
-Cloud Console から Google Cloud が提供するサービスを利用することができ、以下のカテゴリで構成される。（[詳細](https://cloud.google.com/docs/overview/cloud-platform-services#top_of_page)）
+### 5.1. サービスアカウント
 
-- コンピューティングとホスティング
-- ストレージ
-- データベース
-- ネットワーキング
-- ビッグデータ
-- 機械学習
+サービスアカウントを作成して、ネットワーク管理者とセキュリティ管理者のロールの権限を確認する。  
+以下の手順で確認する。
 
-- [プロダクトとサービスの一覧](https://cloud.google.com/products?hl=ja)
+- ゾーン `us-central1-a` の default ネットワーク環境を利用
+- VM インスタンス blue を作成する
+    - nginx
+    - ネットワークタグ `web-server` を付与
+    - `/var/www/html/index.nginx-debian.html` の `<h1>Welcome to nginx!</h1>` 行を `<h1>Welcome to the blue server!</h1>` に編集
+- VM インスタンス green を作成する
+    - nginx
+    - `/var/www/html/index.nginx-debian.html` の `<h1>Welcome to nginx!</h1>` 行を `<h1>Welcome to the green server!</h1>` に編集
+- ファイアウォールルール `allow-http-web-server` を作成する
+    - ターゲットタグ `web-server` に対してインターネットからの HTTP アクセスを許可
+- VM インスタンス test-vm を作成する
+    - ここから blue と green を操作し、ネットワーク管理者とセキュリティ管理者のロールの権限を確認する
+- 新規にサービスアカウント `Network-admin` を作成して、 test-vm から権限を確認しつつ操作する
 
-以下、他ページに現状整理し辛いサービスを記載する。
 
-### Cloud Deployment Manager
+```bash
+# 初期設定
+$ gcloud config set compute/region us-central1
+$ gcloud config set compute/zone us-central1-a
 
-AWS でいう CloudFormation 。  
-単一の API に対応した **リソース** とそのリソースをまとめた **デプロイメント** などで構成される。  
-`gcloud deployment-manager deployments` コマンドでデプロイメントを管理し、 `gcloud deployment-manager resouces` コマンドでデプロイメントに含まれるリソースを管理する。
+# VM インスタンス blue を作成
+$ gcloud compute instances create blue \
+   --tags=web-server \
+   --metadata=startup-script='#! /bin/bash
+     apt-get update
+     sudo apt-get install nginx-light -y'
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-02-4e1179b11a90/zones/us-central1-a/instances/blue].
+NAME  ZONE           MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP     STATUS
+blue  us-central1-a  n1-standard-1               10.128.0.2   104.198.156.96  RUNNING
+
+# VM インスタンス green を作成
+$ gcloud compute instances create green \
+   --metadata=startup-script='#! /bin/bash
+     apt-get update
+     sudo apt-get install nginx-light -y'
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-02-4e1179b11a90/zones/us-central1-a/instances/green].
+NAME   ZONE           MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
+green  us-central1-a  n1-standard-1               10.128.0.3   34.123.63.156  RUNNING
+
+# VM インスタンス test-vm を作成
+$ gcloud compute instances create test-vm --machine-type=f1-micro
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-02-4e1179b11a90/zones/us-central1-a/instances/test-vm].
+NAME     ZONE           MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
+test-vm  us-central1-a  f1-micro                   10.128.0.4   35.232.124.24  RUNNING
+
+# Cloud Console の Compute Engine ページから blue 、 green にログインして `/var/www/html/index.nginx-debian.html` を編集する。
+$ gcloud compute ssh blue
+$ sudo vi /var/www/html/index.nginx-debian.html
+$ exit
+$ gcloud compute ssh green
+$ sudo vi /var/www/html/index.nginx-debian.html
+$ exit
+
+# ファイアウォールルール allow-http-web-server を作成
+$ gcloud compute firewall-rules create allow-http-web-server \
+    --action=allow \
+    --direction=ingress \
+    --source-ranges=0.0.0.0/0 \
+    --target-tags=web-server \
+    --rules=tcp:80,icmp
+```
+
+ここまで作成したら、test-vm に SSH して、blue と green を疎通してみる。
+
+```bash
+$ gcloud compute ssh test-vm
+$ curl http://10.128.0.2     # blue の内部 IP -> アクセス可能
+$ curl http://10.128.0.3     # green の内部 IP -> アクセス可能
+$ curl http://104.198.156.96 # blue の外部 IP -> アクセス可能
+$ curl http://34.123.63.156  # green の外部 IP -> アクセス不可能！
+$ exit
+```
+
+ネットワークタグ `web-server` を付与していない green は外部から HTTP アクセスできないことが確認できる。  
+ここからはサービスアカウントを作成して、そのサービスアカウントにネットワーク管理者とセキュリティ管理者のロールを付与することによってどのようにアクセス制御されるのかをみてみる。
+
+- ネットワーク管理者: ネットワーキング リソース（ファイアウォール ルールと SSL 証明書を除く）を作成、変更、削除するための権限。
+- セキュリティ管理者: ファイアウォール ルールと SSL 証明書を作成、変更、削除するための権限。
+
+デフォルトのサービスアカウントが付与されている test-vm に SSH して上記の権限を確認してみる。
+
+```bash
+$ gcloud compute ssh test-vm
+
+$ gcloud compute firewall-rules list
+ERROR: (gcloud.compute.firewall-rules.list) Some requests did not succeed:
+ - Request had insufficient authentication scopes.
+
+$ gcloud compute firewall-rules delete allow-http-web-server
+ERROR: (gcloud.compute.firewall-rules.delete) Could not fetch resource:
+ - Request had insufficient authentication scopes.
+
+$ exit
+```
+
+デフォルトのサービスアカウントでは権限が不足しているため、エラーが発生する。  
+新規でサービスアカウントを作成して、権限を付与してみる。
+
+1. Cloud Platform Console で、ナビゲーション メニュー（mainmenu.png）> [IAM と管理者] > [サービス アカウント] に移動します。
+2. [サービス アカウントを作成] をクリックします。
+3. [サービス アカウント名] に「Network-admin」と入力し、[作成] をクリックします。
+4. [ロールを選択] で、[Compute Engine] > [Compute ネットワーク管理者] を選択し、[完了] をクリックします。
+5. 一覧から 「Network-admin」 を選択して、 [鍵の管理] をクリック
+6. [鍵の追加] -> [新しい鍵] -> [JSON] を選択し、 [作成]
+7. JSON ファイルがローカルにダウンロードされるので `credentials.json` にリネーム
+
+test-vm に SSH して、作成したサービスアカウント権限で操作してみる。
+
+1. Cloud Console から test-vm インスタンスに SSH してターミナルを開く
+2. SSH VM ターミナル右上の隅にある歯車アイコンをクリックして、[ファイルをアップロード] をクリックして `credentials.json` をアップロード
+3. アップロードした認証情報を使用して VM に許可を与える
+     - `gcloud auth activate-service-account --key-file credentials.json`
+
+以上で、サービスアカウント `Network-admin` の権限が付与された。  
+この状態で操作してみる。
+
+```bash
+$ gcloud compute firewall-rules list
+NAME                    NETWORK  DIRECTION  PRIORITY  ALLOW                         DENY  DISABLED
+allow-http-web-server   default  INGRESS    1000      tcp:80,icmp                         False
+default-allow-icmp      default  INGRESS    65534     icmp                                False
+default-allow-internal  default  INGRESS    65534     tcp:0-65535,udp:0-65535,icmp        False
+default-allow-rdp       default  INGRESS    65534     tcp:3389                            False
+default-allow-ssh       default  INGRESS    65534     tcp:22                              False
+
+$ gcloud compute firewall-rules delete allow-http-web-server
+ERROR: (gcloud.compute.firewall-rules.delete) Could not fetch resource:
+ - Required 'compute.firewalls.delete' permission for 'projects/qwiklabs-gcp-02-4e1179b11a90/global/firewalls/allow
+-http-web-server'
+```
+
+**ネットワーク管理者** の権限があるためファイアウォールルールの一覧を確認できたが、 **セキュリティ管理者** の権限が無いためファイアウォールルールの削除はできなかった。  
+なので、サービスアカウント `Network-admin` に **セキュリティ管理者** の権限を付与してみる。
+
+1. Cloud Platform Console で、ナビゲーション メニュー > [IAM と管理] > [IAM] に移動
+2. Network-admin アカウントを見つけます。このアカウントは [名前] 列で特定
+3. Network-admin アカウントの鉛筆アイコンをクリック
+4. [ロール] を [Compute Engine] > [Compute セキュリティ管理者] に変更して [保存]
+
+**セキュリティ管理者** の権限に変更できたので、もう一度 `gcloud compute firewall-rules delete allow-http-web-server` を実行してみると今度はエラーなく実行できることを確認できる。
