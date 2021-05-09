@@ -11,10 +11,13 @@ weight: 2
 
 <!--more-->
 
+Cloud Load Balancing
 
-## 3. Cloud Load Balancing
+1. 種類
+2. 作成
+3. ユースケース
 
-### 3.1. 種類
+## 1. 種類
 
 Cloud Load Balancing の負荷分散の種類には以下がある。
 
@@ -74,16 +77,16 @@ HTTP(S) ロードバランサ の構成イメージは以下。
 ![https-load-balancer-diagram](./img/https-load-balancer-diagram.svg)
 ![https-load-balancer-diagram](./img/https-load-balancer-diagram.png)
 
-### 3.2. 作成
+## 2. 作成
 
-#### 3.2.1. ネットワークロードバランサのコンセプト
+### 2.1. ネットワークロードバランサのコンセプト
 
 - ターゲットプール
 - 静的外部 IP アドレス
 - レガシー HTTP ヘルスチェック リソース
 - 転送ルール
 
-#### 3.2.2. ネットワークロードバランサの作成
+### 2.2. ネットワークロードバランサの作成
 
 デフォルトのリージョンとゾーンを設定する。
 
@@ -246,7 +249,7 @@ $ while true; do curl -m1 35.232.6.132; done
 # www1/2/3 が不規則に出る
 ```
 
-#### 3.2.3. HTTP(S) ロードバランサのコンセプト
+### 2.3. HTTP(S) ロードバランサのコンセプト
 
 - インスタンステンプレート
     - VM インスタンス や マネージドインスタンスグループ（ MIG ）を作成するために使用できるリソース
@@ -263,7 +266,7 @@ $ while true; do curl -m1 35.232.6.132; done
 - ターゲット HTTP プロキシ
 - グローバル転送ルール
 
-#### 3.2.4. HTTP(S) ロードバランサの作成
+### 3.2.4. HTTP(S) ロードバランサの作成
 
 負荷分散ターゲットの基となる インスタンステーンプレート　を作成する。
 
@@ -409,3 +412,194 @@ Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-02-aa3df922
 Cloud Console のナビゲーション メニューで、[ネットワーク サービス] > [Cloud Load Balancing] に移動して、作成したロードバランサ（web-map-http）をクリック。  
 [バックエンド] セクションでバックエンドの名前をクリックして、VM が正常であることを確認。  
 ブラウザで「http://34.120.128.63」にアクセスして動確（リロードしまくり）。「lb-backend-group-xxxx」の「xxxx」が変わることで、 MIG 内の別インスタンスに負荷分散されていることがわかる。
+
+## 3. ユースケース
+
+### 3.1. Cloud Armor
+
+HTTP とヘルスチェックのファイアウォール ルールを構成する。
+
+```bash
+# HTTP ファイアウォールルール default-allow-http を作成
+$ gcloud compute firewall-rules create default-allow-http \
+    --action=allow \
+    --direction=ingress \
+    --source-ranges=0.0.0.0/0 \
+    --target-tags=http-server \
+    --rules=tcp:80
+
+# ヘルスチェックのファイアウォールルール default-allow-health-check を作成
+$ gcloud compute firewall-rules create default-allow-health-check \
+    --action=allow \
+    --direction=ingress \
+    --source-ranges=130.211.0.0/22,35.191.0.0/16 \
+    --target-tags=http-server \
+    --rules=tcp
+```
+
+インスタンス テンプレートを構成し、インスタンス グループを作成する。
+
+```bash
+#####
+# us-east1
+#####
+# インスタンス テンプレート us-east1-template を作成
+$ gcloud compute instance-templates create us-east1-template \
+   --region=us-east1 \
+   --network=default \
+   --subnet=default \
+   --tags=http-server \
+   --image-family=debian-9 \
+   --image-project=debian-cloud \
+   --scopes default \
+   --metadata startup-script-url=gs://cloud-training/gcpnet/httplb/startup.sh
+
+# インスタンス テンプレート us-east1-template から MIG us-east1-mig を作成
+$ gcloud compute instance-groups managed create us-east1-mig \
+    --region=us-east1 \
+    --template=us-east1-template \
+    --size=1
+
+# MIG us-east1-mig に CPU 使用率に基づくスケーリングを設定
+$ gcloud compute instance-groups managed set-autoscaling us-east1-mig \
+    --region=us-east1 \
+    --target-cpu-utilization 0.80 \
+    --min-num-replicas 1 \
+    --max-num-replicas 5 \
+    --cool-down-period 45
+
+#####
+# europe-west1
+#####
+
+# インスタンス テンプレート europe-west1-template を作成
+$ gcloud compute instance-templates create europe-west1-template \
+   --region=europe-west1 \
+   --network=default \
+   --subnet=default \
+   --tags=http-server \
+   --image-family=debian-9 \
+   --image-project=debian-cloud \
+   --scopes default \
+   --metadata startup-script-url=gs://cloud-training/gcpnet/httplb/startup.sh
+
+# インスタンス テンプレート europe-west1-template から MIG europe-west1-mig を作成
+$ gcloud compute instance-groups managed create europe-west1-mig \
+    --region=europe-west1 \
+    --template=europe-west1-template \
+    --size=1
+
+# MIG europe-west1-mig に CPU 使用率に基づくスケーリングを設定
+$ gcloud compute instance-groups managed set-autoscaling europe-west1-mig \
+    --region=europe-west1 \
+    --target-cpu-utilization 0.80 \
+    --min-num-replicas 1 \
+    --max-num-replicas 5 \
+    --cool-down-period 45
+```
+
+HTTP ロードバランサを構成する。
+
+
+```bash
+# ヘルスチェックを作成
+$ gcloud compute health-checks create http http-health-check \
+    --port 80
+
+# ヘルスチェックを構成したバックエンドサービスを作成（ロギングを有効化し、サンプリングレート1.0）
+$ gcloud compute backend-services create http-backend \
+    --protocol=HTTP \
+    --port-name=http \
+    --health-checks=http-health-check \
+    --enable-logging \
+    --logging-sample-rate=1.0 \
+    --global
+
+# MIG をバックエンドに追加
+$ gcloud compute backend-services add-backend http-backend \
+    --instance-group=us-east1-mig \
+    --instance-group-region=us-east1 \
+    --global
+$ gcloud compute backend-services add-backend http-backend \
+    --instance-group=europe-west1-mig \
+    --instance-group-region=europe-west1 \
+    --global
+
+# フロントエンドを構成
+# IP アドレスを作成
+$ gcloud compute addresses create http-lb-ipv4 \
+    --ip-version=IPV4 \
+    --global
+$ gcloud compute addresses create http-lb-ipv6 \
+    --ip-version=IPV6 \
+    --global
+
+# URL マップを作成（ URL マップが ロードバランサの名前に該当する、ここでは http-lb ）
+$ gcloud compute url-maps create http-lb \
+    --default-service http-backend # バックエンドサービスは http-backend
+
+# URL マップにリクエストをルーティングするターゲット HTTP プロキシを作成
+$ gcloud compute target-http-proxies create http-lb-proxy \
+    --url-map http-lb
+
+# 受信リクエストをプロキシにルーティングするグローバル転送ルールを作成
+$ gcloud compute forwarding-rules create http-ipv4-rule \
+    --address=http-lb-ipv4 \
+    --global \
+    --target-http-proxy=http-lb-proxy \
+    --ports=80
+$ gcloud compute forwarding-rules create http-ipv6-rule \
+    --address=http-lb-ipv6 \
+    --global \
+    --target-http-proxy=http-lb-proxy \
+    --ports=80
+```
+
+HTTP ロードバランサをテストする。
+
+- ブラウザで `http://[LB_IP_v4]` にアクセス
+
+HTTP ロードバランサのストレステストを実施する。
+
+```bash
+# ストレステスト用の VM インスタンス を作成
+$ gcloud compute instances create siege-vm \
+    --zone=us-west1-c
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-00-b8e0aafe04ca/zones/us-west1-c/instances/siege-vm].
+NAME      ZONE        MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
+siege-vm  us-west1-c  n1-standard-1               10.138.0.2   34.83.236.190  RUNNING
+
+# siege-vm に SSH して設定
+$ gcloud compute ssh siege-vm --zone=us-west1-c
+$ sudo apt-get -y install siege
+$ export LB_IP=35.201.108.202 # LB の IPV4
+$ siege -c 250 http://$LB_IP
+```
+
+siege-vm をブラックリストに登録する。
+
+```bash
+# siege-vm の外部 IP を確認
+$ gcloud compute instances describe siege-vm
+```
+
+```bash
+# Google Cloud Armor セキュリティ ポリシーを作成
+$ gcloud compute security-policies create denylist-siege
+
+# セキュリティ ポリシーに対するデフォルトのルールを更新し、トラフィックを拒否
+$ gcloud compute security-policies rules update 2147483647 \
+    --security-policy denylist-siege \
+    --action "deny-403"
+
+# セキュリティ ポリシーにルールを追加
+$ gcloud compute security-policies rules create 1000 \
+    --security-policy denylist-siege \
+    --src-ip-ranges "34.83.236.190/32" \
+    --action "deny-403"
+
+# セキュリティ ポリシーをバックエンド サービスに接続
+$ gcloud compute backend-services update http-backend \
+    --security-policy denylist-siege \
+    --global
+```
