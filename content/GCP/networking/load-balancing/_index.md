@@ -449,8 +449,6 @@ $ gcloud compute instance-templates create us-east1-template \
    --network=default \
    --subnet=default \
    --tags=http-server \
-   --image-family=debian-9 \
-   --image-project=debian-cloud \
    --scopes default \
    --metadata startup-script-url=gs://cloud-training/gcpnet/httplb/startup.sh
 
@@ -478,8 +476,6 @@ $ gcloud compute instance-templates create europe-west1-template \
    --network=default \
    --subnet=default \
    --tags=http-server \
-   --image-family=debian-9 \
-   --image-project=debian-cloud \
    --scopes default \
    --metadata startup-script-url=gs://cloud-training/gcpnet/httplb/startup.sh
 
@@ -519,10 +515,16 @@ $ gcloud compute backend-services create http-backend \
 $ gcloud compute backend-services add-backend http-backend \
     --instance-group=us-east1-mig \
     --instance-group-region=us-east1 \
+    --balancing-mode=RATE \
+    --max-rate=50 \
+    --capacity-scaler=1.0 \
     --global
 $ gcloud compute backend-services add-backend http-backend \
     --instance-group=europe-west1-mig \
     --instance-group-region=europe-west1 \
+    --balancing-mode=UTILIZATION \
+    --max-utilization=0.80 \
+    --capacity-scaler=1.0 \
     --global
 
 # フロントエンドを構成
@@ -563,17 +565,17 @@ HTTP ロードバランサのストレステストを実施する。
 
 ```bash
 # ストレステスト用の VM インスタンス を作成
-$ gcloud compute instances create siege-vm \
-    --zone=us-west1-c
-Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-00-b8e0aafe04ca/zones/us-west1-c/instances/siege-vm].
+$ gcloud compute instances create siege-vm --zone=us-west1-c
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-04-c77142eb9067/zones/us-west1-c/instances/siege-vm].
 NAME      ZONE        MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
-siege-vm  us-west1-c  n1-standard-1               10.138.0.2   34.83.236.190  RUNNING
+siege-vm  us-west1-c  n1-standard-1               10.138.0.2   34.105.25.106  RUNNING
 
 # siege-vm に SSH して設定
 $ gcloud compute ssh siege-vm --zone=us-west1-c
 $ sudo apt-get -y install siege
-$ export LB_IP=35.201.108.202 # LB の IPV4
+$ export LB_IP=34.98.93.118 # LB の IPV4
 $ siege -c 250 http://$LB_IP
+$ exit
 ```
 
 siege-vm をブラックリストに登録する。
@@ -583,23 +585,34 @@ siege-vm をブラックリストに登録する。
 $ gcloud compute instances describe siege-vm
 ```
 
+Google Cloud Armor を構成し、 VM インスタンス siege-vm からのリクエストを遮断する。
+
 ```bash
 # Google Cloud Armor セキュリティ ポリシーを作成
 $ gcloud compute security-policies create denylist-siege
 
-# セキュリティ ポリシーに対するデフォルトのルールを更新し、トラフィックを拒否
-$ gcloud compute security-policies rules update 2147483647 \
-    --security-policy denylist-siege \
-    --action "deny-403"
+# セキュリティ ポリシーに対するデフォルトのルールを更新し、トラフィックを許可
+$ gcloud compute security-policies rules create 2147483647 \
+    --action=allow \
+    --src-ip-ranges=\* \
+    --security-policy=denylist-siege
 
-# セキュリティ ポリシーにルールを追加
+# セキュリティ ポリシーにルールを追加し、siege-vm からのリクエストを拒否
 $ gcloud compute security-policies rules create 1000 \
-    --security-policy denylist-siege \
-    --src-ip-ranges "34.83.236.190/32" \
-    --action "deny-403"
+    --action=deny\(403\) \
+    --src-ip-ranges=34.105.25.106 \
+    --security-policy=denylist-siege
 
 # セキュリティ ポリシーをバックエンド サービスに接続
 $ gcloud compute backend-services update http-backend \
-    --security-policy denylist-siege \
-    --global
+    --security-policy=denylist-siege
+```
+
+VM インスタンス siege-vm に SSH して接続が拒否されるのを確認する。
+
+```bash
+$ gcloud compute ssh siege-vm --zone=us-west1-c
+$ export LB_IP=34.98.93.118 # LB の IPV4
+$ curl http://$LB_IP
+<!doctype html><meta charset="utf-8"><meta name=viewport content="width=device-width, initial-scale=1"><title>403</title>403 Forbidden
 ```
