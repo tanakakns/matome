@@ -417,7 +417,8 @@ Cloud Console のナビゲーション メニューで、[ネットワーク サ
 
 ### 3.1. Cloud Armor
 
-HTTP とヘルスチェックのファイアウォール ルールを構成する。
+外部 HTTP ロードバランサを作成し、　Cloud Armor を使用して DoS 対策を行う。  
+まず、HTTP とヘルスチェックのファイアウォール ルールを構成する。
 
 ```bash
 # HTTP ファイアウォールルール default-allow-http を作成
@@ -615,4 +616,191 @@ $ gcloud compute ssh siege-vm --zone=us-west1-c
 $ export LB_IP=34.98.93.118 # LB の IPV4
 $ curl http://$LB_IP
 <!doctype html><meta charset="utf-8"><meta name=viewport content="width=device-width, initial-scale=1"><title>403</title>403 Forbidden
+```
+
+### 3.2. 内部ロードバランサの作成
+
+TCP/UDP トラフィックの内部負荷分散機能を作成する。  
+内部負荷分散により、内部仮想（VM）マシンのインスタンスのみにアクセス可能なプライベート負荷分散 IP アドレスの背後でサービスを実行、スケーリングする。  
+まず、HTTP とヘルスチェックのファイアウォール ルールを構成する。  
+なお、`us-central1` リージョン内に `subnet-a` と `subnet-b` を備えたネットワーク `my-internal-app` があらかじめ構成されている。
+
+```bash
+# HTTP ファイアウォールルール app-allow-http を作成
+$ gcloud compute firewall-rules create app-allow-http \
+    --network=my-internal-app \
+    --action=allow \
+    --direction=ingress \
+    --source-ranges=0.0.0.0/0 \
+    --target-tags=lb-backend \
+    --rules=tcp:80
+
+# ヘルスチェックのファイアウォールルール app-allow-health-check を作成
+$ gcloud compute firewall-rules create app-allow-health-check \
+    --action=allow \
+    --direction=ingress \
+    --source-ranges=130.211.0.0/22,35.191.0.0/16 \
+    --target-tags=lb-backend \
+    --rules=tcp
+```
+
+上記のファイアウォールはネットワークタグによって確実に適用される。  
+インスタンス テンプレートを構成し、インスタンス グループを作成する。
+
+```bash
+#####
+# subnet-a
+#####
+# インスタンス テンプレート instance-template-1 を作成
+$ gcloud compute instance-templates create instance-template-1 \
+   --region=us-central1 \
+   --network=my-internal-app \
+   --subnet=subnet-a \
+   --tags=lb-backend \
+   --scopes=default \
+   --metadata=startup-script-url=gs://cloud-training/gcpnet/ilb/startup.sh
+
+# インスタンス テンプレート instance-template-1 から MIG instance-group-1 を作成
+$ gcloud compute instance-groups managed create instance-group-1 \
+    --zone=us-central1-a \
+    --template=instance-template-1 \
+    --size=1
+
+# MIG instance-group-1 に CPU 使用率に基づくスケーリングを設定
+$ gcloud compute instance-groups managed set-autoscaling instance-group-1 \
+    --zone=us-central1-a \
+    --target-cpu-utilization 0.80 \
+    --min-num-replicas 1 \
+    --max-num-replicas 5 \
+    --cool-down-period 45
+
+#####
+# subnet-b
+#####
+
+# インスタンス テンプレート instance-template-2 を作成
+$ gcloud compute instance-templates create instance-template-2 \
+   --region=us-central1 \
+   --network=my-internal-app \
+   --subnet=subnet-b \
+   --tags=lb-backend \
+   --scopes=default \
+   --metadata=startup-script-url=gs://cloud-training/gcpnet/ilb/startup.sh
+
+# インスタンス テンプレート instance-template-2 から MIG instance-group-2 を作成
+$ gcloud compute instance-groups managed create instance-group-2 \
+    --zone=us-central1-b \
+    --template=instance-template-2 \
+    --size=1
+
+# MIG instance-group-2 に CPU 使用率に基づくスケーリングを設定
+$ gcloud compute instance-groups managed set-autoscaling instance-group-2 \
+    --zone=us-central1-b \
+    --target-cpu-utilization 0.80 \
+    --min-num-replicas 1 \
+    --max-num-replicas 5 \
+    --cool-down-period 45
+```
+
+疎通用の VM インスタンス `utility-vm` を作成する。
+
+```bash
+# 疎通用 VM インスタンス作成
+$ gcloud compute instances create utility-vm \
+    --zone=us-central1-f \
+    --machine-type=f1-micro \
+    --network-interface=network=my-internal-app,subnet=subnet-a,private-network-ip=10.10.20.50,no-address
+
+# SSH
+$ gcloud compute ssh utility-vm --zone=us-central1-f
+# instance-group-1-xxxx のスタートページを確認
+$ curl 10.10.20.2
+<h1>Internal Load Balancing Lab</h1><h2>Client IP</h2>Your IP address : 10.10.20.50<h2>Hostname</h2>Server Hostname: instance-group-1-zx46<h2>Server Location</h2>Region and Zone: us-central1-a
+# instance-group-2-xxxx のスタートページを確認
+$ curl 10.10.30.2
+<h1>Internal Load Balancing Lab</h1><h2>Client IP</h2>Your IP address : 10.10.20.50<h2>Hostname</h2>Server Hostname: instance-group-2-095r<h2>Server Location</h2>Region and Zone: us-central1-b
+$ exit
+```
+
+疎通する。  
+リージョン バックエンド サービスを構成する。
+
+```bash
+# ヘルスチェックを作成
+$ gcloud compute health-checks create http my-ilb-health-check \
+    --region=us-central1 \
+    --port 80
+
+# ヘルスチェックを構成したバックエンドサービスを作成
+$ gcloud compute backend-services create http-backend \
+    --load-balancing-scheme=internal \
+    --protocol=tcp \
+    --region=us-central1 \
+    --health-checks=my-ilb-health-check \
+    --health-checks-region=us-central1
+
+# MIG をバックエンドに追加
+$ gcloud compute backend-services add-backend http-backend \
+    --region=us-central1 \
+    --instance-group=instance-group-1 \
+    --instance-group-zone=us-central1-a
+$ gcloud compute backend-services add-backend http-backend \
+    --region=us-central1 \
+    --instance-group=instance-group-2 \
+    --instance-group-zone=us-central1-b
+
+# フロントエンドを構成（内部 LB の場合、 URL マップ・プロキシは不要で、 IP アドレス・転送ルール のみでよい）
+# IP アドレスを作成
+$ gcloud compute addresses create my-ilb-ip \
+    --region=us-central1 \
+    --subnet=subnet-b \
+    --addresses=10.10.30.5
+
+# 転送ルール（内部の場合、これが LB 名？）
+$ gcloud compute forwarding-rules create my-ilb \
+    --region=us-central1 \
+    --load-balancing-scheme=internal \
+    --network=my-internal-app \
+    --subnet=subnet-b \
+    --address=my-ilb-ip \
+    --ip-protocol=TCP \
+    --ports=80 \
+    --backend-service=http-backend \
+    --backend-service-region=us-central1
+
+
+
+
+
+
+
+
+# IP アドレスを作成：いらん
+$ gcloud compute addresses create http-lb-ipv4 \
+    --ip-version=IPV4
+
+# URL マップを作成（ URL マップが ロードバランサの名前に該当する、ここでは http-lb ）：いらん
+$ gcloud compute url-maps create http-lb \
+    --default-service http-backend # バックエンドサービスは http-backend
+
+# URL マップにリクエストをルーティングするターゲット HTTP プロキシを作成：いらん
+$ gcloud compute target-http-proxies create http-lb-proxy \
+    --url-map http-lb
+
+# 受信リクエストをプロキシにルーティングするグローバル転送ルールを作成：内部の場合、これが LB 名？
+$ gcloud compute forwarding-rules create http-ipv4-rule \
+    --address=http-lb-ipv4 \
+    --global \
+    --target-http-proxy=http-lb-proxy \
+    --ports=80
+```
+
+疎通用 VM インスタンスに SSH して何回か curl を叩いて、 instance-group-1も2も反応するかテストする。
+
+```bash
+# SSH
+$ gcloud compute ssh utility-vm --zone=us-central1-f
+
+# テスト
+$ curl 10.10.30.5
 ```
