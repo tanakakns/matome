@@ -11,7 +11,7 @@ weight: 2
 
 <!--more-->
 
-## 3. Google Kubernetes Engine
+[Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/docs/how-to)
 
 1. [コンセプト](#3-1-コンセプト)
 2. [クラスタ作成](#3-2-クラスタ作成)
@@ -19,11 +19,11 @@ weight: 2
 4. Spinnaker と Kubernetes Engine を使用した継続的デリバリー パイプライン
 5. 監視
 
-### 3.1. コンセプト
+### 1. コンセプト
 
 ToDo
 
-### 3.2. クラスタ作成
+### 2. クラスタ作成
 
 デフォルトのコンピューティング ゾーンを設定する。
 
@@ -96,9 +96,9 @@ Deleting cluster my-cluster...done.
 Deleted [https://container.googleapis.com/v1/projects/qwiklabs-gcp-01-47d564cd39d1/zones/us-central1-a/clusters/my-cluster].
 ```
 
-### 3.3. デプロイ管理
+### 3. デプロイ管理
 
-#### 3.3.1. Deployment オブジェクトの詳細
+#### 3.1. Deployment オブジェクトの詳細
 
 `kubectl explain` コマンドを使用すると、Deployment などのオブジェクトの設定項目に関する情報が取得できる。
 
@@ -112,7 +112,7 @@ $ kubectl explain deployment --recursive
 $ kubectl explain deployment.metadata.name
 ```
 
-#### 3.3.2. Deployment の作成
+#### 3.2. Deployment の作成
 
 Google 提供の資材を使って、Cloud Console の Cloud Shell 上で実施していく。  
 まずはクラスタを作成する。
@@ -185,7 +185,7 @@ $ curl -ks https://34.66.110.111
 {"message":"Hello"}
 ```
 
-#### 3.3.3. スケールアウト・イン
+#### 3.3. スケールアウト・イン
 
 Deployment をスケーリングするには、 `spec.replicas` フィールドを更新する。  
 `kubectl explain` コマンドで、このフィールドの説明を確認してみる。
@@ -218,7 +218,7 @@ $ kubectl get pods | grep hello- | wc -l
 3
 ```
 
-#### 3.3.3. ローリング アップデート
+#### 3.3. ローリング アップデート
 
 ReplicaSet が新たに作成され、古い ReplicaSet のレプリカ数が減少するにつれて、新しい ReplicaSet のレプリカ数が徐々に増加する形で実行される。  
 Deployment を更新するには、次のコマンドを実行してマニフェストを編集する。
@@ -286,7 +286,7 @@ $ kubectl edit deployment hello
 $ kubectl get pods -o jsonpath --template='{range .items[*]}{.metadata.name}{"\t"}{"\t"}{.spec.containers[0].image}{"\n"}{end}'
 ```
 
-#### 3.3.4. カナリア デプロイ
+#### 3.4. カナリア デプロイ
 
 カナリア デプロイでは、一部のユーザーに変更をリリースすることで、新しいリリースに伴うリスクを軽減する手法。  
 新しいバージョンの Deployment を作成する。
@@ -329,7 +329,7 @@ spec:
       targetPort: 80
 ```
 
-#### 3.3.5. Blue / Green デプロイ
+#### 3.5. Blue / Green デプロイ
 
 Kubernetes は、古い「Blue」バージョン用と新しい「Green」バージョン用に 2 つの異なるデプロイを作成することでこれを実現します。  
 このデプロイには、ルータとして機能するサービスを介してアクセスする。  
@@ -423,7 +423,7 @@ $ curl -ks https://`kubectl get svc frontend -o=jsonpath="{.status.loadBalancer.
 # 1.0.0 しか返ってこない
 ```
 
-### 3.4. Spinnaker と Kubernetes Engine を使用した継続的デリバリー パイプライン
+### 4. Spinnaker と Kubernetes Engine を使用した継続的デリバリー パイプライン
 
 まずは環境を設定する。
 
@@ -737,7 +737,33 @@ $ git push --tags
     - [INFRASTRUCTURE] > [LOAD BALANCERS] の順にクリックしてから、[service sample-frontend-production] の [DEFAULT] をクリックして Ingress IP アドレスをコピー。このアドレスを新しいタブに貼り付け。
     - アプリがオレンジ色に戻り、production バージョン番号を確認できる。
 
-### 3.5. Cloud Monitoring APM によるサイトの信頼性のトラブルシューティング
+## 5. 監視
+
+### 5.1. Cloud Monitoring と Cloud Logging
+
+- GKE 用 Google Cloud オペレーション スイートの概要
+    - https://cloud.google.com/stackdriver/docs/solutions/gke?hl=ja#skm-howto
+
+GKEには、Cloud Monitoring および Cloud Logging との統合機能が含まれている。（ [Prometheus の使用](https://cloud.google.com/stackdriver/docs/solutions/gke/prometheus?hl=ja) はこちらを参照）  
+`gcloud container clusters create` コマンドでクラスタを作成した場合、デフォルトで有効になっているが、既存のクラスタで有効にする場合は以下のコマンドを実行する。
+
+```bash
+$ gcloud container clusters update [CLUSTER_NAME] --enable-stackdriver-kubernetes
+# ちなみに削除は「-no-enable-stackdriver-kubernetes」オプション
+```
+
+なお、現在はベータ版であるが、「 `--enable-logging-monitoring-system-only` 」オプションでシステムログのみ収集可能になる。（デフォルトは全ログ）  
+システムログとは以下を指す。
+
+- 名前空間 `kube-system` 、 `istio-system` 、 `knative-serving` 、 `gke-system` 、 `config-management-system`  で実行中のすべての Pod
+- コンテナ化されていない重要なサービス:  `docker/containerd` ランタイム、 `kubelet` 、 `kubelet-monitor` 、 `node-problem-detector` 、 `kube-container-runtime-monitor`
+- ノードのシリアルポート出力（VM インスタンスのメタデータ `serial-port-logging-enable` が true に設定されている場合）
+
+アプリケーションログは、 コンテナが STDOUT と STDERR に書き込まれたワークロードのログを収集する。
+
+[GKE ログの管理](http://cloud.google.com/stackdriver/docs/solutions/gke/managing-logs?hl=ja)
+
+### 5.2. Cloud Monitoring APM によるサイトの信頼性のトラブルシューティング
 
 Monitoring ワークスペースを作成して監視を行う。
 
@@ -762,27 +788,3 @@ Monitoring ワークスペースを作成して監視を行う。
 |可用性|フロントエンドの成功率|サービスの可用性の判断基準として、成功したリクエストの割合。|過去 60 分間で 99% のリクエストが成功している|
 
 Cloud Platform Console の Cloud モニタリング（ナビゲーション メニュー > [モニタリング]）で、左側のメニューにある [アラート]、[CREATE POLICY] の順にクリックし、SLO を監視するアラートを作成する。
-
-## 5. 監視
-
-- GKE 用 Google Cloud オペレーション スイートの概要
-    - https://cloud.google.com/stackdriver/docs/solutions/gke?hl=ja#skm-howto
-
-GKEには、Cloud Monitoring および Cloud Logging との統合機能が含まれている。（ [Prometheus の使用](https://cloud.google.com/stackdriver/docs/solutions/gke/prometheus?hl=ja) はこちらを参照）  
-`gcloud container clusters create` コマンドでクラスタを作成した場合、デフォルトで有効になっているが、既存のクラスタで有効にする場合は以下のコマンドを実行する。
-
-```bash
-$ gcloud container clusters update [CLUSTER_NAME] --enable-stackdriver-kubernetes
-# ちなみに削除は「-no-enable-stackdriver-kubernetes」オプション
-```
-
-なお、現在はベータ版であるが、「 `--enable-logging-monitoring-system-only` 」オプションでシステムログのみ収集可能になる。（デフォルトは全ログ）  
-システムログとは以下を指す。
-
-- 名前空間 `kube-system` 、 `istio-system` 、 `knative-serving` 、 `gke-system` 、 `config-management-system`  で実行中のすべての Pod
-- コンテナ化されていない重要なサービス:  `docker/containerd` ランタイム、 `kubelet` 、 `kubelet-monitor` 、 `node-problem-detector` 、 `kube-container-runtime-monitor`
-- ノードのシリアルポート出力（VM インスタンスのメタデータ `serial-port-logging-enable` が true に設定されている場合）
-
-アプリケーションログは、 コンテナが STDOUT と STDERR に書き込まれたワークロードのログを収集する。
-
-[GKE ログの管理](http://cloud.google.com/stackdriver/docs/solutions/gke/managing-logs?hl=ja)

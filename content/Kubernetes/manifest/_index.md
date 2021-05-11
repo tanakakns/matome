@@ -10,8 +10,8 @@ weight: 5
 
 kubernetes では `kubectl` に様々コマンドがあるが、基本的には `kubectl create/delete/apply` コマンドと **マニフェスト** とよぶ YAML/JSON ファイルを使用することで、リソースの作成/削除/更新できる。
 
-1. マニフェストの雛形
-2. マニフェストの理解
+1. [マニフェストの雛形](#1-マニフェスト雛形)
+2. [マニフェストの理解](#2-マニフェスト理解)
 3. その他のリソース
 
 <!--more-->
@@ -148,7 +148,7 @@ namespace リソース（ `kind: Namespace` ）を作成し、各リソースの
 ```
 apiVersion: app/v1
 kind: Deployment
-metadata: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta
+metadata: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#objectmeta-v1-meta
   annotations:                # 任意のメタデータを保存および取得する。外部ツールなどによって設定・変更・保存される箇所でもある。
     key: value
   clusterName: string         # オブジェクトが所属するクラスタ名。異なるクラスターで同じ名前と名前空間を持つリソースを区別するために使用。使わない。
@@ -168,32 +168,32 @@ metadata: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/
   resourceVersion:            # オブジェクトがいつ変更されたかを判断するためにクライアントが使用できるこのオブジェクトの内部バージョン。読み取り専用。
   selfLink:                   # このオブジェクトを表すURL。読み取り専用。
   uid:                        # このオブジェクトの一意な ID 。システムにより管理される。
-spec: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#deploymentspec-v1-apps
+spec: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#deploymentspec-v1-apps
   minReadySeconds:         # コンテナがクラッシュすることなく、新しく作成されたポッドの準備が整うまでの最小秒数。デフォルト 0 。
   paused: bool             # 展開が一時停止されていることを示す。
   progressDeadlineSeconds: # 展開が失敗したと見なされるまで最大秒数。
   replicas:                # Pod のリプリケーション数。
   revisionHistoryLimit:    # ロールバックを許可するReplicaSetの世代数。デフォルト 10 。
-  selector: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#labelselector-v1-meta
+  selector: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta
             # ReplicaSet が Pod を選択するための Label Selector 。
-    matchExpressions: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#labelselectorrequirement-v1-meta
+    matchExpressions: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselectorrequirement-v1-meta
                       # Label Selector のリスト。 AND で評価される。
     matchLabels:      # key-value 形式の Label Selector のリスト。 AND で評価される。matchExpressions の方が複雑な表現が可能。
-  strategy: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#deploymentstrategy-v1-apps
+  strategy: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#deploymentstrategy-v1-apps
             # 新しいポッドに置き換えるため展開戦略。現状は単純な再配置とローリングアップデートのみ。
-    rollingUpdate: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#rollingupdatedeployment-v1-apps
+    rollingUpdate: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#rollingupdatedeployment-v1-apps
       maxSurge:       # Pod のレプリケーション数を超えて作成できるコンテナの最大数。数か割合で表現。
       maxUnavailable: # Pod のレプリケーション数を下回って利用できなくする最大数。数か割合で表現。
     type: # Recreate か RollingUpdate 。デフォルト RollingUpdate 。
-  template: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podtemplatespec-v1-core
+  template: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#podtemplatespec-v1-core
             # 作成する Pod の定義
     metadata: # 先の metadata に同じ。
-    spec: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core
+    spec: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#podspec-v1-core
       activeDeadlineSeconds: # Pod が非アクティブになってから強制終了されるまでの秒数。
-      affinity: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#affinity-v1-core
+      affinity: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#affinity-v1-core
                 # Pod をスケジューリングする際の制約。
       automountServiceAccountToken: # サービスアカウントトークンを自動的にマウントする必要があるかどうかを示す。
-      containers: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core
+      containers: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#container-v1-core
                   # Pod に属するコンテナのリスト。
         args:                     # ENTRYPOINT へ引数。
         command:                  # ENTRYPOINT 配列。
@@ -216,19 +216,19 @@ spec: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#dep
         volumeDevices:            # コンテナが使用するブロックデバイスのリスト。
         volumeMounts:             # コンテナのファイルシステムにマウントするポッドボリューム。
         workingDir:               # コンテナの作業ディレクトリ。
-      dnsConfig: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#poddnsconfig-v1-core
+      dnsConfig: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#poddnsconfig-v1-core
         nameservers: # DNSネームサーバーのIPアドレスのリスト。
         options:     # DNSリゾルバーオプションのリスト。
         searches:    # ホスト名検索用のDNS検索ドメインのリスト。
       dnsPolicy:   # Pod の DNS ポリシー。ClusterFirstWithHostNet, ClusterFirst（デフォルト）, Default, None 。
       enableServiceLinks: # サービスに関する情報をDockerリンクの構文と一致する Pod の環境変数に注入するか否か。デフォルト true 。
-      hostAliases: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#hostalias-v1-core
+      hostAliases: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#hostalias-v1-core
                    # Pod の hosts ファイルへの追加設定。
       hostIPC:     # ホストの IPC 名前空間を使うか否か。デフォルト false 。
       hostNetwork: # Pod に要求されたホストネットワーキング。ホストのネットワーク名前空間を使用。デフォルト false 。
       hostPID:     # ホストの PID 名前空間を利用するか否か。デフォルト false 。
       hostname:    # Pod のホスト名。指定しない場合システムが付与。
-      imagePullSecrets: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#localobjectreference-v1-core
+      imagePullSecrets: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#localobjectreference-v1-core
                         # Docker イメージを Pull する際のシークレット。
       initContainers:    # Pod に属する初期化コンテナのリスト。コンテナが開始される前に順番に実行される。
       nodeName:          # Pod を特定のノードへスケジューリングする。
@@ -237,21 +237,21 @@ spec: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#dep
       preemptionPolicy:  # 優先度の低い Pod を先取りするポリシー。
       priority:          # 優先度の値。値が大きいほど優先度が高い。
       priorityClassName: # Pod の優先順位を示す。
-      readinessGates: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podreadinessgate-v1-core
+      readinessGates: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#podreadinessgate-v1-core
                       # Pod の準備状況を評価する。
       restartPolicy:    # Pod 内の全てのコンテナの再起動ポリシー。
       runtimeClassName: # Pod 実行に使用する RuntimeClass オブジェクト。
       schedulerName:    # Pod を管理するスケジューラ。
-      securityContext: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podsecuritycontext-v1-core
+      securityContext: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#podsecuritycontext-v1-core
                        # Pod レベルのセキュリティ属性。
       serviceAccount:                # Deprecated
       serviceAccountName:            # Pod の実行に使用する ServiceAccount 名。
       shareProcessNamespace:         # Pod 内の全てのコンテナ間で PID 空間を共有する。デフォルト false 。
       subdomain:                     # サブドメインを指定する。"<hostname>.<subdomain>.<pod namespace>.svc.<cluster domain>" 。
       terminationGracePeriodSeconds: # Pod が Graceful Stop するのに要する秒数。デフォルト 30 秒。
-      tolerations: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#toleration-v1-core
+      tolerations: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#toleration-v1-core
                    # Pod を特定のノードに配置する際に利用。 nodeSelector の方が古い。
-      volumes: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#volume-v1-core
+      volumes: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#volume-v1-core
                # マウントできるボリュームのリスト。
 ```
 
@@ -281,6 +281,9 @@ spec:
         image: <string>    # Pod に利用するコンテナイメージ
         name: <string>     # Pod 名
         ports:
+        imagePullPolicy: <string> # Docker イメージの pull ポリシー。 Always（常にpull）, Never（ローカルのみ）, IfNotPresent（ローカルに無ければpull）
+        livenessProbe:            # コンテナ死活の定期的な調査。
+        readinessProbe:           # コンテナサービスの準備状況の定期的な調査。
         resources: {}
 ```
 
@@ -288,6 +291,8 @@ spec:
 
 - spec.strategy
 - spec.template.spec.affinity : [参考](https://qiita.com/sheepland/items/ed12b3dc4a8f1df7c4ec)
+
+`livenessProbe`、`readinessProbe` については [こちら](https://kubernetes.io/ja/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/) 。
 
 ### 2.4. Pod
 

@@ -13,6 +13,10 @@ weight: 1
 
 - [Virtual Private Cloud（VPC）](https://cloud.google.com/vpc/docs)
 
+1. [コンセプト](#1-コンセプト)
+2. [VPC](#2-vpc)
+3. [Cloud VPN](#3-cloud-vpn)
+
 ## 1. コンセプト
 
 - VPC ネットワーク
@@ -147,3 +151,15 @@ NAME                 ZONE            MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EX
 （省略）
 privatenet-us-vm     us-central1-c   n1-standard-1               172.16.0.2   35.223.37.245   RUNNING
 ```
+
+## 3. Cloud VPN
+
+[Cloud VPN](https://cloud.google.com/network-connectivity/docs/vpn/concepts/overview?hl=ja#vpn-types) には以下の 2 種類ある。  
+サイト間の IPsec VPN 接続のみがサポートされる。  
+オンプレミスの VPN ルータ機器とそのグローバル IP を対象に接続することとなる。
+
+- HA VPN
+    - 単一リージョン内の IPsec VPN 接続を使用して、オンプレミス ネットワークを VPC ネットワークに安全に接続できる
+    - **リージョン単位** で、Cloud VPN ゲートウェイ と Cloud Router を構成し、それぞれ冗長化される
+- Classic VPN
+    - レガシーのため省略

@@ -21,8 +21,12 @@ weight: 4
 
 - [スタンダード環境](https://cloud.google.com/appengine/docs/standard)
     - サンドボックス内で実行される
+    - スケールアウト・インに対応（ 0 台までスケールインできる）
+    - VPC に接続されていない、利用するには [サーバーレス VPC アクセス](https://cloud.google.com/vpc/docs/configure-serverless-vpc-access?hl=ja) を介する必要がる
 - [フレキシブル環境](https://cloud.google.com/appengine/docs/flexible)
     - Compute Engine 仮想マシン（VM）上の Docker コンテナ内で実行される
+    - スケールアップ・ダウンに対応（ スケールアウト・インではないので 0 台にはできない）
+    - VPC 環境で利用できる
 
 1 リージョン・マルチゾーンで構成される。  
 また、 App Engine を作成すると、デフォルトで 単一リージョンで Cloud Storage パケットが作成される。

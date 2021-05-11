@@ -107,3 +107,15 @@ $ gsutil acl ch -d AllUsers gs://YOUR-BUCKET-NAME/ada.jpg
 ```bash
 $ gsutil rm gs://YOUR-BUCKET-NAME/ada.jpg
 ```
+
+### 1.6. [再試行方法](https://cloud.google.com/storage/docs/retry-strategy)
+
+Cloud Storage へのリクエストに失敗した場合に再試行するかどうかを決定するには、リクエストのタイプとべき等性を検討する必要がある。
+
+- リトライ
+    - 指数バックオフアルゴリズム： `2^n + randam` ： `n` は試行回数
+- べき等性
+    - 以下のような条件を満たす必要がある
+        - オペレーションを連続してリクエストしても、対象リソースに対して結果が生成される。
+        - オペレーションが 1 回だけ成功する。
+        - 対象リソースの状態に対して観察可能な結果がない。
