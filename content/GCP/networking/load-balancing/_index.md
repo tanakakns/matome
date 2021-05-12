@@ -268,6 +268,17 @@ $ while true; do curl -m1 35.232.6.132; done
 
 ### 3.2.4. HTTP(S) ロードバランサの作成
 
+外部 HTTP(S) ロードバランサの構成要素は以下の通り。
+
+- グローバル外部 IP アドレス（ `addresses --global` ）：OSI 参照モデル第4層 - ネットワーク層：IP アドレス
+- グローバル転送ルール（ `forwarding-rules` ）
+    - IP アドレスが受信したトラフィックをプロキシへ転送する
+- HTTP プロキシ（ `target-http-proxies` ）： OSI 参照モデル第4層 - トランスポート層：TCP
+- URL マップ（ `url-maps` ）： OSI 参照モデル第7層 - アプリケーション層：HTTP
+    - ホストとパスに基づいてトラフィックを1つ以上の宛先に転送
+- バックエンドサービス（ backend-services ）
+    - ヘルスチェック（　health-checks ）
+
 負荷分散ターゲットの基となる インスタンステーンプレート　を作成する。
 
 ```bash

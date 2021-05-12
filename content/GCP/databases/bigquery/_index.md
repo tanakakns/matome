@@ -15,7 +15,20 @@ weight: 1
 データ アナリストやデータ サイエンティストは、サーバーを設定、管理することなく、大規模なデータセットに対するクエリ（ SQL ）やフィルタの実行、結果の集計、複雑な操作の実行が可能。  
 コマンドライン ツール（ `bq` ）またはウェブ コンソールを使用して、GCP プロジェクトに格納されているデータを管理、照会できる。
 
-### コスト
+1. パーティション分割と有効期限
+2. コスト
+
+## 1. 有効期限
+
+BigQuery では以下のようにデータのパーティション分割と有効期限を設定できる。
+
+- [パーティション分割](https://cloud.google.com/bigquery/docs/partitioned-tables#ingestion_time)
+    - 取り込み時間パーティション分割テーブル
+    - 日付、タイムスタンプ、日時パーティション分割テーブル
+- [有効期限](http://cloud.google.com/bigquery/docs/best-practices-storage#use_the_expiration_settings_to_remove_unneeded_tables_and_partitions)
+    - パーティションやテーブルデータの有効期限を設定できる
+
+## 2. コスト
 
 BigQuery のコストは大きく以下の 2 つある。
 

@@ -16,6 +16,9 @@ weight: 1
 1. [コンセプト](#1-コンセプト)
 2. [VPC](#2-vpc)
 3. [Cloud VPN](#3-cloud-vpn)
+4. [プライベート接続](#4-プライベート接続)
+5. [共有 VPC](#5-共有-vpc)
+6. [Cloud CDN](#6-cloud-cdn)
 
 ## 1. コンセプト
 
@@ -130,7 +133,7 @@ privatenet-allow-icmp-ssh-rdp  privatenet  INGRESS    1000      icmp,tcp:22,tcp:
 
 作成したファイアウォールは以下のコマンドで確認する。
 
-```
+```bash
 $ gcloud compute firewall-rules list --sort-by=NETWORK
 NAME                              NETWORK        DIRECTION  PRIORITY  ALLOW                         DENY  DISABLED
 （省略）
@@ -163,3 +166,43 @@ privatenet-us-vm     us-central1-c   n1-standard-1               172.16.0.2   35
     - **リージョン単位** で、Cloud VPN ゲートウェイ と Cloud Router を構成し、それぞれ冗長化される
 - Classic VPN
     - レガシーのため省略
+
+## 4. プライベート接続
+
+- [Private Service Connect](http://cloud.google.com/vpc/docs/private-service-connect)
+    - VPC ネットワークの内部 IP アドレスを使用してプライベートエンドポイントを作成し、インターネットを介さず Google API に接続できるサービス
+    - `storage.googleapis.com` などの公開サービスのエンドポイントではなく、 `storage-vialink1.p.googleapis.com` や `bigtable-adsteam.p.googleapis.com` など意味のある DNS 名で名前解決でき、 Google のネットワーク内でルーティングされる
+        - Cloud Storage などの Google サービスだけでなく、 **Cloud VPN** または **Cloud Interconnect** 経由で接続しているオンプレミス ネットワークでも使用可能
+    - Private Service Connect を使用するには、外部 IP アドレスのない VM インスタンスのプライマリインターフェースが、 **限定公開の Google アクセス** が有効になっているサブネット内に存在する必要がある
+    - Private Service Connect エンドポイントは、 **ピアリングされた VPC ネットワークからアクセスできない**
+
+## 5. 共有 VPC
+
+[共有 VPC](https://cloud.google.com/vpc/docs/shared-vpc?hl=ja) は、同じ **組織** （リソース階層のルート）内のプロジェクトで共有して利用できる VPC 。  
+共有 VPC に参加するプロジェクトは、 **ホストプロジェクト** または **サービスプロジェクト** のいずれかである必要がある。
+
+- ホストプロジェクト
+    - [共有 VPC 管理者](https://cloud.google.com/vpc/docs/shared-vpc?hl=ja#iam_in_shared_vpc) がホストプロジェクトとして有効化したプロジェクト
+    - 共有 VPC 管理者が 1 つ以上の 共有 VPC を作成し、 1 つ以上のサービスプロジェクトが接続される
+- サービスプロジェクト
+    - 共有 VPC 管理者がホストプロジェクトに接続したプロジェクト
+    - 接続したプロジェクトには、共有 VPC への参加が許可される
+- 制約
+    - 1 つのプロジェクトを同時にホスト プロジェクトとサービス プロジェクトの両方にすることはできない
+    - ホストプロジェクトを複数作成できるが、各サービスプロジェクトは 1 つのホストプロジェクトにしか接続できない
+
+## 6. Cloud CDN
+
+[Cloud CDN](https://cloud.google.com/cdn/docs/overview) は、Google のグローバル エッジ ネットワークを使用して、ユーザーの近くからコンテンツを配信する。  
+Cloud CDN は、外部 HTTP(S) 負荷分散の Cloud Load Balancing と連携し、前段に位置する。  
+
+- 外部 HTTP(S) 負荷分散の Cloud Load Balancing を介した インスタンスグループ
+- 外部 HTTP(S) 負荷分散の Cloud Load Balancing を介した [ネットワークエンドポイントグループ（ NEG ）](https://cloud.google.com/load-balancing/docs/negs)
+- Cloud Storage のバケット
+
+デフォルトでは、Cloud CDN は完全なリクエストURLを使用して **キャッシュキー** を構築する。  
+キャッシュヒット率を最適化するために、 **カスタムキャッシュキー** を使用できる。  
+キャッシュキーをカスタマイズして、プロトコル、ホスト、クエリ文字列の任意の組み合わせの追加や省略を行うことができる。  
+たとえば、異なるドメインで同じロゴを使用する 2 つのウェブサイトがあるとします。HTTP と HTTPS のどちらで表示されるかにかかわらず、ロゴはキャッシュに保存される必要がある。ロゴを保存するバックエンド サービスのキャッシュキーをカスタマイズするときに、[プロトコル] チェックボックスをオフにすると、HTTP と HTTPS によるリクエストがロゴのキャッシュエントリの一致としてカウントされるようになる。
+
+- [コンテンツ配信のベスト プラクティス](https://cloud.google.com/cdn/docs/best-practices)

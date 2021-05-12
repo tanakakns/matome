@@ -9,7 +9,7 @@ subpage: false
 weight: 7
 ---
 
-VPC、Cloud Load Balancing、Identity-Aware Proxy
+VPC、Cloud Load Balancing、Identity-Aware Proxy、Cloud Interconnect
 
 <!--more-->
 
@@ -18,5 +18,6 @@ VPC、Cloud Load Balancing、Identity-Aware Proxy
 |[vpc](./vpc)|ネットワーク|
 |[Cloud Load Balancing](./load-balancing)|ロードバランサ|
 |[Identity-Aware Proxy](./iap)|アプリケーション認証|
+|[Cloud Interconnect](./interconnect)|オンプレ・GCP間の専用線接続|
 
 - [Google Cloud ネットワーキング プロダクト](https://cloud.google.com/products/networking)

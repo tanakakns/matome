@@ -112,6 +112,7 @@ $ gcloud compute instance-groups managed create [インスタンスグループ�
         - 自動修復のためのヘルスチェックが新しく作成したインスタンスを対象にしない時間
         - 初期化完了前にUnhealthyと判断され、無駄な再作成を防ぐ目的で設定する
     - [ヘルスチェックと自動修復の設定](https://cloud.google.com/compute/docs/instance-groups/autohealing-instances-in-migs?hl=ja)
+- [ローリングアップデート](https://cloud.google.com/compute/docs/instance-groups/rolling-out-updates-to-managed-instance-groups)
 
 ### 1.2. マシンタイプ
 
@@ -418,6 +419,8 @@ $ gcloud compute firewall-rules create allow-http \
 ```bash
 $ gcloud compute instances add-tags INSTANCE_NAME --tags=http-server
 ```
+
+また、ファイアウォールルールの優先度は、0〜65535の整数で表現され、値が小さいほど優先度が高くなる。（ [優先度](https://cloud.google.com/vpc/docs/firewalls#priority_order_for_firewall_rules) ）
 
 ## 5. ネットワークインターフェース
 

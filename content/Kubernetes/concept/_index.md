@@ -60,6 +60,8 @@ weight: 1
     - selector をサポートする点において ReplicationController と異なる
     - set-based selector
     - ReplicaSet の特殊な形として「 DaemonSet 」「 StatefulSet 」がある
+        - DaemonSet ：全て(またはいくつか)のNodeが単一のPodのコピーを稼働させることを保証する。各ノードに 1 Pod ずつ起動したい（Fluentdなど）ときに有効。
+        - StatefulSet ：ReplicaSet がステートレスだとするとStatefulSetはステートフル。Podの識別子の順序管理など、個々の Pod の状態変化を前提として管理する。
 - Deployments
     - Pod と ReplicaSet を一括で管理する ReplicaSet の上位互換
     - Deployment は複数の ReplicaSet を管理することで、ローリングアップデートやロールバックなどを実現可能にするリソース
