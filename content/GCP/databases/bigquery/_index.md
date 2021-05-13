@@ -16,7 +16,8 @@ weight: 1
 コマンドライン ツール（ `bq` ）またはウェブ コンソールを使用して、GCP プロジェクトに格納されているデータを管理、照会できる。
 
 1. パーティション分割と有効期限
-2. コスト
+2. 外部データソースに対するクエリ
+3. コスト
 
 ## 1. 有効期限
 
@@ -28,7 +29,18 @@ BigQuery では以下のようにデータのパーティション分割と有�
 - [有効期限](http://cloud.google.com/bigquery/docs/best-practices-storage#use_the_expiration_settings_to_remove_unneeded_tables_and_partitions)
     - パーティションやテーブルデータの有効期限を設定できる
 
-## 2. コスト
+## 2. 外部データソースに対するクエリ
+
+BigQuery は [外部データソース](https://cloud.google.com/bigquery/external-data-sources) に対してクエリを発行できる。
+
+- Cloud SQL
+- Bigtable
+- Cloud Storage
+- Google ドライブ
+
+ただし、データの生合成が取れないなどの制約はある。
+
+## 3. コスト
 
 BigQuery のコストは大きく以下の 2 つある。
 
