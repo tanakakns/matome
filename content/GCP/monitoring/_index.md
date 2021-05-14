@@ -6,50 +6,44 @@ hide:
 - toc
 - nextpage
 subpage: false
-weight: 8
+weight: 1
 ---
 
 <!--more-->
 
-1. オペレーションスイート
+1. コンセプト
 
+## 1. コンセプト
 
-## 1. [オペレーションスイート](https://cloud.google.com/products/operations?hl=ja)
+[オペレーションスイート](https://cloud.google.com/products/operations?hl=ja)（旧称 Stackdriver）
 
-旧称 Stackdriver
-
-- Monitoring
-    - アラート定義
-    - アップタイムチェック、稼働時間モニタリング
-    - AWSもまとめてみれる
-- Logging
-    - ログに基づいた指標定義
-    - フィルターや検索でアプリケーションログを見る
-    - BigQuery、Google Cloud Storage、Pub/Subへのエクスポート
-    - エージェント導入できる
-- Trace
-    - Google App Engine 用のレイテンシのサンプリング
-    - URL ごとの統計
-    - レイテンシの分布
-- Debugger
-    - 本番環境でのコードのデバッグ（途中で止める）
-- Error Reporting
-    - エラーをレポート。通知
-
-## 5. 監視
-
-[Google Cloud のオペレーション スイート](https://cloud.google.com/products/operations?hl=ja)
-
-- Cloud Logging
-    - リアルタイムでログを管理して分析する、大規模なフルマネージドサービス
+1. Cloud Logging
+    - リアルタイムでログを収集・分析する、大規模なフルマネージドサービス
+        - 選択したログを分析でき、アプリケーションのトラブルシューティングが加速する
+        - ログに基づいた指標（メトリクス）定義
+        - フィルターや検索でアプリケーションログを見る
+        - VM インスタンスに対してはエージェントを導入する必要がある
     - アプリケーションとシステムのログデータのほか、GKE 環境、VM、Google Cloud サービスからのカスタム ログデータも取り込める
-    - 選択したログを分析でき、アプリケーションのトラブルシューティングが加速する
-- Cloud Monitoring
+    - BigQuery、Google Cloud Storage、Pub/Subへのエクスポート
+2. Cloud Monitoring
     - 組み込みの大規模な指標オブザーバビリティ
     - クラウドで実行されるアプリケーションのパフォーマンスや稼働時間、全体的な動作状況を確認できる
     - メトリクス・イベント・メタデータを収集し、チャートやダッシュボードで可視化してアラート管理できる
+    - アラート定義、アップタイムチェック、稼働時間モニタリング
+    - AWSもまとめてみれる
+3. Trace
+    - Google App Engine 用のレイテンシのサンプリング
+    - URL ごとの統計
+    - レイテンシの分布
+4. Debugger
+    - 本番環境でのコードのデバッグ（途中で止める）
+5. Error Reporting
+    - エラーをレポート、通知
 
-### 5.1. Cloud Logging
+- エージェント
+    - インスタンスから情報を収集する VM に [Monitoring エージェント](https://cloud.google.com/monitoring/agent) と [Logging エージェント](https://cloud.google.com/logging/docs/agent?hl=ja) をインストールすることで収集可能となる
+
+## 1. Cloud Logging
 
 Cloud Logging は IAM を使用して Google Cloud リソースのロギングデータへの [アクセス制御](https://cloud.google.com/logging/docs/access-control?hl=ja#permissions_and_roles) を実施できる。
 
@@ -78,9 +72,7 @@ Cloud Logging は IAM を使用して Google Cloud リソースのロギング�
 - `roles/owner`（プロジェクト オーナー）
     - Logging に対する完全アクセス権（アクセスの透明性ログとデータアクセス監査ログ）
 
-
-
-#### 5.1.1. 監査ログ
+### 1.1. 監査ログ
 
 権限管理された上で、オペレーションを監視するログに以下の種類がある。（ [Cloud Audit Logs](https://cloud.google.com/logging/docs/audit) ）
 
@@ -95,11 +87,13 @@ Cloud Logging は IAM を使用して Google Cloud リソースのロギング�
 - ポリシー拒否監査ログ
     - セキュリティ ポリシー違反のため Google Cloud サービスがユーザーまたはサービス アカウントへのアクセスを拒否したときに、ポリシー拒否監査ログを記録する
 
-### 5.2. Cloud Monitoring
+現状、アクティビティログというサービスがあるが、 Deprecated なので監査ログを使用すること。
+
+## 2. Cloud Monitoring
 
 - [ワークスペース](https://cloud.google.com/monitoring/workspaces?hl=ja#accounts) は、1 つ以上の Google Cloud プロジェクトまたは AWS アカウントに含まれるリソースをモニタリングするためのツール
     - 各ワークスペースには、Google Cloud プロジェクトや AWS アカウントなど、1～100 個のモニタリング対象プロジェクトを作成できる
-    - ワークスペースの数に制限はありませんが、Google CloudプロジェクトとAWSアカウントを複数のワークスペースでモニタリングすることはできない
+    - ワークスペースの数に制限はないが、Google CloudプロジェクトとAWSアカウントを複数のワークスペースでモニタリングすることはできない
 - **ホストプロジェクト**
     - すべてのワークスペースには、ホストプロジェクトがある
     - ワークスペースの作成に使用した Google Cloud プロジェクトが、ワークスペースのホスト プロジェクト
@@ -107,3 +101,4 @@ Cloud Logging は IAM を使用して Google Cloud リソースのロギング�
     - ホストプロジェクトでワークスペースを作成すると、Google Cloud プロジェクトと AWS アカウントが追加できるようになる
     - 新しい空白の Google Cloud プロジェクトを使用してワークスペースをホストしてから、モニタリングするプロジェクトと AWS アカウントをワークスペースに追加するのがよい
         - ホスト プロジェクトと Workspace の名前を自由に選択でき、ワークスペース間でモニタリング対象プロジェクトを柔軟に移動できる
+- [カスタムメトリクス](https://cloud.google.com/monitoring/custom-metrics)

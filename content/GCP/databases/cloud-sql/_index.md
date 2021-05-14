@@ -11,6 +11,13 @@ weight: 1
 
 <!--more-->
 
+1. コンセプト
+2. インスタンスの作成
+3. レプリケーション
+4. ユースケース
+
+## 1. コンセプト
+
 [Cloud SQL](https://cloud.google.com/sql/docs) はクラウド上の PostgreSQL 、 MySQL 、 SQL Server のリレーショナル データベースを簡単に設定、維持、運用、管理できるようにするフルマネージド データベース サービス。  
 **GCP 外からもアクセス可能** なのが売りの 1 つらしい。  
 Cloud SQL が対応しているデータ形式には、ダンプファイル（.sql）と CSV ファイル（.csv）。
@@ -23,7 +30,7 @@ Cloud SQL が対応しているデータ形式には、ダンプファイル（.
     - グローバル IP だけでなく、 プライベート IP もサポートされている
 
 
-## インスタンスの作成
+## 2. インスタンスの作成
 
 - [インスタンスの作成](https://cloud.google.com/sql/docs/mysql/create-instance#gcloud)
 - [`gcloud sql instances create`](https://cloud.google.com/sdk/gcloud/reference/sql/instances/create)
@@ -38,22 +45,36 @@ $ gcloud sql instances create INSTANCE_NAME --cpu=NUMBER_CPUS --memory=MEMORY_SI
 - プライベートアクセスする場合は `--network=projects/testproject/global/networks/testsharednetwork` のように VPC を指定する必要がある
     - ただし、ベータ版コマンド（ `gcloud beta sql instances create`）でのみ有効
 
-## Cloud Shell から `gcloud` でインスタンスに接続
+### 2.1. Cloud Shell から `gcloud` でインスタンスに接続
 
 ```bash
 $ gcloud sql connect qwiklabs-demo --user=root
 ```
 
-## Cloud SQL Auth Proxy
+## 2.2. Cloud SQL Auth Proxy
 
 - Cloud SQL Auth Proxy はローカル環境から Cloud SQL へ接続するための仕組み
 - テスト用
 - ローカル PC に 「Cloud SQL Auth Proxy クライアント」を導入して、 `gcloud` で認証することにより接続できる
 - [Cloud SQL Auth Proxy を使用するためのクイックスタート](https://cloud.google.com/sql/docs/mysql/quickstart-proxy-test)
 
-## ユースケース
+## 3. レプリケーション
 
-### VM インスタンスから Cloud SQL に接続する
+- 高可用性構成
+    - HA を構成し、可用性を高める
+    - リードレプリカじゃない（ HA なので）
+    - 同一リージョン・複数ゾーンで構成され、 **フェールオーバーに対応** する
+- [リードレプリカ](https://cloud.google.com/sql/docs/postgres/replication#read-replicas)
+    - プライマリインスタンスの正確なコピーを作成し、読み取り専用のセカンダリインスタンスとして構成する
+    - プライマリインスタンスごとに最大 10 個のリードレプリカを作成できる
+    - **フェールオーバーできない**
+- [クロスリージョン リードレプリカ](https://cloud.google.com/sql/docs/postgres/replication#cross-region-read-replicas)
+    - リードレプリカはクロスリージョンにも対応する
+    - **フェールオーバーできない**
+
+## 4. ユースケース
+
+### 4.1. VM インスタンスから Cloud SQL に接続する
 
 - `default` ネットワークの `us-central1-a` ゾーンに `blog` VM インスタンスがある
     - 内部 IP `10.128.0.3` 、 外部 IP `35.194.61.180`

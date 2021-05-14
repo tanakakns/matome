@@ -109,6 +109,10 @@ $ gsutil acl ch -d AllUsers gs://YOUR-BUCKET-NAME/ada.jpg
 $ gsutil rm gs://YOUR-BUCKET-NAME/ada.jpg
 ```
 
+#### 1.5.1. boto 構成ファイル
+
+[boto 構成ファイル]() は、Amazon S3 SDK for Python でも使用される `~/.boto` ファイルで、 Cloud Storage へアクセスするための認証情報・暗号鍵情報を管理できる。
+
 ### 1.6. [再試行方法](https://cloud.google.com/storage/docs/retry-strategy)
 
 Cloud Storage へのリクエストに失敗した場合に再試行するかどうかを決定するには、リクエストのタイプとべき等性を検討する必要がある。
