@@ -31,10 +31,10 @@ weight: 1
     - メトリクス・イベント・メタデータを収集し、チャートやダッシュボードで可視化してアラート管理できる
     - アラート定義、アップタイムチェック、稼働時間モニタリング
     - AWSもまとめてみれる
-3. Trace
-    - Google App Engine 用のレイテンシのサンプリング
-    - URL ごとの統計
-    - レイテンシの分布
+3. [Cloud Trace](https://cloud.google.com/trace/docs/overview)
+    - 各プログラミング言語に対応したライブラリを使用することで、HTTP ヘッダを挿入し、VM、コンテナー、AppEngine、トレースをキャプチャする
+        - ロードバランサにも対応
+    - URL ごとの統計、レイテンシの分布
 4. Debugger
     - 本番環境でのコードのデバッグ（途中で止める）
 5. Error Reporting
@@ -45,7 +45,8 @@ weight: 1
 
 ## 1. Cloud Logging
 
-Cloud Logging は IAM を使用して Google Cloud リソースのロギングデータへの [アクセス制御](https://cloud.google.com/logging/docs/access-control?hl=ja#permissions_and_roles) を実施できる。
+Cloud Logging は IAM を使用して Google Cloud リソースのロギングデータへの [アクセス制御](https://cloud.google.com/logging/docs/access-control?hl=ja#permissions_and_roles) を実施できる。  
+ログは **400 日間** 保存されるが、延長することはできない。長期保存するには Cloud Storage などへエキスポートする必要がある。
 
 - `roles/logging.viewer`（ログビューア）（＝ `roles/viewer` ）
     - アクセスの透明性ログとデータアクセス監査ログ以外のすべての Logging 機能に対する読み取り専用権限
@@ -88,6 +89,19 @@ Cloud Logging は IAM を使用して Google Cloud リソースのロギング�
     - セキュリティ ポリシー違反のため Google Cloud サービスがユーザーまたはサービス アカウントへのアクセスを拒否したときに、ポリシー拒否監査ログを記録する
 
 現状、アクティビティログというサービスがあるが、 Deprecated なので監査ログを使用すること。
+
+### 1.2. エキスポート・シンク
+
+Cloud Logging は以下のエキスポート・シンクをサポートする。  
+gcloud 、Cloud Console、Google Cloud APIs ログシンクでログシンクのエクスポート先を作成してから、[集約シンク](https://cloud.google.com/logging/docs/export/aggregated_sinks) を作成する。
+
+- Cloud Storage
+    - Cloud Storage バケットに保存される JSON ファイル
+- BigQuery
+    - BigQuery データセットに作成されるテーブ。
+- Pub/Sub
+    - Pub/Sub トピックに配信される JSON メッセージ
+    - サードパーティによる Logging との統合サービス（Splunk など）をサポート
 
 ## 2. Cloud Monitoring
 
