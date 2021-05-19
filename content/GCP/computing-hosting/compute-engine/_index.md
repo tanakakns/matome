@@ -21,7 +21,8 @@ weight: 1
 6. [インスタンスへの接続](#6-インスタンスへの接続)
 7. [Cloud Monitoring / Cloud Logging 連携](#7-cloud-monitoring--cloud-logging-連携)
 8. [サービスアカウント](#8-サービスアカウント)
-9. [ケーススタディ](#9-ケーススタディ)
+9. [アクセススコープ](#9-アクセススコープ)
+10. [ケーススタディ](#9-ケーススタディ)
 
 - [公式ガイド](https://cloud.google.com/compute/docs/how-to?hl=ja)
 - [Compute Engine のリージョン選択に関するベスト プラクティス](https://cloud.google.com/solutions/best-practices-compute-engine-region-selection?hl=ja)
@@ -36,6 +37,7 @@ weight: 1
 6. [ゲスト環境](#16-ゲスト環境)
 7. [メタデータサーバー](#17-メタデータサーバー)
 8. [ライブマイグレーション](#18-ライプマイグレーション)
+9. [ラベル](#19-ラベル)
 
 ### 1.1. VM インスタンス
 
@@ -207,6 +209,10 @@ coreos-stable-1911-3-0-v20181106  coreos-cloud  coreos-stable              READY
 - ユーザーが VM を再起動しなくても、実行中のインスタンスを同じゾーンの別のホストに移行できる
 - ただし、以下および以下を含むインスタンスはライブマイグレーションできない
     - [Confidential VMs](https://cloud.google.com/compute/confidential-vm/docs/creating-cvm-instance)、GPU、[Cloud TPU](https://cloud.google.com/tpu/docs/tpus)、[プリエンプティブル インスタンス](https://cloud.google.com/compute/docs/instances/preemptible)
+
+### 1.9. ラベル
+
+Compute の各リソースには [リソースのラベル付け](https://cloud.google.com/compute/docs/labeling-resources) を行うことができ、これにより簡単にリソースをグループ化することができる。
 
 ## 2. インスタンス作成
 
@@ -400,6 +406,15 @@ $ gcloud compute instances attach-disk INSTANCE_NAME --disk DISK_NAME
 - ディスクを作成・アタッチして起動（ [参考](https://cloud.google.com/sdk/gcloud/reference/compute/instances/create#--create-disk) ）
     - オプション `--create-disk=[PROPERTY=VALUE,…]`
 
+### 3.1. 永続ディスクの操作
+
+永続ディスクは、インスタンスを停止することなく [サイズを変更](https://cloud.google.com/compute/docs/disks/working-with-persistent-disks#resize_pd) することができる。  
+以下の手順で行う。
+
+1. ディスクのサイズ変更：`gcloud compute disks resize DISK_NAME --size DISK_SIZE`
+2. ディスクのバックアップ
+3. ファイルシステムとパーティションのサイズの変更
+
 ## 4. ファイアウォールルールの作成
 
 以下のコマンドでファイアウォールルールを作成する。
@@ -523,17 +538,33 @@ $ gcloud compute instances set-service-account INSTANCE_NAME \
 ```
 
 - [ベストプラクティス](https://cloud.google.com/compute/docs/access/create-enable-service-accounts-for-instances?hl=ja#best_practices)
-    - Compute Engine のデフォルトのサービス アカウントを使用せずに、新しいサービス アカウントを作成
+    - Compute Engine のデフォルトのサービスアカウントを使用せずに、新しいサービスアカウントを作成
     - 必要なリソースについてのみ、このサービス アカウントに IAM ロールを付与
     - このサービス アカウントとして実行するようにインスタンスを構成
-    - インスタンスの https://www.googleapis.com/auth/cloud-platform スコープにすべての Google Cloud APIs への完全アクセス権を与えるには、インスタンスの IAM 権限をサービス アカウントの IAM のロールで完全に決定するようにする
 
-## 9. ケーススタディ
+## 9. アクセススコープ
+
+**アクセススコープ** は、インスタンスの権限を指定するレガシーな方法。  
+セキュリティメカニズムではなく、gcloud ツールまたはクライアントライブラリからのリクエストで使用されるデフォルトの OAuth スコープを定義するもの。  
+これは、gRPC や SignBlob API など、OAuth を介して認証を受けないリクエストには影響しないことに注意。  
+`gcloud compute instances create` コマンドの `--scopes` オプションを使用して、 VM インスタンスに付与することができる。  
+以下のようなアクセススコープがある。
+
+
+- `https://www.googleapis.com/auth/cloud-platform` ：すべての Google Cloud リソースに対する完全アクセス権
+- `https://www.googleapis.com/auth/compute` ：Compute Engine メソッドに対するフル コントロール アクセス権
+- `https://www.googleapis.com/auth/compute.readonly` ：Compute Engine メソッドに対する読み取り専用アクセス権
+- `https://www.googleapis.com/auth/devstorage.read_only` ：Cloud Storage に対する読み取り専用アクセス権
+- `https://www.googleapis.com/auth/logging.write` ：Compute Engine ログに対する書き込みアクセス権
+
+ベストプラクティスとしては、 VM インスタンスのアクセススコープに完全な権限( `https://www.googleapis.com/auth/cloud-platform` )を付与し、サービスアカウントの IAM ロールで権限を絞るのがよい。
+
+## 10. ケーススタディ
 
 1. [Apache の VM インスタンスを作成](#91-apache-の-vm-インスタンスを作成)
 2. [踏み台経由の RDP](#92-踏み台経由の-rdp)
 
-### 9.1. Apache の VM インスタンスを作成
+### 10.1. Apache の VM インスタンスを作成
 
 要件は以下。
 
@@ -608,7 +639,7 @@ apt-get update
 apt-get install -y apache2
 ```
 
-### 9.2. 踏み台経由の RDP
+### 10.2. 踏み台経由の RDP
 
 要件は以下。
 

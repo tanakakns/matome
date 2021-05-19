@@ -15,16 +15,18 @@ Cloud SQL、Cloud Spanner、Bare Metal Solution、Cloud Bigtable、Firestore、M
 
 [Google Cloud データベース](https://cloud.google.com/products/databases)
 
-|サービス|モデル|提供|ユースケース|
-|:---|:---|:---|:---|
-|[Cloud SQL](./cloud-sql) ※[doc](https://cloud.google.com/sql/docs)|リレーショナル（ SQL ）|インスタンス|小規模（TB級）、水平スケーラビリティ不可|
-|[Cloud Spanner](./cloud-spanner) ※[doc](https://cloud.google.com/spanner/docs)|リレーショナル（ SQL ）|インスタンス？|大規模（PB級）、水平スケーラビリティ、グローバル分散|
-|[Bare Metal Solution](./bare-metal-solution) ※[doc](https://cloud.google.com/bare-metal/docs)||||
-|[Cloud Bigtable](./cloud-bigtable) ※[doc](https://cloud.google.com/bigtable/docs)|Key-Value（ HBase 互換）||大容量（PB級）、超低レイテンシ（レイテンシが許容されるなら BQ ）|
-|[Firestore](./firestore) ※旧 [Datastore](https://cloud.google.com/datastore/docs?hl=ja) ※[doc](https://cloud.google.com/firestore/docs)|ドキュメント|サーバレス|TB級、トランザクション可能、サーバレス、水平スケーラビリティ|
-|[Firebase Realtime Database](./firebase-realtime-database) ※[doc](https://firebase.google.com/products/realtime-database/)||||
-|[Memorystore](./memorystore) ※[doc](https://cloud.google.com/memorystore/docs)|インメモリ||キャッシュ、超低レイテンシ、非永続化|
-|[BigQuery](./bigquery) ※[doc](https://cloud.google.com/bigquery/docs?hl=ja)|DWH（ SQL ）||大規模（PB級）なデータアナリティクス|
+|サービス|モデル|提供|ユースケース|備考|
+|:---|:---|:---|:---|:---|
+|[Cloud SQL](./cloud-sql)|リレーショナル（ SQL ）|インスタンス|小規模（TB級）、水平スケーラビリティ不可|[doc](https://cloud.google.com/sql/docs)|
+|[Cloud Spanner](./cloud-spanner)|リレーショナル（ SQL ）|インスタンス？|大規模（PB級）、水平スケーラビリティ、グローバル分散|[doc](https://cloud.google.com/spanner/docs)|
+|[Cloud Bigtable](./cloud-bigtable)|Key-Value（ HBase 互換）||大容量（PB級）、超低レイテンシ（レイテンシが許容されるなら BQ ）|[doc](https://cloud.google.com/bigtable/docs)|
+|[Firestore ネイティブモード](./firestore-native)|ドキュメント（ドキュメントとコレクション）|サーバレス|TB級、トランザクション可能、サーバレス、水平スケーラビリティ|[doc](https://cloud.google.com/firestore/docs)、[Firebase Realtime Database](https://firebase.google.com/products/realtime-database/)の後継|
+|[Firestore Datastore モード](./firestore-datastore)|ドキュメント（エンティティと種類）|サーバレス|TB級、トランザクション可能、サーバレス、水平スケーラビリティ|[doc](https://cloud.google.com/firestore/docs/concepts)、[Datastore](https://cloud.google.com/datastore/docs?hl=ja)の後継|
+|[Memorystore](./memorystore)|インメモリ||キャッシュ、超低レイテンシ、非永続化|[doc](https://cloud.google.com/memorystore/docs)|
+|[BigQuery](./bigquery)|DWH（ SQL ）||大規模（PB級）なデータアナリティクス|[doc](https://cloud.google.com/bigquery/docs?hl=ja)|
+
+- [ネイティブ モードと Datastore モードからの選択](https://cloud.google.com/firestore/docs/firestore-or-datastore?hl=ja#feature_comparison)
+    - モバイルと直接通信の場合はネイティブモード、サーバとの直接通信の場合は Datastore モードが推奨
 
 ## データ移行
 
@@ -40,18 +42,3 @@ Cloud SQL、Cloud Spanner、Bare Metal Solution、Cloud Bigtable、Firestore、M
     - 大量のデータ（数百テラバイトから 1 ペタバイトまで）を Google Cloud Platform に安全に移行できるハードウェア アプライアンス
     - トータルの所用期間は 50 日
 - BigQuery Data Transfer Service ：あらかじめ設定されたスケジュールに基づき、BigQuery へのデータの移動を自動化するマネージド サービス
-
-## データ分析パイプライン
-
-「取り込み」 -> 「処理」 -> 「分析」 -> 「可視化」の順で処理をする。
-
-- 取り込み
-    - Cloud Pub/Sub：ストリーミングの場合はこちら
-    - Cloud Storage：ストリーミングではなく一時保存する場合はこちらでも
-- 処理
-    - Cloud Dataflow（推奨）： Apache Beam 準拠の ETL 処理、サーバレス
-    - Cloud Dataproc：マネージド Hadoop/Spark、クラスタ管理が必要、既存の Hadoop/Sparkジョブがある場合はこちらでも
-- 分析
-    - BigQuery
-- 可視化
-    - DataPortal

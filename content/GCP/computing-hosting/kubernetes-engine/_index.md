@@ -97,6 +97,47 @@ Deleting cluster my-cluster...done.
 Deleted [https://container.googleapis.com/v1/projects/qwiklabs-gcp-01-47d564cd39d1/zones/us-central1-a/clusters/my-cluster].
 ```
 
+### 2.1. 限定公開 Kubernetes クラスタのセットアップ
+
+Kubernetes Engine における限定公開クラスタとは、公共のインターネットからマスターにアクセスできないようにするクラスタ。  
+このクラスタのノードにはプライベート アドレスしかない（パブリック IP アドレスがない）ため、隔離された環境でワークロードが実行される。  
+ノードとマスターは、VPC ピアリングを使用して相互に通信する。  
+Kubernetes Engine API では、アドレス範囲が CIDR（Classless Inter-Domain Routing）ブロックとして表される。
+
+```bash
+$ gcloud beta container clusters create private-cluster \
+    --private-cluster \
+    --master-ipv4-cidr 172.16.0.16/28 \
+    --enable-ip-alias \
+    --create-subnetwork ""
+```
+
+なお、カスタム サブネットワークを使用する限定公開クラスタの作成は以下。
+
+```bash
+# サブネットワークとセカンダリ範囲を作成
+$ gcloud compute networks subnets create my-subnet \
+    --network default \
+    --range 10.0.4.0/22 \
+    --enable-private-ip-google-access \
+    --region us-central1 \
+    --secondary-range my-svc-range=10.0.32.0/20,my-pod-range=10.4.0.0/14
+# サブネットワークを使用する限定公開クラスタを作成
+$ gcloud beta container clusters create private-cluster2 \
+    --private-cluster \
+    --enable-ip-alias \
+    --master-ipv4-cidr 172.16.0.32/28 \
+    --subnetwork my-subnet \
+    --services-secondary-range-name my-svc-range \
+    --cluster-secondary-range-name my-pod-range
+
+# 外部アドレス範囲を承認（プライベートアクセスできる、IP の CIDR を設定する）
+# [MY_EXTERNAL_RANGE] は、前の出力で取得した外部アドレスの CIDR 範囲に置き換え
+$ gcloud container clusters update private-cluster2 \
+    --enable-master-authorized-networks \
+    --master-authorized-networks [MY_EXTERNAL_RANGE]
+```
+
 ## 3. デプロイ管理
 
 ### 3.1. Deployment オブジェクトの詳細

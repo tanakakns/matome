@@ -1,5 +1,5 @@
 ---
-title: "アクセス制御"
+title: "アクセス制御とセキュリティ"
 date: 2021-01-30T15:26:01+09:00
 draft: false
 hide:
@@ -13,22 +13,12 @@ weight: 3
 
 1. [コンセプト](#1-コンセプト)
 2. [リソース階層とアクセス制御](#3-リソース階層とアクセス制御)
-3. リソースの管理
-4. コスト管理
-5. ユースケース
+3. [リソースの管理](#3-リソースの管理)
+4. [Cloud KMS](#4-cloud-kms)
+5. [コスト管理](#5-コスト管理)
+6. [ユースケース](#6-ユースケース)
 
 ## 1. コンセプト
-
-GCP のサービス（ [プロダクトとサービスの一覧](https://cloud.google.com/products?hl=ja) ）は以下のカテゴリで構成される。（[詳細](https://cloud.google.com/docs/overview/cloud-platform-services#top_of_page)）
-
-- コンピューティングとホスティング
-- ストレージ
-- データベース
-- ネットワーキング
-- ビッグデータ
-- 機械学習
-
-基本的な概念は以下の通り。
 
 - [リージョンとゾーン](https://cloud.google.com/compute/docs/regions-zones/) ※[地域とリージョン](https://cloud.google.com/docs/geography-and-regions?hl=ja)
     - 一部の Compute Engine リソースは、リージョン内またはゾーン内にのみ存在する
@@ -55,8 +45,6 @@ GCP のサービス（ [プロダクトとサービスの一覧](https://cloud.g
 
 ## 2. リソース階層とアクセス制御
 
-- ToDo  
-- 「権限管理」くらいのタイトルで一つの記事に切り出して際整理が必要か？
 - ここが全て：https://cloud.google.com/iam/docs/overview?hl=ja
 - 理解の補足
     - [GCP の IAM をおさらいしよう](https://medium.com/google-cloud-jp/gcp-iam-beginner-b2e1ef7ad9c2)
@@ -85,14 +73,6 @@ Cloud Console の 「サイドメニュー」->「 IAM と管理」->「 IAM 」
 ### 2.2. メンバー
 
 リソースへのアクセスが許可される主体（「誰が」）には以下がある。
-
-|主体|内容|具体例|
-|:---|:---|:---|
-|Google アカウント|Gmail アカウントや Google アカウントに関連づけられているメールアドレス| `@gmail.com` やその他ドメインのメールアドレス|
-|Google グループ|Google アカウントとサービスアカウントの名前付きコレクション|グループ固有メールアドレス|
-|サービスアカウント|個々のエンドユーザではなく、アプリケーションのアカウント| `[サービスアカウント]@[プロジェクトID].iam.gserviceaccount.com` |
-|G Suite ドメイン|組織のインターネットドメイン名| `example.com` |
-|Cloud Identity ドメイン|組織のインターネットドメイン名（G Suite の機能にはアクセスできない）| `example.com` |
 
 - **Google アカウント** （ `user:xxxx` の形式）
     - Gmail アカウント（ `@gmail.com` ）や Google アカウントに関連づけられているメールアドレス
@@ -125,18 +105,10 @@ Cloud Console の 「サイドメニュー」->「 IAM と管理」->「 IAM 」
 サービスアカウントについて以下で補足する。
 
 - アプリケーションやサーバのための ID
+- `gcloud iam service-accounts create SERVICE_ACCOUNT_ID` でサービスアカウントを作成する
+- サービスアカウントによって使われるキーは自動的に管理され、ユーザがキーを作成・ダウンロードすることも可能
 - サービスアカウント自体もリソースで、人が「サービスアカウントとして実行」もできる
     - JSONをダウンロードして `gcloud auth activate-service-account --key-file credentials.json` する？
-- サービスアカウントによって使われるキーは自動的に管理される
-- ユーザがキーを作成・ダウンロードすることも可能
-- `gcloud iam service-accounts create SERVICE_ACCOUNT_ID` でサービスアカウントを作成する
-- サービスアカウントには **アクセススコープ** を設定できる（以下、例）
-    - `https://www.googleapis.com/auth/cloud-platform` ：すべての Google Cloud リソースに対する完全アクセス権
-    - `https://www.googleapis.com/auth/compute` ：Compute Engine メソッドに対するフル コントロール アクセス権
-    - `https://www.googleapis.com/auth/compute.readonly` ：Compute Engine メソッドに対する読み取り専用アクセス権
-    - `https://www.googleapis.com/auth/devstorage.read_only` ：Cloud Storage に対する読み取り専用アクセス権
-    - `https://www.googleapis.com/auth/logging.write` ：Compute Engine ログに対する書き込みアクセス権
-- アクセススコープでは完全な権限(/auth/cloud-platform)を付与し、IAMロールで権限を絞るのがおすすめ
 
 ### 2.3. 権限とロール
 
@@ -430,24 +402,148 @@ version: 1
 gcloud projects add-iam-policy-binding [PROJECT_ID] --member=MEMBER --role=ROLE
 ```
 
-## 4. コスト管理
+## 4. Cloud KMS
 
-### 4.1. コスト算出
+```bash
+$ BUCKET_NAME=pepese_enron_corpus
+$ gsutil mb gs://${BUCKET_NAME}
+
+gsutil cp gs://enron_emails/allen-p/inbox/1. .
+
+
+# Cloud KMS を有効にする
+$ gcloud services enable cloudkms.googleapis.com
+
+# データを暗号化するには、キーリングと暗号鍵を作成する必要がある
+# キーリングは鍵をグループ化する際に役立ち、鍵は環境別（テスト、ステージング、本番など）、またはその他の概念別にグループ化できる
+# ここでは、キーリングの名前は test、暗号鍵の名前は qwiklab 
+$ KEYRING_NAME=test CRYPTOKEY_NAME=qwiklab
+# キーリングの作成
+$ gcloud kms keyrings create $KEYRING_NAME --location global
+# キーリングをしようして暗号鍵の作成
+$ gcloud kms keys create $CRYPTOKEY_NAME --location global \
+      --keyring $KEYRING_NAME \
+      --purpose encryption
+
+# メールの base64 エンコード（Base-64 エンコードを行うと、バイナリデータであってもプレーンテキストとして扱うことができる）
+$ PLAINTEXT=$(cat 1. | base64 -w0)
+
+# 暗号化
+$ curl -v "https://cloudkms.googleapis.com/v1/projects/$DEVSHELL_PROJECT_ID/locations/global/keyRings/$KEYRING_NAME/cryptoKeys/$CRYPTOKEY_NAME:encrypt" \
+  -d "{\"plaintext\":\"$PLAINTEXT\"}" \
+  -H "Authorization:Bearer $(gcloud auth application-default print-access-token)"\
+  -H "Content-Type: application/json"
+* Connected to cloudkms.googleapis.com (64.233.187.95) port 443 (#0)
+* ALPN, offering h2
+* ALPN, offering http/1.1
+* successfully set certificate verify locations:
+*   CAfile: none
+  CApath: /etc/ssl/certs
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+* ALPN, server accepted to use h2
+* Server certificate:
+*  subject: C=US; ST=California; L=Mountain View; O=Google LLC; CN=upload.video.google.com
+*  start date: Apr 13 10:16:07 2021 GMT
+*  expire date: Jul  6 10:16:06 2021 GMT
+*  subjectAltName: host "cloudkms.googleapis.com" matched cert's "*.googleapis.com"
+*  issuer: C=US; O=Google Trust Services; CN=GTS CA 1O1
+*  SSL certificate verify ok.
+* Using HTTP2, server supports multi-use
+* Connection state changed (HTTP/2 confirmed)
+* Copying HTTP/2 data in stream buffer to connection buffer after upgrade: len=0
+* Using Stream ID: 1 (easy handle 0x563024fbefb0)
+> POST /v1/projects/qwiklabs-gcp-02-b49ebfd3b4b8/locations/global/keyRings/test/cryptoKeys/qwiklab:encrypt HTTP/2
+> Host: cloudkms.googleapis.com
+> User-Agent: curl/7.64.0
+> Accept: */*
+> Authorization:Bearer ya29.a0AfH6SMB-LBTO6PGarRHEadU4ULHrPMT5yYFmIoTZD1clCWU9TapTOUMXgIuGjyfyBCMFQS6m4_CsMCnixMMTEpJWhVg5wFbUiAy_LyaI5rXj5v53a_6P4wDFDXWrkkopWWMex1oXMNTYqOR6XZBQOlhCDSDI_Dqd9DjR1KADeHSj7_PCFekQRbGs-5hNAxOIZj7O_zLtvfEE-5ONOHhWUhOqXbbc49ibOOGnweOXfQeYqWLY789gdfubPPFMtr6jP9QiNw
+> Content-Type: application/json
+> Content-Length: 2384
+>
+* Connection state changed (MAX_CONCURRENT_STREAMS == 100)!
+* We are completely uploaded and fine
+< HTTP/2 200
+< content-type: application/json; charset=UTF-8
+< vary: X-Origin
+< vary: Referer
+< vary: Origin,Accept-Encoding
+< date: Wed, 19 May 2021 11:40:29 GMT
+< server: ESF
+< cache-control: private
+< x-xss-protection: 0
+< x-frame-options: SAMEORIGIN
+< x-content-type-options: nosniff
+< accept-ranges: none
+<
+{
+  "name": "projects/qwiklabs-gcp-02-b49ebfd3b4b8/locations/global/keyRings/test/cryptoKeys/qwiklab/cryptoKeyVersions/1",
+  "ciphertext": "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",
+  "ciphertextCrc32c": "4146537015",
+  "protectionLevel": "SOFTWARE"
+}
+* Connection #0 to host cloudkms.googleapis.com left intact
+
+# 上記は長いので暗号化部分のみ取り出す
+$ curl -v "https://cloudkms.googleapis.com/v1/projects/$DEVSHELL_PROJECT_ID/locations/global/keyRings/$KEYRING_NAME/cryptoKeys/$CRYPTOKEY_NAME:encrypt" \
+  -d "{\"plaintext\":\"$PLAINTEXT\"}" \
+  -H "Authorization:Bearer $(gcloud auth application-default print-access-token)"\
+  -H "Content-Type:application/json" \
+| jq .ciphertext -r > 1.encrypted
+
+# 暗号化されたデータが複合化可能か確認
+$ curl -v "https://cloudkms.googleapis.com/v1/projects/$DEVSHELL_PROJECT_ID/locations/global/keyRings/$KEYRING_NAME/cryptoKeys/$CRYPTOKEY_NAME:decrypt" \
+  -d "{\"ciphertext\":\"$(cat 1.encrypted)\"}" \
+  -H "Authorization:Bearer $(gcloud auth application-default print-access-token)"\
+  -H "Content-Type:application/json" \
+| jq .plaintext -r | base64 -d
+
+# 暗号化されたデータを Cloud Storage バケットへアップロード
+$ gsutil cp 1.encrypted gs://${BUCKET_NAME}
+```
+
+鍵を管理する権限は `cloudkms.admin` で、この権限を持つすべてのユーザーがキーリングを作成し、暗号鍵を作成、変更、無効化、破壊できる。  
+暗号化および復号する権限は `cloudkms.cryptoKeyEncrypterDecrypter` で、暗号化および復号 API エンドポイントを呼び出すために使用される。
+
+```bash
+$ gcloud kms keyrings add-iam-policy-binding $KEYRING_NAME \
+    --location global \
+    --member user:$USER_EMAIL \
+    --role roles/cloudkms.admin
+
+$ gcloud kms keyrings add-iam-policy-binding $KEYRING_NAME \
+    --location global \
+    --member user:$USER_EMAIL \
+    --role roles/cloudkms.cryptoKeyEncrypterDecrypter
+```
+
+## 5. コスト管理
+
+### 5.1. コスト算出
 
 [Google Cloud Pricing Calculator](https://cloud.google.com/products/calculator/?hl=ja) で各サービスに適した算出が可能。  
 ただし、 BigQuery など一部特殊なものもある。  
 請求データの分析は [Cloud Billing データを BigQuery にエクスポートする](https://cloud.google.com/billing/docs/how-to/export-data-bigquery?hl=ja#differences_between_exported_data_and_invoices) を参照。
 
-### 4.2. 請求
+### 5.2. 請求
 
 請求先アカウントのリンク（紐付け）を更新するためには、 **請求先アカウント管理者** および **プロジェクト支払い管理者** の権限が必要になる。
 
 - [Cloud Billing のコンセプト](https://cloud.google.com/billing/docs/concepts?hl=ja#billing_account)
 - [プロジェクトの請求設定の変更](https://cloud.google.com/billing/docs/how-to/modify-project)
 
-## 5. ユースケース
+## 6. ユースケース
 
-### 5.1. サービスアカウント
+1. [サービスアカウント](#61-サービスアカウント)
+
+### 6.1. サービスアカウント
 
 サービスアカウントを作成して、ネットワーク管理者とセキュリティ管理者のロールの権限を確認する。  
 以下の手順で確認する。

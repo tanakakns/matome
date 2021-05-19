@@ -40,7 +40,15 @@ AWS でいう S3 。
 ### 1.3. ライフサイクル
 
 古いデータはアーカイブしたり削除したいといったニーズに対応する、オブジェクト管理に関する運用を効率化するための機構。  
-複数の条件と、その条件にマッチした際の操作（削除 or ストレージクラスの変更）を設定できる。
+複数の条件と、その条件にマッチした際の操作（削除 or ストレージクラスの変更）を設定できる。  
+`gsutil lifecycle set` コマンドで 1 つ以上のバケットにライフサイクル管理構成を設定できる。  
+コマンドラインで指定する `config-json-file` は、ライフサイクル構成 JSON ドキュメントを含むローカルファイルへのパスである必要がある。
+
+```bash
+$ gsutil lifecycle set <config-json-file> gs://<bucket_name>...
+```
+
+参照：https://cloud.google.com/storage/docs/gsutil/commands/lifecycle
 
 ### 1.4. バージョニング
 

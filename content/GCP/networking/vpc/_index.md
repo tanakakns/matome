@@ -19,6 +19,7 @@ weight: 1
 4. [プライベート接続](#4-プライベート接続)
 5. [共有 VPC](#5-共有-vpc)
 6. [Cloud CDN](#6-cloud-cdn)
+7. [ユースケース](#7-ユースケース)
 
 ## 1. コンセプト
 
@@ -206,3 +207,133 @@ Cloud CDN は、外部 HTTP(S) 負荷分散の Cloud Load Balancing と連携し
 たとえば、異なるドメインで同じロゴを使用する 2 つのウェブサイトがあるとします。HTTP と HTTPS のどちらで表示されるかにかかわらず、ロゴはキャッシュに保存される必要がある。ロゴを保存するバックエンド サービスのキャッシュキーをカスタマイズするときに、[プロトコル] チェックボックスをオフにすると、HTTP と HTTPS によるリクエストがロゴのキャッシュエントリの一致としてカウントされるようになる。
 
 - [コンテンツ配信のベスト プラクティス](https://cloud.google.com/cdn/docs/best-practices)
+
+## 7. ユースケース
+
+1. [VPC ピアリング](#71-vpc-ピアリング)
+
+### 7.1. VPC ピアリング
+
+要件は以下の通り。
+
+- 異なる 2 つの GCP プロジェクトがある（ Project-A、Project-B ）
+- それぞれのプロジェクトで CIDR が重複しない VPC およびサブネットを作成する（リージョンは `us-central1` ）
+    - Project-A ： `10.0.0.0/16`
+    - Project-B ： `10.8.0.0/16`
+- それぞれのネットワークに SSH と icmp の Ingress を許可したファイアウォールを適用した VM インスタンスを作成
+- VPC ネットワーク ピアリング セッションを設定
+- 各々の VM インスタンスから他方の VM インスタンスへ SSH できることを確認する。
+
+まずは、 VPC・サブネット・ファイアウォールルール・VM インスタンスを作成する。
+
+```bash
+###
+# Project-A：qwiklabs-gcp-00-5e5e0d21f51f
+###
+# Project ID を設定
+$ gcloud config set project qwiklabs-gcp-00-5e5e0d21f51f
+
+# VPC 作成
+$ gcloud compute networks create network-a --subnet-mode custom
+
+# サブネット作成
+$ gcloud compute networks subnets create network-a-central --network network-a \
+    --range 10.0.0.0/16 --region us-central1
+
+# VM インスタンス作成
+$ gcloud compute instances create vm-a --zone us-central1-a --network network-a --subnet network-a-central
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-00-5e5e0d21f51f/zones/us-central1-a/instances/vm-a].
+NAME  ZONE           MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
+vm-a  us-central1-a  n1-standard-1               10.0.0.2     34.123.180.47  RUNNING
+
+# ファイアウォールルール作成
+$ gcloud compute firewall-rules create network-a-fw --network network-a --allow tcp:22,icmp
+
+###
+# Project-B：qwiklabs-gcp-00-6069f8516f00
+###
+# Project ID を設定
+$ gcloud config set project qwiklabs-gcp-00-6069f8516f00
+
+# VPC 作成
+$ gcloud compute networks create network-b --subnet-mode custom
+
+# サブネット作成
+$ gcloud compute networks subnets create network-b-central --network network-b \
+    --range 10.8.0.0/16 --region us-central1
+
+# VM インスタンス作成
+$ gcloud compute instances create vm-b --zone us-central1-a --network network-b --subnet network-b-central
+Created [https://www.googleapis.com/compute/v1/projects/qwiklabs-gcp-00-6069f8516f00/zones/us-central1-a/instances/vm-b].
+NAME  ZONE           MACHINE_TYPE   PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP    STATUS
+vm-b  us-central1-a  n1-standard-1               10.8.0.2     35.232.49.173  RUNNING
+
+# ファイアウォールルール作成
+$ gcloud compute firewall-rules create network-b-fw --network network-b --allow tcp:22,icmp
+```
+
+次にVPC ネットワーク ピアリング セッションを設定する。
+
+```bash
+###
+# network-a を network-b にピアリングする
+###
+# Project-A の ID を設定
+$ gcloud config set project qwiklabs-gcp-00-5e5e0d21f51f
+
+# VPC ネットワークピアリングを作成
+$ gcloud compute networks peerings create peer-ab \
+    --network=network-a \
+    --peer-network=network-b \
+    --peer-project=qwiklabs-gcp-00-6069f8516f00 # Project-B の Project ID
+
+###
+# network-b を network-a にピアリングする
+###
+# Project-B の ID を設定
+$ gcloud config set project qwiklabs-gcp-00-6069f8516f00
+
+# VPC ネットワークピアリングを作成
+$ gcloud compute networks peerings create peer-ba \
+    --network=network-b \
+    --peer-network=network-a \
+    --peer-project=qwiklabs-gcp-00-5e5e0d21f51f # Project-A の Project ID
+
+###
+# 確認
+###
+# Project-A の ID を設定
+$ gcloud config set project qwiklabs-gcp-00-5e5e0d21f51f
+
+# project-A のすべての VPC ネットワークのルートが一覧表示
+$ gcloud compute routes list --project qwiklabs-gcp-00-5e5e0d21f51f
+NAME                            NETWORK    DEST_RANGE     NEXT_HOP                  PRIORITY
+peering-route-5479c05ba45a5d81  network-a  10.8.0.0/16    peer-ab                   0 # この行を確認する
+
+# Project-B の ID を設定
+$ gcloud config set project qwiklabs-gcp-00-6069f8516f00
+
+# project-B のすべての VPC ネットワークのルートが一覧表示
+$ gcloud compute routes list --project qwiklabs-gcp-00-6069f8516f00
+NAME                            NETWORK    DEST_RANGE     NEXT_HOP                  PRIORITY
+peering-route-8fd601b505e3037b  network-b  10.0.0.0/16    peer-ba                   0 # この行を確認する
+```
+
+Project-A の VM インスタンス vm-a へ SSH して Project-B の VM インスタンスのプライベート IP に ping が通ることを確認する。
+
+```bash
+# Project-A の ID を設定
+$ gcloud config set project qwiklabs-gcp-00-5e5e0d21f51f
+
+# Project-A の VM インスタンス vm-a へ SSH
+$ gcloud compute ssh vm-a --zone=us-central1-a
+
+# Project-B の VM インスタンス vm-b のプライベート IP へ ping
+$ ping -c 5 10.8.0.2
+PING 10.8.0.2 (10.8.0.2) 56(84) bytes of data.
+64 bytes from 10.8.0.2: icmp_seq=1 ttl=64 time=1.41 ms
+64 bytes from 10.8.0.2: icmp_seq=2 ttl=64 time=0.357 ms
+64 bytes from 10.8.0.2: icmp_seq=3 ttl=64 time=0.306 ms
+64 bytes from 10.8.0.2: icmp_seq=4 ttl=64 time=0.317 ms
+64 bytes from 10.8.0.2: icmp_seq=5 ttl=64 time=0.347 ms
+```

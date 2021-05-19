@@ -77,6 +77,10 @@ HTTP(S) ロードバランサ の構成イメージは以下。
 ![https-load-balancer-diagram](./img/https-load-balancer-diagram.svg)
 ![https-load-balancer-diagram](./img/https-load-balancer-diagram.png)
 
+### 1.1. 負荷分散
+
+トラフィック分散には [次](https://cloud.google.com/load-balancing/docs/backend-service#traffic_distribution)のような種類がある。
+
 ## 2. 作成
 
 ### 2.1. ネットワークロードバランサのコンセプト
