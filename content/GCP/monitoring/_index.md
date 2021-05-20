@@ -11,26 +11,27 @@ weight: 1
 
 <!--more-->
 
-1. コンセプト
+1. [コンセプト](#1-コンセプト)
+2. [Cloud Logging](#2-cloud-logging)
+3. [Cloud Monitoring](#3-cloud-monitoring)
 
 ## 1. コンセプト
 
 [オペレーションスイート](https://cloud.google.com/products/operations?hl=ja)（旧称 Stackdriver）
 
-1. Cloud Logging
-    - リアルタイムでログを収集・分析する、大規模なフルマネージドサービス
-        - 選択したログを分析でき、アプリケーションのトラブルシューティングが加速する
+1. [Cloud Logging](https://cloud.google.com/logging/docs/concepts?hl=ja)
+    - リアルタイムでログを収集・分析する大規模なフルマネージドサービス
+        - フィルターや検索でログ分析でき、トラブルシューティングが加速
         - ログに基づいた指標（メトリクス）定義
-        - フィルターや検索でアプリケーションログを見る
-        - VM インスタンスに対してはエージェントを導入する必要がある
-    - アプリケーションとシステムのログデータのほか、GKE 環境、VM、Google Cloud サービスからのカスタム ログデータも取り込める
-    - BigQuery、Google Cloud Storage、Pub/Subへのエクスポート
-2. Cloud Monitoring
-    - 組み込みの大規模な指標オブザーバビリティ
+        - VM インスタンスに対しては[Logging エージェント](https://cloud.google.com/logging/docs/agent?hl=ja)を導入する必要がある（ GKE ノードはデフォルトで導入済）
+        - ログは **400 日間** 保存されるが延長することはできないので、長期保存するには Cloud Storage などへエキスポートする必要がある
+    - アプリケーションとシステムのログデータのほか、GKE 環境 や Google Cloud サービスからのカスタム ログデータも取り込める
+    - BigQuery、Google Cloud Storage、Pub/Subへのエクスポートできる
+2. [Cloud Monitoring](https://cloud.google.com/monitoring/docs/concepts?hl=ja)
+    - 組み込みの大規模なリソース指標（メトリクス）オブザーバビリティ
     - クラウドで実行されるアプリケーションのパフォーマンスや稼働時間、全体的な動作状況を確認できる
-    - メトリクス・イベント・メタデータを収集し、チャートやダッシュボードで可視化してアラート管理できる
-    - アラート定義、アップタイムチェック、稼働時間モニタリング
-    - AWSもまとめてみれる
+    - メトリクス・イベント・メタデータを収集し、**ワークスペース** を作成することでチャートやダッシュボードで可視化してアラート管理できる
+    - AWS にも対応
 3. [Cloud Trace](https://cloud.google.com/trace/docs/overview)
     - 各プログラミング言語に対応したライブラリを使用することで、HTTP ヘッダを挿入し、VM、コンテナー、AppEngine、トレースをキャプチャする
         - ロードバランサにも対応
@@ -43,10 +44,11 @@ weight: 1
 - エージェント
     - インスタンスから情報を収集する VM に [Monitoring エージェント](https://cloud.google.com/monitoring/agent) と [Logging エージェント](https://cloud.google.com/logging/docs/agent?hl=ja) をインストールすることで収集可能となる
 
-## 1. Cloud Logging
+## 2. Cloud Logging
 
-Cloud Logging は IAM を使用して Google Cloud リソースのロギングデータへの [アクセス制御](https://cloud.google.com/logging/docs/access-control?hl=ja#permissions_and_roles) を実施できる。  
-ログは **400 日間** 保存されるが、延長することはできない。長期保存するには Cloud Storage などへエキスポートする必要がある。
+### 2.1. アクセス制御
+
+IAM を使用して Google Cloud リソースのロギングデータへの [アクセス制御](https://cloud.google.com/logging/docs/access-control?hl=ja#permissions_and_roles) を実施できる。  
 
 - `roles/logging.viewer`（ログビューア）（＝ `roles/viewer` ）
     - アクセスの透明性ログとデータアクセス監査ログ以外のすべての Logging 機能に対する読み取り専用権限
@@ -73,7 +75,16 @@ Cloud Logging は IAM を使用して Google Cloud リソースのロギング�
 - `roles/owner`（プロジェクト オーナー）
     - Logging に対する完全アクセス権（アクセスの透明性ログとデータアクセス監査ログ）
 
-### 1.1. 監査ログ
+### 2.1. 監査ログ
+
+- Google Cloud Platform のログ： GCP サービス固定ログ
+- ユーザー作成のログ：ユーザ独自ログで、Logging エージェント、Cloud Logging API、または Cloud Logging クライアント ライブラリから取り込んだもの
+- セキュリティログ
+    - 監査ログ（[Cloud Audit Logs](https://cloud.google.com/logging/docs/audit)）
+    - [アクセスの透過ログ](https://cloud.google.com/logging/docs/audit/access-transparency-overview)： Google スタッフによる操作ログ
+- マルチクラウドとハイブリッド クラウドのログ： Azure や AWS など別クラウドから取り込んだログ
+
+#### 2.1.1. 監査ログ
 
 権限管理された上で、オペレーションを監視するログに以下の種類がある。（ [Cloud Audit Logs](https://cloud.google.com/logging/docs/audit) ）
 
@@ -90,7 +101,7 @@ Cloud Logging は IAM を使用して Google Cloud リソースのロギング�
 
 現状、アクティビティログというサービスがあるが、 Deprecated なので監査ログを使用すること。
 
-### 1.2. エキスポート・シンク
+### 2.2. エキスポート・シンク
 
 Cloud Logging は以下のエキスポート・シンクをサポートする。  
 gcloud 、Cloud Console、Google Cloud APIs ログシンクでログシンクのエクスポート先を作成してから、[集約シンク](https://cloud.google.com/logging/docs/export/aggregated_sinks) を作成する。
@@ -103,7 +114,7 @@ gcloud 、Cloud Console、Google Cloud APIs ログシンクでログシンクの
     - Pub/Sub トピックに配信される JSON メッセージ
     - サードパーティによる Logging との統合サービス（Splunk など）をサポート
 
-## 2. Cloud Monitoring
+## 3. Cloud Monitoring
 
 - [ワークスペース](https://cloud.google.com/monitoring/workspaces?hl=ja#accounts) は、1 つ以上の Google Cloud プロジェクトまたは AWS アカウントに含まれるリソースをモニタリングするためのツール
     - 各ワークスペースには、Google Cloud プロジェクトや AWS アカウントなど、1～100 個のモニタリング対象プロジェクトを作成できる
