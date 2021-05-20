@@ -9,6 +9,8 @@ subpage: false
 weight: 1
 ---
 
+Cloud Logging、Cloud Monitoring、Cloud Trace、Debugger、Error Reporting
+
 <!--more-->
 
 1. [コンセプト](#1-コンセプト)
@@ -75,7 +77,7 @@ IAM を使用して Google Cloud リソースのロギングデータへの [ア
 - `roles/owner`（プロジェクト オーナー）
     - Logging に対する完全アクセス権（アクセスの透明性ログとデータアクセス監査ログ）
 
-### 2.1. 監査ログ
+### 2.1. ログの種類
 
 - Google Cloud Platform のログ： GCP サービス固定ログ
 - ユーザー作成のログ：ユーザ独自ログで、Logging エージェント、Cloud Logging API、または Cloud Logging クライアント ライブラリから取り込んだもの

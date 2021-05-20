@@ -25,7 +25,8 @@ weight: 1
     - GCPではVPCを作ると初めからマルチリージョンで作られる / ゾーン(AZ相当)を跨ったサブネットが作れる
     - 外部IPアドレス（EIP相当）は、テンポラリーIPを昇格させることができる。また、グローバルに負荷分散できるIPも取得できる。
 - データベース
-    - CloudSQL（RDS相当）にOracle、SQLServerはない（Bare Metal Solution にある）    
+    - CloudSQL（RDS相当）にOracleはない（Bare Metal Solution にある） 
+    - CloudSQL に SQL Server はある、、、
 - API
     - 各サービスを操作するAPIがあるのだが初期で有効になっているものはほとんどなく、ユーザが意図的に有効かしないとつかえない
 - ストレージ

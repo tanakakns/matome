@@ -45,7 +45,7 @@ weight: 3
 
 ## 2. リソース階層とアクセス制御
 
-- ここが全て：https://cloud.google.com/iam/docs/overview?hl=ja
+- [ここの説明](https://cloud.google.com/iam/docs/overview?hl=ja) が全て
 - 理解の補足
     - [GCP の IAM をおさらいしよう](https://medium.com/google-cloud-jp/gcp-iam-beginner-b2e1ef7ad9c2)
     - [Google Cloud のアクセス管理をおさらいしよう 2020アップデート版](https://medium.com/google-cloud-jp/google-cloud-access-management-40963bea0dfc)
@@ -65,8 +65,9 @@ weight: 3
     - 権限のコレクションであり、権限によってリソースに対して許可されているオペレーションが決まる
     - メンバーに対して付与する
 - **ポリシー** / IAM ポリシー
-    - 1 つ以上のメンバーを 1 つのロールにバインドした一覧
+    - 1 つ以上のメンバーを 1 つのロールにバインドした一覧（「誰が」「どういう操作を」「何に対して」全て含まれる）
     - IAM ポリシーは IAM Policy オブジェクトによって表現され、バインディング リストで構成され（ `Binding` は、`members` のリストを `role` にバインドする）
+    - このポリシーを **組織** ・ **フォルダ** ・ **プロジェクト** に設定する
 
 Cloud Console の 「サイドメニュー」->「 IAM と管理」->「 IAM 」から利用できる。
 
@@ -91,9 +92,9 @@ Cloud Console の 「サイドメニュー」->「 IAM と管理」->「 IAM 」
 - **Cloud Identity ドメイン** （ `domain:xxxx` の形式）
     - Google Workspace ドメインに似ているが、 Drive、Meet、Docs といった Google Workspace のツール類は利用できない
     - アカウント管理（ `username@example.com` など）や仮想グループ（ `example.com` など ）だけ
-- **認証済みのすべてのユーザー** （ `` の形式）
+- **認証済みのすべてのユーザー**
     - すべてのサービス アカウント、および Google アカウントで認証されたユーザー全員を表す特殊な識別子 `allAuthenticatedUsers`
-- **全ユーザー** （ `` の形式）
+- **全ユーザー**
     - 認証されたユーザーと認証されていないユーザーの両方を含めて、インターネット上のユーザーを表す特殊な識別子 `allUsers`
 
 **Google アカウント** は **個人管理** と **企業管理** のものがある。  
@@ -112,17 +113,21 @@ Cloud Console の 「サイドメニュー」->「 IAM と管理」->「 IAM 」
 
 ### 2.3. 権限とロール
 
+#### 2.3.1. 権限
+
 リソースに対する操作の **権限** は以下の命名規則で表現される。（多くの場合、権限は REST API メソッドと 1 対 1 で対応している）  
 リソースの例として、プロジェクト、Compute Engine インスタンス、Cloud Storage バケットなどがある。
 
 ```bash
 <サービス名>.<リソース>.<動詞>
 
-ex)
+例
 compute.instance.delete
 compute.instance.start
 compute.instance.setMachineType
 ```
+
+#### 2.3.1. ロール
 
 **ロール** は権限のコレクション。  
 `roles/service.roleName` の形式で指定し、たとえば、Cloud Storage には `roles/storage.objectAdmin` 、 `roles/storage.objectCreator` 、 `roles/storage.objectViewer` などのロールがある。  
@@ -177,7 +182,7 @@ Identity and Access Management API または gcloud コマンドライン ツー
 
 ![リソース階層](./img/policy-inheritance.svg)
 
-上位階層のリソースに関する権限付与についれ例を出すと、「アカウント A に compute.instances.get 権限を 組織 X に対して付与」すると、「アカウント A は 組織 X に含まれる全てのフォルダの全てのプロジェクトの VM インスタンス情報を取得できる」ようになる。
+上位階層のリソースに関する権限付与について例を出すと、『「アカウント A に compute.instances.get 権限を付与したポリシー」を 組織 X に対して付与』すると、『アカウント A は 組織 X に含まれる全てのフォルダの全てのプロジェクトの VM インスタンス情報を取得できる』ようになる。
 
 リソースは [Resource Manager](https://cloud.google.com/resource-manager?hl=ja) API を利用することで管理できる。
 
@@ -221,7 +226,7 @@ IAM ポリシーは、リソース階層の任意のレベル（組織レベル�
 - リソースレベルではなく、 **組織またはプロジェクト** レベルでポリシーを設定する
 - 個々のユーザではなく、 **グループ** にロールを付与する
     - `gcloud iam roles copy` コマンドを利用して既存プロジェクトのロールをグループにコピーして使ったりする
-- ラベルを使って、リソースのアノテーションをつけ、グループ化・フィルタリングを行う
+- ラベルを使って、リソースにアノテーションをつけ、グループ化・フィルタリングを行う
 - 異なる権限を必要とする複数サービスがある場合は、サービス毎に個別のサービスアカウントを作成し、必要な権限のみ付与する
 
 ### 2.7. [リソースへのアクセス権の付与、変更、取り消し](https://cloud.google.com/iam/docs/granting-changing-revoking-access?hl=ja)
@@ -244,6 +249,9 @@ $ gcloud GROUP add-iam-policy-binding RESOURCE --member=MEMBER --role=ROLE_ID
 
 # 例：プロジェクト my-project のユーザー my-user@example.com に閲覧者の役割を付与する
 $ gcloud projects add-iam-policy-binding my-project --member=user:my-user@example.com --role=roles/viewer
+
+# 例：組織 my-organization のユーザー my-user@example.com に閲覧者の役割を付与する
+$ gcloud organizations add-iam-policy-binding my-organization --member=user:my-user@example.com --role=roles/viewer
 ```
 
 #### 2.7.2. メンバからロールを削除する
