@@ -124,9 +124,9 @@ Cloud Dataflow パイプラインを設定する。
 - [Pub/Sub input topic] には、`projects/qwiklabs-gcp-03-b799ccdd7f75/topics/iotlab`
 - [BigQuery output table] には、 `qwiklabs-gcp-03-b799ccdd7f75:iotlabdataset.sensordata`
 - [一時的なロケーション] には、`gs://qwiklabs-gcp-03-b799ccdd7f75-bucket/tmp/`
-- [オプション パラメータ] をクリック
-- [最大ワーカー数] に「2」と入力
-- [マシンタイプ] に「n1-standard-1」と入力
+- [オプション パラメータ] をクリックして以下を設定
+    - [最大ワーカー数] に「2」と入力
+    - [マシンタイプ] に「n1-standard-1」と入力
 - [ジョブを実行] をクリック
 
 Compute Engine VM を準備する。  
@@ -254,3 +254,6 @@ SELECT timestamp, device, temperature from iotlabdataset.sensordata
 ORDER BY timestamp DESC
 LIMIT 100
 ```
+
+### Dataflow と BigQuery を使用した Google Cloud での ETL 処理
+
