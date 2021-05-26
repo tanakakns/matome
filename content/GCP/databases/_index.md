@@ -42,3 +42,91 @@ Cloud SQL、Cloud Spanner、Bare Metal Solution、Cloud Bigtable、Firestore、M
     - 大量のデータ（数百テラバイトから 1 ペタバイトまで）を Google Cloud Platform に安全に移行できるハードウェア アプライアンス
     - トータルの所用期間は 50 日
 - BigQuery Data Transfer Service ：あらかじめ設定されたスケジュールに基づき、BigQuery へのデータの移動を自動化するマネージド サービス
+
+## Firestore Datastore モード
+
+### コンセプト
+
+- エンティティ
+    - エンティティは 1 つ以上の名前付きプロパティを持ち、各プロパティが 1 つ以上の値を持つ
+    - 同じ種類のエンティティが同じプロパティを持つとは限らない
+    - エンティティの特定のプロパティの値がすべて同じデータ型である必要はない
+- プロパティ
+    - 整数、浮動小数点数、文字列、日付、バイナリデータ のデータ型をサポート
+- キー
+- 祖先キー
+    - そのエンティティの親となるエンティティの主キー
+    - こうすることで、エンティティがツリー構造になる
+    - このツリーを **エンティティグループ** という
+- エンティティグループ
+    - 祖先キーとキーから構成されるツリー構造となったエンティティ群
+    - エンティティグループに対する書き込み処理は1秒間1回しか実行できないが、一貫性のあるクエリを実現できる
+        - Datastore の提供するクエリは基本的に 結果整合のクエリ だが、エンティティグループにおいては例外で、これがエンティティグループを作る理由
+
+RDBMS と比較した場合は以下の対応になる。
+
+|RDBMS|Datastore|
+|:---:|:---:|
+|スキーマ（データベース）|ネームスペース|
+|テーブル|カインド（種類）|
+|レコード|エンティティ|
+|プライマリキー|キー + 祖先キー|
+
+### 操作
+
+Go 言語の場合で記載する。
+
+```go
+# エンティティの作成
+type Task struct {
+        Category        string
+        Done            bool
+        Priority        float64
+        Description     string `datastore:",noindex"`
+        PercentComplete float64
+        Created         time.Time
+}
+task := &Task{
+        Category:        "Personal",
+        Done:            false,
+        Priority:        4,
+        Description:     "Learn Cloud Datastore",
+        PercentComplete: 10.0,
+        Created:         time.Now(),
+}
+
+# エンティティの登録・更新
+key := datastore.IncompleteKey("Task", nil)
+key, err := client.Put(ctx, key, task)
+
+# エンティティの取得
+var task Task
+taskKey := datastore.NameKey("Task", "sampleTask", nil)
+err := client.Get(ctx, taskKey, &task)
+
+# エンティティの削除
+key := datastore.NameKey("Task", "sampletask", nil)
+err := client.Delete(ctx, key)
+
+# 一括オペレーション（バッチ）
+tasks := []*Task{
+        {
+                Category:    "Personal",
+                Done:        false,
+                Priority:    4,
+                Description: "Learn Cloud Datastore",
+        },
+        {
+                Category:    "Personal",
+                Done:        false,
+                Priority:    5,
+                Description: "Integrate Cloud Datastore",
+        },
+}
+keys := []*datastore.Key{
+        datastore.IncompleteKey("Task", nil),
+        datastore.IncompleteKey("Task", nil),
+}
+keys, err := client.PutMulti(ctx, keys, tasks)
+# その他に GetMulti 、 DeleteMulti もある
+```

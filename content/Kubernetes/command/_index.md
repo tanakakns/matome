@@ -207,3 +207,11 @@ Pod 以外の大体のリソースは `kubectl create` で作れる。[参考](h
 
 リソースに対して label の追加・更新・削除を行う。
 
+## `kubectl set`
+
+オブジェクトに特定の features を設定するコマンド。  
+例えば、以下のコマンドはデプロイメントのイメージのみ変更する。
+
+```bash
+$ kubectl set image deployment/<demployment> <new-image>
+```

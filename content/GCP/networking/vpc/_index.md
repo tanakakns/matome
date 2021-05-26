@@ -165,6 +165,7 @@ privatenet-us-vm     us-central1-c   n1-standard-1               172.16.0.2   35
 - HA VPN
     - 単一リージョン内の IPsec VPN 接続を使用して、オンプレミス ネットワークを VPC ネットワークに安全に接続できる
     - **リージョン単位** で、Cloud VPN ゲートウェイ と Cloud Router を構成し、それぞれ冗長化される
+        - Cloud VPN ゲートウェイはリージョンリソースなので、リージョン毎に作成する必要がある。
 - Classic VPN
     - レガシーのため省略
 

@@ -469,6 +469,7 @@ $ curl -ks https://`kubectl get svc frontend -o=jsonpath="{.status.loadBalancer.
 
 - [クラスタオートスケーラー](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler)
     - GKE スラスタのノードプールサイズを自動変更することにより実現（ MIG ではないことに注意！）
+    - `gcloud container clusters create` コマンドの `--enable-autoscaling --min-nodes 1 --max-nodes 4` オプションで指定
 - [水平 Pod 自動スケーリング](https://cloud.google.com/kubernetes-engine/docs/concepts/horizontalpodautoscaler)
     - HPA ( [Horizontal Pod Autoscaler](https://kubernetes.io/ja/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/) ) により実現される
 - [垂直 Pod 自動スケーリング](https://cloud.google.com/kubernetes-engine/docs/concepts/verticalpodautoscaler)
