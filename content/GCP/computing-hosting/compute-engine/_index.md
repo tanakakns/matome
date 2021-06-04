@@ -413,7 +413,7 @@ $ gcloud compute instances attach-disk INSTANCE_NAME --disk DISK_NAME
 
 1. ディスクのサイズ変更：`gcloud compute disks resize DISK_NAME --size DISK_SIZE`
 2. ディスクのバックアップ
-3. ファイルシステムとパーティションのサイズの変更
+3. ファイルシステムとパーティションのサイズの変更（ `resize2fs` / `xfs_growfs` によって OS にサイズを再認識させる必要あり ）
 
 ## 4. ファイアウォールルールの作成
 

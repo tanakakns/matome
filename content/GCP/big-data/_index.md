@@ -53,6 +53,7 @@ weight: 9
     - Qwiklabs の [Cloud Dataprep でデータ変換パイプラインを作成する](https://googlecourses.qwiklabs.com/focuses/11580?parent=catalog) で体験できる。
 - [Cloud Datalab](https://cloud.google.com/datalab)
     - データを探索、分析、変換、視覚化し、GCPで機械学習モデルを構築するために作成された強力なインタラクティブツール
+        - データクレンジングには適していない
     - Compute Engineで実行され、複数のクラウドサービスに簡単に接続できるため、データサイエンスのタスクに集中できる
     - 一方でデータのクレンジングには適さない
 - [Cloud Composer](https://cloud.google.com/composer)
