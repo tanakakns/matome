@@ -17,7 +17,7 @@ weight: 1
 
 ## 1. デプロイ戦略
 
-[参考](https://cloud.google.com/architecture/application-deployment-and-testing-strategies?hl=ja)
+[参考](https://cloud.google.com/architecture/application-deployment-and-testing-strategies?hl=ja) 、 [参考](https://thenewstack.io/deployment-strategies/)
 
 |パターン|メリット|デメリット|説明|
 |:---|:---|:---|:---|
@@ -26,3 +26,4 @@ weight: 1
 |Blue/Green|ダウンタイム無、即時ロールバック、環境分離|コスト、下位互換性、カットオーバー|両立せず即時切り替え|
 |カナリア|ダウンタイム無、高速ロールバック、本番テスト|リリース遅、堅牢な監視必要、下位互換性、スティッキーセッション||
 |A/B テスト||||
+|シャドー||||
