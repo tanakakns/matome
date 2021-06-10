@@ -17,9 +17,9 @@ Cloud SQL、Cloud Spanner、Bare Metal Solution、Cloud Bigtable、Firestore、M
 
 |サービス|モデル|提供|ユースケース|備考|
 |:---|:---|:---|:---|:---|
-|[Cloud SQL](./cloud-sql)|リレーショナル（ SQL ）|インスタンス|小規模（TB級）、水平スケーラビリティ不可|[doc](https://cloud.google.com/sql/docs)|
-|[Cloud Spanner](./cloud-spanner)|リレーショナル（ SQL ）|インスタンス？|大規模（PB級）、水平スケーラビリティ、グローバル分散|[doc](https://cloud.google.com/spanner/docs)|
-|[Cloud Bigtable](./cloud-bigtable)|Key-Value（ HBase 互換）||大容量（PB級）、超低レイテンシ（レイテンシが許容されるなら BQ ）|[doc](https://cloud.google.com/bigtable/docs)|
+|[Cloud SQL](./sql)|リレーショナル（ SQL ）|インスタンス|小規模（TB級）、水平スケーラビリティ不可|[doc](https://cloud.google.com/sql/docs)|
+|[Cloud Spanner](./spanner)|リレーショナル（ SQL ）|インスタンス？|大規模（PB級）、水平スケーラビリティ、グローバル分散|[doc](https://cloud.google.com/spanner/docs)|
+|[Cloud Bigtable](./bigtable)|Key-Value（ HBase 互換）||大容量（PB級）、超低レイテンシ（レイテンシが許容されるなら BQ ）|[doc](https://cloud.google.com/bigtable/docs)|
 |[Firestore ネイティブモード](./firestore-native)|ドキュメント（ドキュメントとコレクション）|サーバレス|TB級、トランザクション可能、サーバレス、水平スケーラビリティ|[doc](https://cloud.google.com/firestore/docs)、[Firebase Realtime Database](https://firebase.google.com/products/realtime-database/)の後継|
 |[Firestore Datastore モード](./firestore-datastore)|ドキュメント（エンティティと種類）|サーバレス|TB級、トランザクション可能、サーバレス、水平スケーラビリティ|[doc](https://cloud.google.com/firestore/docs/concepts)、[Datastore](https://cloud.google.com/datastore/docs?hl=ja)の後継|
 |[Memorystore](./memorystore)|インメモリ||キャッシュ、超低レイテンシ、非永続化|[doc](https://cloud.google.com/memorystore/docs)|

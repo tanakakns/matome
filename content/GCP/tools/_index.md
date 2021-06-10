@@ -286,3 +286,8 @@ $ gcloud config set compute/zone <ZONE>
 AWS でいう CloudFormation 。  
 単一の API に対応した **リソース** とそのリソースをまとめた **デプロイメント** などで構成される。  
 `gcloud deployment-manager deployments` コマンドでデプロイメントを管理し、 `gcloud deployment-manager resouces` コマンドでデプロイメントに含まれるリソースを管理する。
+
+## 6. Cloud Build
+
+[doc](https://cloud.google.com/build/docs/concepts?hl=ja)
+
