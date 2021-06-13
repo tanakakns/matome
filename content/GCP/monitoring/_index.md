@@ -135,6 +135,10 @@ gcloud 、Cloud Console、Google Cloud APIs ログシンクでログシンクの
         - ホスト プロジェクトと Workspace の名前を自由に選択でき、ワークスペース間でモニタリング対象プロジェクトを柔軟に移動できる
 - [カスタムメトリクス](https://cloud.google.com/monitoring/custom-metrics)
 
+### 3.1. Metrics Explorer
+
+[Metrics Explorer](https://cloud.google.com/monitoring/charts/metrics-explorer?hl=ja) を使用すると、プロジェクトで収集された指標のグラフを作成できる。
+
 ### 3.1. アラート
 
 [アラートの動作](https://cloud.google.com/monitoring/alerts/concepts-indepth)
