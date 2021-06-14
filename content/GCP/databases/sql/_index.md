@@ -18,7 +18,7 @@ weight: 1
 
 ## 1. コンセプト
 
-[Cloud SQL](https://cloud.google.com/sql/docs) はクラウド上の PostgreSQL 、 MySQL 、 SQL Server のリレーショナル データベースを簡単に設定、維持、運用、管理できるようにするフルマネージド データベース サービス。  
+[Cloud SQL](https://cloud.google.com/sql/docs) はクラウド上の MySQL 、 PostgreSQL 、 SQL Server のリレーショナル データベースを簡単に設定、維持、運用、管理できるようにするフルマネージド データベース サービス。  
 **GCP 外からもアクセス可能** なのが売りの 1 つらしい。  
 Cloud SQL が対応しているデータ形式には、ダンプファイル（.sql）と CSV ファイル（.csv）。
 
@@ -65,12 +65,17 @@ $ gcloud sql connect qwiklabs-demo --user=root
     - リードレプリカじゃない（ HA なので）
     - 同一リージョン・複数ゾーンで構成され、 **フェールオーバーに対応** する
 - [リードレプリカ](https://cloud.google.com/sql/docs/postgres/replication#read-replicas)
-    - プライマリインスタンスの正確なコピーを作成し、読み取り専用のセカンダリインスタンスとして構成する
+    - プライマリインスタンスの正確なコピーを作成し、読み取り専用のセカンダリインスタンスとして構成する（リードレプリカ）
+    - プライマリインスタンス、スタンバイインスタンス、リードレプリカの 3 種類で構成される
+        - スタンバイインスタンスは文字通り、プライマリインスタンスのフェールオーバー用で通常は機能していない
     - プライマリインスタンスごとに最大 10 個のリードレプリカを作成できる
-    - **フェールオーバーできない**
+    - リードレプリカは **フェールオーバーできない**
 - [クロスリージョン リードレプリカ](https://cloud.google.com/sql/docs/postgres/replication#cross-region-read-replicas)
     - リードレプリカはクロスリージョンにも対応する
-    - **フェールオーバーできない**
+- [外部リードレプリカ](https://cloud.google.com/sql/docs/mysql/replication#external-read-replicas)
+    - Cloud SQL プライマリ インスタンスを複製する外部インスタンス
+- [外部サーバーからのレプリケーション](https://cloud.google.com/sql/docs/mysql/replication/replication-from-external)
+    - 外部インスタンスがプライマリで、 Cloud SQL がレプリカの構成
 
 ## 4. ユースケース
 

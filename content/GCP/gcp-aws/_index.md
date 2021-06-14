@@ -194,7 +194,7 @@ weight: 1
 
 |サービス|一行説明|
 |:---|:---|
-|Cloud SQL|MySQL / PostgreSQL のマネージドサービス|
+|Cloud SQL|MySQL / PostgreSQL / SQL Server のマネージドサービス|
 |Cloud Bigtable|HBase 互換の NoSQL DB|
 |Cloud Datastore|水平スケールする NoSQL DB|
 |Cloud Spanner|リレーショナル DB と NoSQL の特性を備えた DB。データをグローバルで複製・同期|
