@@ -139,6 +139,18 @@ gcloud 、Cloud Console、Google Cloud APIs ログシンクでログシンクの
 
 [Metrics Explorer](https://cloud.google.com/monitoring/charts/metrics-explorer?hl=ja) を使用すると、プロジェクトで収集された指標のグラフを作成できる。
 
-### 3.1. アラート
+### 3.2. アラート
 
 [アラートの動作](https://cloud.google.com/monitoring/alerts/concepts-indepth)
+
+### 3.3. プラグイン
+
+オンプレミスや Compute Engine にインストールしたサードパーティ製アプリケーションをモニタリングする際のプラグインとして以下のようなものがある。
+
+- Apache
+- JMX Monitoring
+- Memcached
+- MySQL ： プラグインを導入するだけではダメで、 MySQL に接続するユーザの作成と設定が必要
+- Nginx
+- Redis
+- StatsD

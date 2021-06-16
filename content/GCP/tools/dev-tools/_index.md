@@ -14,6 +14,7 @@ weight: 2
 1. Cloud Deployment Manager
 2. Cloud Build
 3. Cloud Tasks
+4. Cloud Composer
 
 ## 1. Cloud Deployment Manager
 
@@ -103,3 +104,34 @@ images:
 Cloud Tasks と Cloud Pub/Sub は類似しているように思える。  
 しかし、最大の違いは Cloud Tasks は Publisher が **明示的に** タスクをコントロールできることにある。  
 Cloud Pub/Sub は、 Publisher が Subscriber をコントロールすることはできない。
+
+## 4. Cloud Composer
+
+[Cloud Composer](https://cloud.google.com/composer/docs/concepts/overview) は、フルマネージドのワークフロー オーケストレーション サービスで、クラウドとオンプレミス データセンターにまたがるワークフローを作成できる。  
+Apache Airflow オープンソース プロジェクトを基に構築され、Python プログラミング言語を使用して運用される。
+
+- ワークフロー
+    - データの取り込み、変換、分析、利用のための一連のタスクを表す
+    - Airflow では、ワークフローは DAG（有向非巡回グラフ：Directed Acyclic Graph）を使用して作成される
+- DAG
+    - スケジューリングして実行するタスクのコレクション
+    - Python スクリプトで作成され、コードを使用して DAG の構造（タスクとそれらの依存関係）を定義
+
+Cloud Scheduler や cron の単なる代わりではなく、さまざまな機能を提供する。  
+スケジュール・トリガーをきっかけに各種 [演算子](https://cloud.google.com/composer/docs/how-to/using/writing-dags#operators) により処理を実行する。
+
+- スケジュール
+    - cron などと同様、時間起因でワークフローを実行する
+- トリガー
+    - Cloud Storage の変更や Cloud Function に起因してワークフローを実行する
+- 演算子
+    - BashOperator ： Bash スクリプトの実行（ `cloud` など各種コマンドが実行できる）
+    - PythonOperator ： Python コードの実行
+    - Google Cloud の演算子
+        - Dataflow の演算子 ： Dataflow で Apache Beam ジョブを実行
+        - Cloud Data Fusion の演算子 ： Cloud Data Fusion パイプラインの管理と実行
+        - Dataproc の演算子 ： Dataproc で Hadoop ジョブと Spark ジョブを実行
+        - Datastore の演算子 ： Datastore でデータの読み取りと書き込みを実行
+        - AI Platform の演算子 ： AI Platform でトレーニング ジョブと予測ジョブを実行
+        - Cloud Storage の演算子 ： Cloud Storage でデータの読み取りと書き込みを実行
+    - EmailOperator ： メール送信による通知

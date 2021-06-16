@@ -41,6 +41,9 @@ weight: 9
     - フルマネージドのApache Spark、Apache Hadoop、Presto、およびその他のOSSクラスターを構築できる
     - しかし、Dataprocは、バッチおよびストリーム処理には適していない
     - 参照：https://cloud.google.com/dataproc#section-5
+    - Dataproc はストレージとして HDFS / Cloud Storage を選択できる
+        - HDFS は 揮発性で、クラスタを削除するとデータも消えることに注意
+    - BigQuery/BigTable/Cloud Storage に対するプログラマブルな [コネクタ](https://cloud.google.com/dataproc/docs/concepts/connectors/bigquery) が提供されている
 
 ## その他ビッグデータ系サービス
 
