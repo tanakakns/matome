@@ -28,6 +28,12 @@ TensorFlow の実行環境を提供するサービスであり、「トレーニ
 
 [参考](https://cloud.google.com/ai-platform/prediction/docs/online-vs-batch-prediction)
 
+### 1.2. カスタムクラスタ
+
+[カスタムクラスタ](https://cloud.google.com/ai-platform/training/docs/machine-types) に設定できるパラメータは以下。
+
+- workerType、parameterServerType、evaluatorType、workerCount、parameterServerCount、evaluatorCount
+
 ## 2. AutoML
 
 以下の総称？

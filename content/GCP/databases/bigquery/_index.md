@@ -20,7 +20,8 @@ weight: 1
 3. 外部データソースに対するクエリ
 4. BigQuery へのデータの読み込み
 5. BiGQuery へのクエリ
-6. コスト
+6. テーブルスキーマの変更
+7. コスト
 
 ## 1. アクセスコントロール
 
@@ -43,6 +44,23 @@ weight: 1
 - BigQuery メタデータ閲覧者 `roles/bigquery.metadataViewer`
     - メタデータ（テーブル・ビュー・データセット） の Read のみ
 
+|Capability| **dataViewer** | **dataEditor** | **dataOwner** | **metadataViewer** | **user** | **jobUser** | **admin** |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|List/Get projects|o|o|o|o|o|o|o|
+|List tables|o|o|o|o|o||o|
+|Get table metadata|o|o|o|o|||o|
+|Get table data|o|o|o||||o|
+|Create tables||o|o||||o|
+|Modify/Delete tables||o|o||||o|
+|Get dataset metadata|o|o|o|o|o||o|
+|Create new datasets||o|o||o||o|
+|Modify/Delete datasets|||o||Self||o|
+|Create jobs/queries|||||o|o|o|
+|Get jobs||||||Self|Any|
+|List jobs|||||Any||Any|
+
+なお、リソースに対する権限コントロールの最小は **データセット** となる。テーブル・ビュー・行・列単位の権限コントロールはできない。
+
 ## 2. パーティション分割と有効期限
 
 BigQuery では以下のようにデータのパーティション分割と有効期限を設定できる。
@@ -62,7 +80,8 @@ BigQuery は [外部データソース](https://cloud.google.com/bigquery/extern
 - Cloud Storage
 - Google ドライブ
 
-ただし、データの整合性が取れないなどの制約はある。
+ただし、データの整合性が取れないなどの制約はある。  
+外部データソースにクエリする場合でも、 [外部データソースに対するテーブル定義ファイルの作成](https://cloud.google.com/bigquery/external-table-definition) は必要。
 
 ## 4. BigQuery へのデータの読み込み
 
@@ -83,6 +102,9 @@ BigQuery は [外部データソース](https://cloud.google.com/bigquery/extern
     - データ操作言語（DML）ステートメントを使用して、既存のテーブルへの一括挿入や、新しいテーブルでのクエリの結果の保存ができる
 - サードパーティアプリケーションやサービスの利用
     - 一部のサードパーティ アプリケーションやサービスでは、データを BigQuery に取り込むためのコネクタが提供されている
+
+なお、CSV ファイルなどからデータを読み込む際、形式などに不正がありインポートに失敗するレコードが含まれる場合、BigQueryの機能で自動でどうこうすることはできない。  
+Dataflow などで行のバリデーションを実施した上でインポートするしかない。
 
 ## 5. BigQuery へのクエリ
 
@@ -106,8 +128,23 @@ BigQuery には次のようなクエリ・ジョブがある。
 - 一時テーブル
     - 永続的なテーブルに書き込まれていない一時テーブルを使用してクエリ結果をキャッシュに保存する（通常 24 時間）
     - `CURRENT_TIMESTAMP()` や `NOW()` といった日時関数や `SESSION_USER()` 関数など、また、ワイルドカードを利用する場合はキャッシュは機能しない
+    - また、ジョブ構成、GCPコンソール、従来のWeb UI、コマンドライン、またはAPIで宛先テーブルが指定されている場合もクエリ結果はキャッシュされない
 
-## 6. コスト
+## 6. テーブルスキーマの変更
+
+[テーブルスキーマの変更](https://cloud.google.com/bigquery/docs/managing-table-schemas) を行う際、以下の場合その変更はネイティブにサポートされている。
+
+- スキーマ定義への列の追加
+- スキーマ定義からの列の削除またはドロップ
+- 列のモードの REQUIRED から NULLABLE への緩和
+
+しかし以下の場合、新しいテーブルを作成して、 SELECT-INSERT してデータ移行する必要がある。
+
+- 列の名前の変更
+- 列のデータ型の変更
+- 列のモードの変更（REQUIRED 列を NULLABLE に緩和することを除く）
+
+## 7. コスト
 
 BigQuery のコストは大きく以下の 2 つある。
 
