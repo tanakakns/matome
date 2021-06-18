@@ -131,6 +131,16 @@ keys, err := client.PutMulti(ctx, keys, tasks)
 # その他に GetMulti 、 DeleteMulti もある
 ```
 
+### エンティティのエクスポートとインポート
+
+バックアップなどのために [エンティティのエクスポートとインポート](https://cloud.google.com/datastore/docs/export-import-entities) を実行する場合、以下の方法で **マネージドエクスポート・インポートサービス** を利用できる。
+
+- Cloud Console
+- gcloud コマンドライン ツール
+- Datastore Admin API（REST、RPC）
+
+ただ、スケジューラ機能は無いので、 cron ジョブで実行するなどが必要になる。
+
 ## Bigtable
 
 ### Bigtable インスタンスの変更
@@ -162,6 +172,10 @@ Bigtable では HDD または SSD のストレージを選択することがで�
     - バッチやデータアーカイブなど
 - SSD
     - ほとんどのユースケースで最も効率的でコスト効果の高い選択肢
+
+### レプリケーション
+
+クラスタ単位のレプリケーションをするみたい。驚き。（ [参考](https://cloud.google.com/bigtable/docs/replication-overview) ）
 
 ### パフォーマンステスト
 

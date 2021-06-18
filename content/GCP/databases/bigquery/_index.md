@@ -71,6 +71,9 @@ BigQuery では以下のようにデータのパーティション分割と有�
 - [有効期限](http://cloud.google.com/bigquery/docs/best-practices-storage#use_the_expiration_settings_to_remove_unneeded_tables_and_partitions)
     - パーティションやテーブルデータの有効期限を設定できる
 
+[パーティション分割テーブルのクエリ](https://cloud.google.com/bigquery/docs/querying-partitioned-tables?hl=ja) を実行したい場合、 疑似列 `_PARTITIONTIME` / `_PARTITIONDATE` が使用でき、適切にパーティションに対してクエリできる。  
+さらに、 「From `bigquery-public-data.noaa_gsod.gsod*`」 のようなワイルドカードを利用したテーブルに対しては、 疑似列 `_TABLE_SUFFIX` を利用することでその範囲を指定できる。
+
 ## 3. 外部データソースに対するクエリ
 
 BigQuery は [外部データソース](https://cloud.google.com/bigquery/external-data-sources) に対してクエリを発行できる。
@@ -102,6 +105,7 @@ BigQuery は [外部データソース](https://cloud.google.com/bigquery/extern
     - データ操作言語（DML）ステートメントを使用して、既存のテーブルへの一括挿入や、新しいテーブルでのクエリの結果の保存ができる
 - サードパーティアプリケーションやサービスの利用
     - 一部のサードパーティ アプリケーションやサービスでは、データを BigQuery に取り込むためのコネクタが提供されている
+    - [BigQuery Data Transfer Service](https://cloud.google.com/bigquery-transfer/docs/transfer-service-overview) を利用すれば Google Analytics などの Google のサービスや一部のクラウド/SaaS のストレージ/DWHからデータをインポートできる
 
 なお、CSV ファイルなどからデータを読み込む際、形式などに不正がありインポートに失敗するレコードが含まれる場合、BigQueryの機能で自動でどうこうすることはできない。  
 Dataflow などで行のバリデーションを実施した上でインポートするしかない。
@@ -143,6 +147,11 @@ BigQuery には次のようなクエリ・ジョブがある。
 - 列の名前の変更
 - 列のデータ型の変更
 - 列のモードの変更（REQUIRED 列を NULLABLE に緩和することを除く）
+
+## 7. 承認済みのビュー
+
+データセットに表示アクセス権を設定する場合、BigQuery では [承認済みのビュー](https://cloud.google.com/bigquery/docs/authorized-views) を作成する。  
+承認済みビューを使用すると、元のソースデータへのアクセス権がないユーザーでも、クエリの結果を特定のユーザーやグループと共有できる。
 
 ## 7. コスト
 
