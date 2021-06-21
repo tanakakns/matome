@@ -23,7 +23,7 @@ kubernetes では `kubectl` に様々コマンドがあるが、基本的には 
 
 ドライラン（ `kubectl run/create --dry-run=client` ）と yaml 表示（ `-o yaml` を）組み合わせるとマニフェストの雛形を標準出力できる。
 
-``` bash
+```yaml
 $ kubectl run sample --image nginx -o yaml --dry-run=client
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -78,7 +78,7 @@ spec:
 
 Pod の場合は `spec` 以下に Pod の内容を定義する。
 
-```
+```bash
 $ kubectl create -f sample-pod.yaml
 pod "sample-pod" created
 
@@ -145,7 +145,7 @@ namespace リソース（ `kind: Namespace` ）を作成し、各リソースの
 リソースには色々あるが、理解すべきリソースは少ない。そのうちの一つ。  
 （その他は、Service、DaemonSet、CronJobくらい？）
 
-```
+```yaml
 apiVersion: app/v1
 kind: Deployment
 metadata: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#objectmeta-v1-meta
@@ -257,7 +257,7 @@ spec: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#dep
 
 上記、すごい量だが、必要最低限は。
 
-```
+```yaml
 apiVersion: app/v1
 kind: Deployment
 metadata:
@@ -296,7 +296,7 @@ spec:
 
 ### 2.4. Pod
 
-```
+```yaml
 apiVersion: core/v1
 kind: Pod
 metadata: # 先の metadata に同じ。
@@ -304,9 +304,9 @@ spec:     # 先の Deployment の spec.template.spec に同じ。
 status:   # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#podstatus-v1-core
 ```
 
-#### 2.4.1. [Pod のライフサイクル](https://kubernetes.io/ja/docs/concepts/workloads/pods/pod-lifecycle/)
+#### 2.4.1. Lifecycle / Lifecycle Events / Lifecycle Handler
 
-`status.phase` は Pod のライフサイクルにおけるフェーズを表しており、 Pod の状態を確認する上で重要となる。
+Pod には [のライフサイクル](https://kubernetes.io/ja/docs/concepts/workloads/pods/pod-lifecycle/) がり、 `status.phase` は Pod のライフサイクルにおけるフェーズを表しており、 Pod の状態を確認する上で重要となる。
 
 |値|概要|
 |:---|:---|
@@ -361,9 +361,41 @@ Liveness/Readiness Probe の双方で以下の 3 種類のヘルスチェック�
       port: 80
   ```
 
+また、コンテナが開始された際とPodが削除される際にHookして任意の処理を実行することが出来る以下の Lifecycle Events がある。
+
+- postStart
+    - コンテナが作成された後、即座に実行される
+    - このHandlerが失敗した場合終了させ、 restartPolicy に従い再起動させる
+- preStop
+    - コンテナが終了される前に実行される
+    - コンテナのルートプロセスに対して SIGTERM が送出される前にこのHandlerが実行される
+
+postStart や preStop に指定できる Lifecycle Handler の種類は以下の通り。
+
+- exec : コンテナ内でコマンドを実行
+- httpGet : HTTPのGETリクエストを発行
+
+先の probe と同様だ。
+
+#### 2.4.2. Resource Requirements
+
+Pod に割り当てるリソースの要求について記載する。
+
+```yaml
+resources:
+  requests:
+    cpu: 100m
+    memory: 64Mi
+  limits:
+    cpu: 2
+    memory: 1Gi
+```
+
+`resuests` は下限、 `limits` は上限と理解すればいい。
+
 ### 2.5. Service
 
-```
+```yaml
 apiVersion: v1
 kind: Service
 metadata: # 先の metadata に同じ。
@@ -385,7 +417,7 @@ spec: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#ser
 
 色々設定があるが、 ClusterIP の場合は以下くらいでいい。
 
-```
+```yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -444,7 +476,7 @@ spec:
 - 注意点として上記だけでは対象 Node 上で起動している Pod は一度に evicted され、一度に退去させられる可能性がある。例えば ReplicaSet 2 で drain 対象の Node に 2つの Pod が起動していた場合、両方の Pod に対して evicted され、一つも Pod が起動していない時間帯がある可能性が出来てしまう
 - PodDisruptionBudget(PDB)を定義することで上記を防ぐことが出来る
 
-```
+```yaml
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:

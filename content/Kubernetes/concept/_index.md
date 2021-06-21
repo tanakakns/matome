@@ -71,6 +71,15 @@ weight: 1
 - CronJob
     - ScheduledJob の後継
     - スケジュールされた時間に Job を生成
+- DaemonSet
+    - 各ノードに1つずつPodが起動することを保証
+    - 例)ログエージェントPodにより各ノードのログを収集
+- StatefulSet
+    - ステートフルアプリケーションのデプロイに使用
+    - データを永続ディスクストレージに保持
+    - Pod IDに序数インデックスを使用(例:web-0、web-1、web-2)
+- HorizontalPodAutoscaler (HPA)
+    - 指定されたリソースターゲットを対象とし、レプリカ数を調整
 
 Pod の管理・制御を行うリソース（オブジェクト）を **コントローラ** という。
 
@@ -95,7 +104,7 @@ Pod の管理・制御を行うリソース（オブジェクト）を **コン�
 > - L6：TLS
 > - L7：HTTP
 
-#### Service
+### Service
 
 Service は以下の種類の **L4** ロードバランサを提供する。  
 実質、ClusterIP、NodePort、LoadBalancer の 3 種類。
@@ -139,7 +148,7 @@ Service は以下の種類の **L4** ロードバランサを提供する。
 
 サービスのセレクタの設定が正しく Pod を捉えているかどうかは `kubectl get pods -l "app=monolith,secure=enabled"` などのコマンドで対象の Pod を取得できるか、で検査できる。
 
-#### Ingress
+### Ingress
 
 Service とは異なり、 **L7** ロードバランサを提供する。  
 `kind: Service` ではなく、 `kind: Ingress` で提供される。  
@@ -171,16 +180,20 @@ grpc server1    grpc server2
 コンテナに対して設定ファイル、パスワードなどの機密情報などをインジェクトしたり、永続化ボリュームを提供したりするためのリソース。  
 Kubernetesでは、個別のコンテナに対する設定の内容は環境変数やファイルが置かれた領域をマウントして渡すことが一般的
 
+- ConfigMap
+    - 単純な Key-Value の設定を参照する場合に利用
 - Secret
     - 機密情報（ID、Passwordなど）を含む環境変数を参照する場合に利用
     - マニフェスト上で秘匿化部分は base64 化されているだけなので、暗号化したい場合は `kubesec` などを利用する
-- ConfigMap
-    - 単純な Key-Value の設定を参照する場合に利用
-- PersistentVolumeClaim
+- PersistentVolume (PV)
+    - クラスタ内􏰁永続ストレージの管理に使用
+    - GCPでの標準はCompute Engineの永続ディスク
+- PersistentVolumeClaim (PVC)
+    - PVへのリクエスト
+    - PVへの具体的なサイズ、アクセスモード、StorageClass をリクエストする
+    - PodはPVC通じてボリュームを使用。リクエストを満たすPVが存在しプロビジョニング可能な場合、PVCはPVにバインドされる
 
-#### Secret
-
-以下の type がある。
+Config＆Storage リソースとまとめてはいるが、 ConfigMap や Secret もコンテナ間でデータを共有できる Volume と言える。
 
 ## k8s の認証・認可・権限管理
 
