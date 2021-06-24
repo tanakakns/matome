@@ -21,7 +21,7 @@ kubernetes では `kubectl` に様々コマンドがあるが、基本的には 
 
 ## 1. マニフェストの雛形
 
-ドライラン（ `kubectl run/create --dry-run=client` ）と yaml 表示（ `-o yaml` を）組み合わせるとマニフェストの雛形を標準出力できる。
+ドライラン（ `kubectl run/create --dry-run=client` ）と yaml 表示（ `-o yaml` / `--output=yaml` を）組み合わせるとマニフェストの雛形を標準出力できる。
 
 ```yaml
 $ kubectl run sample --image nginx -o yaml --dry-run=client
@@ -51,6 +51,34 @@ spec:
 status: {}
 ```
 
+- deployment
+    - `kubectl run mydeploy --image=nginx --output=yaml --dry-run=client`
+- pod
+    - `--restart=Never` を付けると Pod になる
+    - `kubectl run mypod --restart=Never --image=nginx --output=yaml --dry-run=client`
+- job
+    - `--restart=OnFailure` を付けると Job になる
+    - `kubectl run myjob --restart=OnFailure --image=ubuntu --output=yaml --dry-run=client -- echo hello`
+- cronjob
+    - `--schedule` を付けると CronJob になる
+    - `kubectl run mycron --schedule "1 * * * *" --image=nginx --output=yaml --dry-run=client`
+- service
+    - `kubectl create svc clusterip myapp --tcp=80 --output=yaml --dry-run=client`
+- configmap
+    - `kubectl create cm mycm --from-literal mykey=myval --output=yaml --dry-run=client`
+    - `--from-file` でファイルを指定した場合ちゃんとインデントしてくれる
+    - `kubectl create cm mycm --from-file myfile.yaml --output=yaml --dry-run=client`
+- secret
+    - 値は base64 エンコードされているので編集に注意
+    - `kubectl create secret generic mysecret --from-literal mykey=myval --output=yaml --dry-run=client`
+- serviceaccount
+    - `kubectl create serviceaccount mysc --output=yaml --dry-run=client`
+- clusterrolebinding
+    - `kubectl create clusterrolebinding myclusterrolebinding --clusterrole=edit --serviceaccount default:mysc --output=yaml --dry-run=client`
+- rolebinding
+    - `kubectl create rolebinding cluster-admin-binding --role=edit --serviceaccount default:mysc --output=yaml --dry-run=client`
+- poddisruptionbudget
+    - `kubectl create pdb my-pdb --selector=app=nginx --min-available=1 --output=yaml --dry-run=client`
 
 ## 2. マニフェストの理解
 
@@ -112,7 +140,7 @@ kind: Service
 ```
 
 また、複数のマニフェストファイルを一気に適用したい場合は、ディレクトリにまとめ `-f` で指定して実行することができる。  
-その歳、ファイル名辞書順で実行されることに注意。
+その際、ファイル名辞書順で実行されることに注意。
 
 ### 2.1. Label と Annotation
 
@@ -303,6 +331,20 @@ metadata: # 先の metadata に同じ。
 spec:     # 先の Deployment の spec.template.spec に同じ。
 status:   # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#podstatus-v1-core
 ```
+
+pod のマニフェストに以下を足したものが ReplicaSet 。
+
+```yaml
+spec:
+  replicas: <integer>
+  selector:
+    matchLabels:
+      <key1>: <value1>
+  template:
+      <podの定義に同じ>
+```
+
+なお、 ReplicaSet はマニフェスト上はほぼ Deployment に同じ
 
 #### 2.4.1. Lifecycle / Lifecycle Events / Lifecycle Handler
 

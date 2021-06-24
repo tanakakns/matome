@@ -21,16 +21,17 @@ weight: 2
 
 ## サーバ構成
 
-k8s ではホストマシン（物理サーバ、もしくは仮想マシン、インスタンス）の種別として **Control Plane** と **Worker Nodes** がある。  
+k8s ではホストマシン（物理サーバ、もしくは仮想マシン、インスタンス）の種別として **Master Nodes** と **Worker Nodes** がある。  
 それぞれで実行されるコンポーネントは以下の通り。各コンポーネントはそれぞれ各サーバ上で独立したプロセスとして常駐する。
 
-- **Control Plane** ： 管理サーバ。クライアントツール（ **kubectl** ）から Control Plane を経由して Worker Nodes をコントロールする。
+- **Master Nodes** / **Control Plane** ： 管理サーバ。クライアントツール（ **kubectl** ）から Control Plane を経由して Worker Nodes をコントロールする。
     - `kube-apiserver`
     - `etcd`
-    - `kube-scheduler`
     - `kube-controller-manager`
+        - `node-controller` 、 `replication-controller`
+    - `kube-scheduler`
     - `cloud-controller-manager`
-- **Worker Nodes** ： Control Plane から管理されるワーカーサーバ。複数台で構成されるクラスタ構成をとり、コンテナがマウントされる。
+- **Worker Nodes** / **Data Plane** ： Control Plane から管理されるワーカーサーバ。複数台で構成されるクラスタ構成をとり、コンテナがマウントされる。
     - `kubelet`
     - `kube-proxy`
     - `kube-dns` ・CoreDNS
@@ -57,9 +58,9 @@ k8s ではホストマシン（物理サーバ、もしくは仮想マシン、�
 
 ## コンポーネント
 
-ここでは先ほど紹介した Control Plane/Worker Nodes に配備されている主要コンポーネントについて記載する。
+ここでは先ほど紹介した Master Nodes / Worker Nodes に配備されている主要コンポーネントについて記載する。
 
-### kube-apiserver / Control Plane
+### kube-apiserver / Master Nodes
 
 Kubernetes API を外部に提供するコンポーネント。  
 REST API を提供しているが、通常はクライアントツール `kubectl` でコントロールする。`kubectl` から設定情報を受け付けて、 クラスタが保持すべき状態として情報を `etcd` へ保存する。  
@@ -68,42 +69,25 @@ REST API を提供しているが、通常はクライアントツール `kubect
 コンテナが作成されるまでのフロー例は以下のようになる。
 
 1. `kubectl` で Deployment API を呼ぶ
+    - `api-server` はリクエストの **認証** と **バリデーション** を実行し、 `etcd` にデータを保存したのち結果を返却
 2. Deployment Controller が検知し、 ReplicaSet API を呼ぶ
+    - `api-server` 経由で `etcd` に保存された Deployment に関する情報の変更を検知
 3. ReplicaSet Controller が検知し、 Pod API を呼ぶ
+    - `api-server` 経由で `etcd` に保存された ReplicaSet に関する情報の変更を検知
 4. Scheduler が検知し、配置先 Node を決定し、 Pod API を呼ぶ
 5. Kubelet が検知し、 Pod を作成
     - 各 Controller 、 Scheduler 、 Kubelet は常にそれぞれが Reconcilation Loop を回している
 
-### etcd / Control Plane
+### etcd / Master Nodes
 
 k8s クラスタの全ての情報が保存される分散 KVS 。  
 `etcd` へアクセスするコンポーネントは `kube-apiserver` のみで、他のコンポーネントは `kube-apiserver` を介してアクセスする。  
 分散合意アルゴリズム Raft の特性上、奇数台で冗長構成にする必要がある。  
 `etcdctl shapshot` コマンドなどで定期的にバックアップしておく。
 
-### kube-scheduler / Control Plane
+### kube-controller-manager / Master Nodes
 
-`kube-scheduler` の仕事は、新規に `etcd` に登録された Pod に対して最適な Worker Node を選択して割り当てること。  
-`go routine` の無限ループ（間隔 0s ）で以下の処理を繰り返す。
-
-1. `kube-apiserver` 経由で `etcd` にアクセスし、Worker Nodes へ未割り当ての Pod 情報を 1 つ取得する
-2. Pod の設定情報から最適な Woker Node を選択する
-3. 選択した Worker Node の情報を`kube-apiserver` 経由で `etcd` にアクセスし、保存する
-
-Worker Node の選択は、 `predicates` と呼ばれる条件にによるフィルタと、 `priorities` という優先度付けによって行われる。
-
-- `predicates`
-    - Worker Node をフィルタする条件。
-    - 例えば nodeSelector による Worker Node の選択や request に対するリソースの空き状況によるフィルタがある。
-- `priorities`
-    - Worker Node の優先度付け。
-    - 例えば Pod を出来る限り Worker Nodes、ゾーンを分散させるような優先度付けがある。
-
-参考：https://qiita.com/tkusumi/items/58fdadbe4053812cb44e
-
-### kube-controller-manager / Control Plane
-
-`etcd` の情報とクラスタの現在の状態を比較し、 `etcd` の状態へ更新する（ `kube-apiserver` 経由）。
+5 秒の無限ループ周期で `kube-apiserver` 経由で `etcd` の情報とクラスタの現在の状態を比較し、 `etcd` の状態へ更新する（ `kube-apiserver` 経由）。
 Controller は自作可能であるが、デフォルトで以下のような Controller がある。
 
 - Node Controller
@@ -121,7 +105,27 @@ Controller は自作可能であるが、デフォルトで以下のような Co
 また、各 Controller は `go routine` で起動し、 `kube-apiserver` 経由で `etcd` へアクセスし、登録情報と現在のクラスタの状態を比較し続ける。  
 `kube-controller-manager` は状態の差分を検出、 `etcd` へ登録するが、実際のクラスタへの反映作業は `kubelet` が行う。
 
-### cloud-controller-manager / Control Plane
+### kube-scheduler / Master Nodes
+
+`kube-scheduler` の仕事は、新規に `etcd` に登録された Pod に対して最適な Worker Nodes を選択して割り当てること。  
+`go routine` の無限ループ（間隔 0s ）で以下の処理を繰り返す。
+
+1. `kube-apiserver` 経由で `etcd` にアクセスし、Worker Nodes へ未割り当ての Pod 情報を 1 つ取得する
+2. Pod の設定情報から最適な Woker Node を選択する
+3. 選択した Worker Node の情報を`kube-apiserver` 経由で `etcd` にアクセスし、保存する
+
+Worker Node の選択は、 `predicates` と呼ばれる条件にによるフィルタと、 `priorities` という優先度付けによって行われる。
+
+- `predicates`
+    - Worker Node をフィルタする条件。
+    - 例えば nodeSelector による Worker Node の選択や request に対するリソースの空き状況によるフィルタがある。
+- `priorities`
+    - Worker Node の優先度付け。
+    - 例えば Pod を出来る限り Worker Nodes、ゾーンを分散させるような優先度付けがある。
+
+参考：https://qiita.com/tkusumi/items/58fdadbe4053812cb44e
+
+### cloud-controller-manager / Master Nodes
 
 クラウド特有の制御ロジックを組み込むコンポーネント。  
 `kube-controller-manager` 同様、内部に以下のような Controller を持つ。
