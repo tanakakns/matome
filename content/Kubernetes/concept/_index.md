@@ -106,12 +106,11 @@ Pod の管理・制御を行うリソース（オブジェクト）を **コン�
 
 ### Service
 
-Service は以下の種類の **L4** ロードバランサを提供する。  
+Service は以下の種類の **L4** ロードバランサを提供し、クラスタ内の各ノードに仮想敵に構成される。  
 実質、ClusterIP、NodePort、LoadBalancer の 3 種類。
 
-- ClusterIP
-    - k8s **クラスタ内からのみ疎通可能な IP** となる Service （なので、「Cluster」IP
-        - k8s クラスタ内でのみ疎通可能な仮想 IP
+- **ClusterIP**
+    - k8s **クラスタ内からのみ疎通可能な IP** となる Service （なので、「Cluster」IP）をノード内に仮想敵に構成する
     - k8s クラスタ外から通信を受け付ける必要のない箇所のロードバランサ
     - 各 Pod は IP を持つが個々にアクセスしていては負荷分散できないのでそれを 1 つの IP に束ねる
     - name がホスト名として機能し、 クラスタ内部 DNS により名前解決される
@@ -119,25 +118,36 @@ Service は以下の種類の **L4** ロードバランサを提供する。
         - `svc` は Service の略
     - 各ノードの `kube-proxy` 通信の転送を行う
     - type は `ClusterIP`
+    - 設定する Port は以下の通り
+        - `port` ： Service のポート。 Service は内部的な仮想 IP アドレスを持っており、 Pod へ転送する際の From のポート。
+        - `targetPort` ：転送先の Pod のボート。
 - ExternalIP（ ClusterIP の一種）
     - 特定のノードの IP アドレスで受信した通信をコンテナに転送する Service
     - k8s クラスタ外部からの通信を受け付ける
     - type 自体は `ClusterIP` で、 `spec.externalIPs` （ノードのIP）を指定する
     - `spec.externalIPs` の IP は自分でノードの IP を調べて記載する必要があり、 `spec.ports[].port` の port で受け、該当セレクタの `spec.ports[].targetPort` へ流す
-- NodePort
-    - クラスタ内の各ノードに外部からアクセス可能な IP を与える
+- **NodePort**
+    - クラスタ内の各ノードに外部からアクセス可能な IP を与え、ノード内の仮想的な Service にトラフィックを転送する
     - ExternalIP に類似したサービスだが、ノードの IP を指定する必要がなく、全ノードが対応する
     - 違いは「ノードのIPアドレス:ポート」で通信を受信する点
         - 厳密には「0.0.0.0:ポート」でバインドされ、k8s クラスタ内の全ノードの IP アドレスを意味する
     - デフォルトで利用できるノードポートの範囲は「30000〜32767」であり、クラスタ内でユニークなポートでなければならないことに注意
     - type は `NodePort`
-- LoadBalancer
+    - 設定する Port は以下の通り
+        - `nodePort` ：ノードが受け取るポート。このポートが受けたリクエストは Service へ転送される。
+        - `port` ： Service のポート。 Service は内部的な仮想 IP アドレスを持っており、 Pod へ転送する際の From のポート。
+        - `targetPort` ：転送先の Pod のボート。
+- **LoadBalancer**
     - 商用環境で k8s クラスタ外部から通信を受ける際に良い Service
     - k8s クラスタ外部（例えばロードバランサ）から疎通性のある仮想 IP を払い出せる
     - ExternalIP や NodePort と異なり、ノードIP非依存である点で使い勝手がよい
     - type は `LoadBalancer`
     - クラウド利用の場合、サービスからのトラフィックをクラスタ内のノードに転送するクラウドプロバイダが提供するロードバランサが実態
         - そのため、基盤が LoadBalancer Service に対応している必要がある
+    - 設定する Port は以下の通り
+        - `nodePort` ：ノードが受け取るポート。このポートが受けたリクエストは Service へ転送される。
+        - `port` ： Service のポート。 Service は内部的な仮想 IP アドレスを持っており、 Pod へ転送する際の From のポート。
+        - `targetPort` ：転送先の Pod のボート。
 - Headless（None）
     - ロードバランシングする仮想 IP アドレスが払い出されない DNS ラウンドロビンのエンドポイントを提供する Service
     - type 自体は `ClusterIP` だが、 `clusterIP` が `None`
@@ -146,7 +156,8 @@ Service は以下の種類の **L4** ロードバランサを提供する。
 - None-Selector
     - ？？
 
-サービスのセレクタの設定が正しく Pod を捉えているかどうかは `kubectl get pods -l "app=monolith,secure=enabled"` などのコマンドで対象の Pod を取得できるか、で検査できる。
+Service の転送先は Pod となり（ Deployment/Replicaset ではない）、その Pod の `labels` を `selector` で指定することにより転送先を特定する。
+Service の `selector` の設定が正しく Pod を捉えているかどうかは `kubectl get pods --selector="app=monolith,secure=enabled"` などのコマンドで対象の Pod を取得できるか、で検査できる。
 
 ### Ingress
 

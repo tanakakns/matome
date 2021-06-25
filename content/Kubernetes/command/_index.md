@@ -178,7 +178,8 @@ Pod 以外の大体のリソースは `kubectl create` で作れる。[参考](h
 % kubectl create secret generic my-secret --from-literal=key1=supersecret --from-literal=key2=topsecret
 ```
 
-なお、 Pod だけを作りたい場合は `kubectl run` を利用する。
+なお、 Pod だけを作りたい場合は `kubectl run` を利用する。  
+また、Service の `selector` の設定が正しく Pod を捉えているかどうかは `kubectl get pods --selector="app=monolith,secure=enabled"` などのコマンドで対象の Pod を取得できるか、で検査できる。
 
 ## `kubectl run`
 

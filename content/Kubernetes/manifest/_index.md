@@ -24,7 +24,8 @@ kubernetes では `kubectl` に様々コマンドがあるが、基本的には 
 ドライラン（ `kubectl run/create --dry-run=client` ）と yaml 表示（ `-o yaml` / `--output=yaml` を）組み合わせるとマニフェストの雛形を標準出力できる。
 
 ```yaml
-$ kubectl run sample --image nginx -o yaml --dry-run=client
+$ kubectl run sample --image=nginx --dry-run=client -o yaml
+
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -51,19 +52,23 @@ spec:
 status: {}
 ```
 
-- deployment
-    - `kubectl run mydeploy --image=nginx --output=yaml --dry-run=client`
 - pod
-    - `--restart=Never` を付けると Pod になる
-    - `kubectl run mypod --restart=Never --image=nginx --output=yaml --dry-run=client`
+    - `kubectl run mypod --image=nginx --labels=app=mypod --output=yaml --dry-run=client`
+        - `--restart=Never` を付けなくても Pod になるっぽい
+        - `--expose` オプションをつけると ClusterIP も作成される
+- deployment
+    - `kubectl create deployment mydeploy --image=nginx --replicas=4 --output=yaml --dry-run=client`
 - job
     - `--restart=OnFailure` を付けると Job になる
     - `kubectl run myjob --restart=OnFailure --image=ubuntu --output=yaml --dry-run=client -- echo hello`
 - cronjob
     - `--schedule` を付けると CronJob になる
     - `kubectl run mycron --schedule "1 * * * *" --image=nginx --output=yaml --dry-run=client`
-- service
+- service / clusterIP
     - `kubectl create svc clusterip myapp --tcp=80 --output=yaml --dry-run=client`
+        - これだと `selector` は作成されない
+    - `kubectl expose pod redis --port=6379 --name redis-service --dry-run=client -o yaml`
+        - こうすると `selector` も勝手に作成してくれる
 - configmap
     - `kubectl create cm mycm --from-literal mykey=myval --output=yaml --dry-run=client`
     - `--from-file` でファイルを指定した場合ちゃんとインデントしてくれる
@@ -322,6 +327,8 @@ spec:
 
 `livenessProbe`、`readinessProbe` については [こちら](https://kubernetes.io/ja/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/) 。
 
+また、 Pod の `spec.nodeName` を指定することで、スケジューラに任せず手動で Pod の配置ノードを指定することができる。
+
 ### 2.4. Pod
 
 ```yaml
@@ -344,9 +351,131 @@ spec:
       <podの定義に同じ>
 ```
 
-なお、 ReplicaSet はマニフェスト上はほぼ Deployment に同じ
+なお、 ReplicaSet はマニフェスト上はほぼ Deployment に同じ。
 
-#### 2.4.1. Lifecycle / Lifecycle Events / Lifecycle Handler
+#### 2.4.1. Taints, Tolerations
+
+Taints / Tolerations は Node Affinity と逆の機能。  
+**Taints** は「汚れ」、 **Tolerations** は「寛容」といった意味になる。  
+Taints は Node に付与し、 Tolerations は Pod に付与する。  
+つまり、 Nodeに「汚れ」をつければ、それに「寛容」な Pod しかスケジュールされないということ。  
+注意したいのは、スケジュールされることを **許容するだけで引きつけるわけではない** ということ。  
+Taints / Tolerations は以下の項目で設定できる。
+
+- Key-Value
+    - Labels と同様
+- Effect
+    - 以下のような効果がある
+        - `NoSchedule` ：TaintとTolerationがマッチした場合にのみに、PodがNodeにスケジューリングされる。
+        - `PreferNoSchedule` ： `NoSchedule` の緩いバージョン。どうしても行き場のなくなった Pod は受け入れる。
+        - `NoExecute` ：基本的に `NoSchedule` と同じだが、条件に合わない Pod がすでに実行中の場合は追い出す。
+
+Node に Taints を付与する場合は以下のコマンドを実行する。
+
+```bash
+$ kubectl taint nodes node1 key1=value1:NoSchedule
+
+# ちなみに最後に（ - ）をつけるとその taint を削除できる
+$ kubectl taint nodes node1 key1=value1:NoSchedule-
+```
+
+Pod に Tolerations を付与する場合はマニフェストの `spec.tolerations` に以下を記述する。
+
+```yaml
+tolerations:
+- key: "key1"
+  operator: "Equal"
+  value: "value1"
+  effect: "NoSchedule"
+```
+
+#### 2.4.2. Node Selectors
+
+Pod を特定の Node にスケジュールしたい場合 **Node Selectors** を利用する。  
+Node に Labels を付与し、 Pod の `nodeSelector` にその Labels を付与することで設定できる。  
+Node に Labels を付与するコマンドは以下の通り。
+
+```bash
+# USAGE: kubectl label nodes <node-name> <label-key>=<label-value>
+$ kubectl label nodes node-1 size=Large
+```
+
+また、 Pod のマニフェストの `spec.nodeSelector` に以下を設定する。
+
+```yaml
+nodeSelector:
+  size: Large
+```
+
+Node Selectors は `size=Large` もしくは `size=Middle` のどちらか、といった柔軟性のあるスケジュールはできない。  
+こういう場合は Node Affinity を使う。
+
+#### 2.4.3. Node Affinity
+
+**Node Affinity** は Pod に対して設定し、 Node Selector と同様 Node に付与された Labels を見る。  
+Pod のマニフェストの `spec.affinity` に以下の設定をする。
+
+```yaml
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: size
+          operator: In
+          values:
+          - Large
+```
+
+3 行目の長ったらしいのは **NodeAffinityType**。以下の種類がある。  
+（ `DuringScheduling` と `DuringExecution` に `required` / `preferred` / `Ignored` が修飾されていることに注目。）
+
+- requiredDuringSchedulingIgnoredDuringExecution
+    - 必ず Affinity の通りにスケジュールされるが、すでに実行中のものは再スケジュールされない
+- preferredDuringSchedulingIgnoredDuringExecution
+    - できるだけ Affinity の通りにスケジュールされるが、すでに実行中のものは再スケジュールされない
+- requiredDuringSchedulingRequiredDuringExecution
+    - 必ず Affinity の通りにスケジュールされ、さらに、すでに実行中のものは再スケジュールされる
+
+#### 2.4.4. Resource Requirements
+
+`spec.containers.resources` を設定することで、 Pod に割り当てるリソース（ CPU/Mem/Disk ）の要求について記載することができる。
+
+```yaml
+resources:
+  requests:
+    cpu: 100m
+    memory: 64Mi
+  limits:
+    cpu: 2
+    memory: 1Gi
+```
+
+`resuests` は下限、 `limits` は上限と理解すればいい。  
+なお、デフォルトでは、 `requests` は `CPU=0.5` / `Mem=256Mi` 、 `limits` は `CPU=1` / `Mem=512Mi` となる。
+`CPU=1` は 1 vCPU や 1 core や 1 Hyperthread を意味し、 `CPU=1=1000m` となる。  
+また、 Mem については以下の通り。
+
+- 1G = 1,000,000,000 bytes
+- 1M = 1,000,000 bytes
+- 1K = 1,000 bytes
+- 1Gi = 1,073,741,824 bytes
+- 1Mi = 1,048,576 bytes
+- 1Ki = 1,024 bytes
+
+#### 2.4.5. Static Pod
+
+Kubernetes の Master Nodes の機能がなかった場合でも、 `kubelet` は単独で Pod を起動することができる。（ DaemonSet や Service など Pod 以外は出来ない）  
+この Pod を **Static Pod** と呼ぶ。  
+`kubelet.service` プロセス実行時のオプションに `--pod-manifest-path` というオプションがあり、このパスに Pod のマニフェストを配置することにより Static Pod を実行することができる。  
+（ `/etc/Kubernetes/manifest` あたり）  
+もしくは、`kubelet.service` プロセス実行時のオプションに `--config` オプションがあり、ここで指定された設定の yaml ファイルの中の `staticPodPath` という設定項目になる。  
+Master Nodes が機能している場合、 `kubelet` は自動的に各 Static Pod に対応する mirror pod を `kube-apiserver` 上に作成するため、 `kubectl get` などでも見ることができる。  
+Master Nodes が機能していない場合、作成された Static Pod は `docker ps` コマンドで確認できる。  
+Master Nodes が機能している・いないにかかわらず、 Static Pod に対する変更は各 Static Pod が配置されている Node のマニフェストファイルを変更する他ない。  
+`kube-apiserver` に何らかの問題が発生しても機能継続できるように、 Master Nodes のコンポーネントで Static Pod により構成されているものがある。
+
+#### 2.4.6. Lifecycle / Lifecycle Events / Lifecycle Handler
 
 Pod には [のライフサイクル](https://kubernetes.io/ja/docs/concepts/workloads/pods/pod-lifecycle/) がり、 `status.phase` は Pod のライフサイクルにおけるフェーズを表しており、 Pod の状態を確認する上で重要となる。
 
@@ -419,22 +548,6 @@ postStart や preStop に指定できる Lifecycle Handler の種類は以下の
 
 先の probe と同様だ。
 
-#### 2.4.2. Resource Requirements
-
-Pod に割り当てるリソースの要求について記載する。
-
-```yaml
-resources:
-  requests:
-    cpu: 100m
-    memory: 64Mi
-  limits:
-    cpu: 2
-    memory: 1Gi
-```
-
-`resuests` は下限、 `limits` は上限と理解すればいい。
-
 ### 2.5. Service
 
 ```yaml
@@ -476,6 +589,19 @@ spec:
   - protocol: TCP     # Service が受信するプロトコルとポートマッピング
     port: 80          # Service が受信 Port
     targetPort: 9376  # Pod の Port
+```
+
+Service の `selector` の設定が正しく Pod を捉えているかどうかは `kubectl get pods --selector="app=monolith,secure=enabled"` などのコマンドで対象の Pod を取得できるか、で検査できる。
+
+### 2.6. DaemonSet
+
+各 Node に 1 Pod ずつ配置する。  
+Monitoring/Logging Agent などを仕込むのに最適。（ `kube-proxy` は DaemonSet で配置されているものもある）  
+DaemonSet のマニフェストは ReplicaSet のそれに酷似している。  
+なお、 DaemonSet や ReplicaSet は `kubectl create` コマンドでは作成できないので、下記のような Deployment 作成コマンドでマニフェストの雛形を作成し、その後 `kind` を修正するなどして DaemonSet のマニフェストを作成してから apply するとよい。
+
+```bash
+$ kubectl create deployment elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 --namespace=kube-system --dry-run=client -o yaml > fluent.yaml
 ```
 
 ## 3. その他のリソース
