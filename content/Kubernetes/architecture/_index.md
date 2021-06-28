@@ -43,6 +43,7 @@ k8s ではホストマシン（物理サーバ、もしくは仮想マシン、�
         - k8s 関連のバイナリを1つにまとめたall-in-oneバイナリ
     - cAdvisor
         - 各 Node 上にあるコンテナのCPU、メモリ、ファイル、ネットワーク使用量といった、リソースの使用量と性能の指標を監視・収集するエージェント
+        - `kubelet` に同梱されている
 - クライアントツール
     - kubectl
         - k8s クラスタを管理するコマンド
@@ -163,6 +164,9 @@ Worker Node の選択は、 `predicates` と呼ばれる条件にによるフィ
 
 上記のような複数のコンテナランタイムを利用できる背景には、 CRI ( [Container Runtime Interface](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-node/container-runtime-interface.md) ) や OCI ( [Open Container Initiative](https://opencontainers.org/)) や CNI ( [Container Network Interface](https://github.com/containernetworking/cni) ) などの標準化が進んでいることが挙げられる。
 
+また、 `kubelet` には `cAdvisor` が同梱されており、取得したメトリクスを `metrics-server` へ送信する。  
+`metrics-server` はオンメモリにしかその結果を収集しないので、高級的なモニタリングを行うには他のソリューションを利用する必要がある。
+
 ### kube-proxy / Worker Nodes
 
 k8s クラスタの各 Worker Node で動作するネットワークプロキシで、トラフィックのルーティングを担当する。  
@@ -192,3 +196,14 @@ k8s クラスタの各 Worker Node で動作するネットワークプロキシ
 k8s クラスタの名前解決/**サービスディスカバリ**を担当するクラスタ内の DNS サーバ。  
 `kube-apiserver` をポーリングして設定変更を検知する。  
 `kube-dns` の後継として [CoreDNS](https://kubernetes.io/ja/docs/tasks/administer-cluster/coredns/) がある。
+
+### metrics-server
+
+```bash
+$ git clone https://github.com/kodekloudhub/kubernetes-metrics-server.git
+$ cd kubernetes-metrics-server/
+$ kubectl apply -f .
+```
+
+なお、 `metrics-server` をインストールすることによって、 `kubectl top node` や `kubectl top pod` コマンドなどでメトリクス情報を確認できるようになる。  
+`metrics-server` はオンメモリにのみメトリクス情報を保持するので、恒久的なモニタリングには他のソリューションが必要となる。

@@ -466,16 +466,40 @@ resources:
 #### 2.4.5. Static Pod
 
 Kubernetes の Master Nodes の機能がなかった場合でも、 `kubelet` は単独で Pod を起動することができる。（ DaemonSet や Service など Pod 以外は出来ない）  
-この Pod を **Static Pod** と呼ぶ。  
-`kubelet.service` プロセス実行時のオプションに `--pod-manifest-path` というオプションがあり、このパスに Pod のマニフェストを配置することにより Static Pod を実行することができる。  
-（ `/etc/Kubernetes/manifest` あたり）  
-もしくは、`kubelet.service` プロセス実行時のオプションに `--config` オプションがあり、ここで指定された設定の yaml ファイルの中の `staticPodPath` という設定項目になる。  
+この Pod を **Static Pod** と呼ぶ。
+Static Pod の作成方法は以下の通り。
+
+- `kubelet.service` プロセス実行時のオプションに `--pod-manifest-path` というオプションがあり、このパスに Pod のマニフェストを配置することにより Static Pod を実行することができる。
+    - `/etc/Kubernetes/manifest` あたり
+- もしくは、`kubelet.service` プロセス実行時のオプションに `--config` オプションがあり、ここで指定された設定の yaml ファイルの中の `staticPodPath` という設定項目になる
+- 上記で確認した Path にマニフェストファイルを配置すれば自動で作成される（作成されなければ `systemctl restart kubelet` で再起動）
+- 作成された Static Pod は「<name>-<nodeName>」というふうに suffix にノード名が付与される
+
 Master Nodes が機能している場合、 `kubelet` は自動的に各 Static Pod に対応する mirror pod を `kube-apiserver` 上に作成するため、 `kubectl get` などでも見ることができる。  
 Master Nodes が機能していない場合、作成された Static Pod は `docker ps` コマンドで確認できる。  
 Master Nodes が機能している・いないにかかわらず、 Static Pod に対する変更は各 Static Pod が配置されている Node のマニフェストファイルを変更する他ない。  
 `kube-apiserver` に何らかの問題が発生しても機能継続できるように、 Master Nodes のコンポーネントで Static Pod により構成されているものがある。
 
-#### 2.4.6. Lifecycle / Lifecycle Events / Lifecycle Handler
+#### 2.4.6. Multiple Scheduler
+
+`kube-scheduler` は複数起動することができる。  
+複数のスケジューラがある場合、 Pod のマニフェストにて `spec.schedulerName` でスケジューラ名を指定することにより目的のスケジューラによって処理させることができる。  
+スケジューラを起動する際、以下のオプションを指定することで、スケジューラに命名およびリーダーの選出が可能になる。
+
+```yaml
+    spec:
+      containers:
+      - name: kube-second-scheduler
+        image: gcr.io/my-gcp-project/my-kube-scheduler:1.0
+        command:
+        - /usr/local/bin/kube-scheduler
+        - --address=0.0.0.0
+        - --leader-elect=false          # リーダー選出対象外
+        - --scheduler-name=my-scheduler # スケジューラの命名
+```
+
+
+#### 2.4.7. Lifecycle / Lifecycle Events / Lifecycle Handler
 
 Pod には [のライフサイクル](https://kubernetes.io/ja/docs/concepts/workloads/pods/pod-lifecycle/) がり、 `status.phase` は Pod のライフサイクルにおけるフェーズを表しており、 Pod の状態を確認する上で重要となる。
 
@@ -602,6 +626,91 @@ DaemonSet のマニフェストは ReplicaSet のそれに酷似している。
 
 ```bash
 $ kubectl create deployment elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 --namespace=kube-system --dry-run=client -o yaml > fluent.yaml
+```
+
+### 2.7. ConfigMap /Secrets
+
+#### ConfigMap
+
+ConfigMap は以下の通りコマンドで作成するか、マニフェストを作成する。
+
+```bash
+# コマンドのみで作成
+# USAGE: kubectl create configmap <config-name> --from-literal=<key>=<value>
+$ kubectl create configmap app-config --from-literal=APP_COLOR=blue --from-literal=APP_MOD=prod
+
+# マニフェストファイルを利用する場合
+# USAGE: kubectl create configmap <config-name> --from-file=<file-name>
+$ kubectl create configmap app-config --from-file=app_config.properties
+```
+
+```txt:app_config.properties
+APP_COLOR: blue
+APP_MOD: prod
+```
+
+```yaml:app-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  APP_COLOR: blue
+  APP_MOD: prod
+```
+
+Pod のマニフェストからは以下のように参照する。
+
+```yaml
+spec:
+  containers:
+  - name: hoge
+    image: hoge
+    envFrom:
+    - configMapRef:
+        name: app-config
+```
+
+#### Secret
+
+Secret は以下の通りコマンドで作成するか、マニフェストを作成する。
+
+```bash
+# コマンドのみで作成
+# USAGE: kubectl create secret generic <secret-name> --from-literal=<key>=<value>
+$ kubectl create secret generic app-secret --from-literal=APP_COLOR=blue --from-literal=APP_MOD=prod
+
+# マニフェストファイルを利用する場合
+# USAGE: kubectl create secret generic <secret-name> --from-file=<file-name>
+$ kubectl create secret generic app-secret --from-file=app_secret.properties
+```
+
+```txt:app_secret.properties
+APP_COLOR: blue
+APP_MOD: prod
+```
+
+```yaml:app-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+data:
+  APP_COLOR: blue
+  APP_MOD: prod
+```
+
+ただし、マニフェストファイルに環境変数を記載する際は、 value 値を `base64` コマンドなどで Base64 化する必要がある。（デコードは `base64 --decode` ）  
+Pod のマニフェストからは以下のように参照する。
+
+```yaml
+spec:
+  containers:
+  - name: hoge
+    image: hoge
+    envFrom:
+    - secretRef:
+        name: app-secret
 ```
 
 ## 3. その他のリソース
