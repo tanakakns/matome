@@ -85,6 +85,18 @@ status: {}
 - poddisruptionbudget
     - `kubectl create pdb my-pdb --selector=app=nginx --min-available=1 --output=yaml --dry-run=client`
 
+なお、マニフェストの項目についてコマンドで調べたい場合は `kubectl explain` コマンドを利用するとよい。
+
+```bash
+# Pod マニフェストの概要
+$ kubectl explain pods
+
+# Pod マニフェストの詳細（いっぱい出過ぎる）
+$ kubectl explain pods --recursive
+
+# grep で絞るとよい（ -A 3 はヒット行から 3 行取得の意）
+$ kubectl explain pods --recursive | grep image -A 3
+
 ## 2. マニフェストの理解
 
 ``` yaml:sample-pod.yml
