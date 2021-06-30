@@ -199,7 +199,7 @@ token123,user3,u0003,group2
 - `kube-apiserver` にアクセスする admin ユーザ、 `kube-scheduler` 、 `kube-controller-manager` 、 `kube-proxy` 、 `kubelet` はクライアント証明書を利用
 - `kubelet` 、 `etcd` にアクセスする `kube-apiserver` はクライアント証明書を利用
 
-#### 鍵・証明書の作成方法
+#### 4.1.3. 鍵・証明書の作成方法
 
 上記の通り、サーバ・クライアント証明書が必要な訳だが、それらを管理する認証局/CA を Kubernetes クラスタに作成する必要がある。  
 まずは、 CA の準備をする。
@@ -274,7 +274,7 @@ IP.2 = 172.17.0.87 # PriveteIP
 以上のように作成した鍵・証明書を `apiserver.service` の起動オプションに付与する必要がある。  
 他のサーバ証明書も同じ要領で作る。
 
-#### 鍵・証明書情報の確認方法
+#### 4.1.4. 鍵・証明書情報の確認方法
 
 上記のような鍵・証明書を含めた Master/Worker Nodes の構築をスクラッチで行うのは所謂 **The Hard Way** 。  
 ここでは、 `kubeadm` を用いて作成した場合の鍵・証明書情報の確認方法について見てみる。
@@ -286,7 +286,7 @@ IP.2 = 172.17.0.87 # PriveteIP
 - 以下に各コンポーネントの鍵・証明書の配置や発行者などを一覧化した Excel がある
     - https://github.com/mmumshad/kubernetes-the-hard-way/tree/master/tools
 
-#### Certificate API
+#### 4.1.5. Certificate API
 
 jane というユーザが新規に admin ユーザになる場合を想定する。
 
@@ -321,7 +321,7 @@ spec:
 
 なお、上記の Certificate API は `kube-controller-manager` によって管理されているので、`kube-controller-manager` の起動オプション `--cluster-signing-cert-file` および `--cluster-signing-key-file` にそれぞれ CA のルート証明書と秘密鍵を設定しておく必要がある。
 
-## 4.2. KubeConfig
+### 4.2. KubeConfig
 
 デフォルトでは `$HOME/.kube/config` にある。  
 内容は大きく `clusters` 、 `users` 、 `contexts` の 3 領域ある。
@@ -358,9 +358,9 @@ users:
 - `kubectl config view` コマンドで KubeConfig 情報を閲覧できる
 - `kubectl config user-context <context>` で current-context の変更
 
-## RBAC
+### 4.3. RBAC
 
-### Role と RoleBinding
+#### 4.3.1. Role と RoleBinding
 
 以下のマニフェストで `Role` を作成できる。（ `kubectl apply -f developer-role.yaml` ）
 
@@ -445,7 +445,7 @@ namespaces                        ns           v1                               
 （省略）
 ```
 
-### ClusterRole と ClusterRoleBinding
+#### 4.3.2. ClusterRole と ClusterRoleBinding
 
 `namespace` 毎に作成するオブジェクトに対して指定する `Role` に対して、 `ClusterRole` はクラスタ横断（ `namespace` 横断）のオブジェクトに対して指定する。  
 `nodes` や `PV` などである。
@@ -478,7 +478,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ```
 
-## Image Security
+### 4.4. Image Security
 
 普段マニフェストに記載している `image: nginx` は省略系で、フルで記載すると `image: docker.io/nginx/nginx` となる。（なお、 `docker.io` は Docker Hub の URL）  
 フォーマットとは `image: <Registry>/<User Account>/<Image Repository>` で `nginx` は `<Image Repository>` のみ記載している。  
@@ -496,7 +496,7 @@ $ kubectl create secret docker-registry regcred \
 
 上記の Secret を Pod のマニフェストの `spec.imagePullSecrets` に指定する。
 
-## Security Context
+### 4.5. Security Context
 
 Pod マニフェストの `securityContext` 項目を設定することにより、コンテナで実行されるプロセスの実行ユーザなどを指定することができる。
 
@@ -510,4 +510,274 @@ securityContext:
 
 なお、ユーザを指定しない場合は `root` ユーザとなる。
 
-## Network Policy
+### 4.6. Network Policy
+
+NetworkPolicy を適用すれば、 Pod に対して Inress / Egress のトラフィックを制限することができる。  
+なお、 NetworkPolicy を適用しない場合、全てのトラフィックが許可される。
+
+- Ingress
+    - 自分から見て、リクエストを送信するトラフィック
+    - Egress に対するレスポンスは Ingress でないことに注意
+- Egress
+    - 自分から見て、リクエストを送信するトラフィック
+    - Ingress に対するレスポンスは Egress でないことに注意
+
+例えば、以下の NetworkPolicy は Port 3306 の DB サーバに対して、 api-server からのトラフィックを許可し、その他は遮断するポリシー。  
+（バックアップ用に DB から cidr:192.168.5.10/32 帯にある Port 80 にアクセスできるようにしている。
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-policy
+spec:
+  podSelector:     # policy を適用する Pod の選択
+    matchLabels:
+      role: db
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector: # Ingress を許可する Pod の選択
+        matchLabels:
+          name: api-pod
+      namespaceSelector: # 「-」を見れば分かるがこのルールは上記の PodSelector と and 条件
+        matchLabels:
+          name: prod
+    - ipBlock: # これは or 条件
+        cidr: 192.168.5.10/32
+    ports:          # Ingress を許可する Port
+    - protocol: TCP
+      port: 3306
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 192.168.5.10/32
+    ports:
+    - protocol: TCP
+      port: 80
+```
+
+ネットワークソリューションによっては NetworkPolicy をサポートしていないものがあるので注意。（例えば、 Flannel ）
+
+```bash
+$ kubectl get networkpolicies
+```
+
+## 5. Storage
+
+Docker の場合、以下のコマンドを実行することによってコンテナ内にホストのディレクトリをマウントできる。
+
+```
+$ docker run mysql -v data_volume:/var/lib/mysql
+```
+
+- ホストコンピュータの Docker インストールディレクトリに `volumes` というディレクトリがある
+- `volumes` ディレクトリ内に `data_volume` というディレクトリが作成され、コンテナに関係なく永続化される
+- ホストの `data_volume` ディレクトリが、 コンテナの `/var/lib/mysql` ディレクトリにマウントされる
+
+といった動きになる。
+
+```
+$ docker run mysql -v /data/mysql:/var/lib/mysql
+```
+
+- 上記のように実行した場合は、ホストの `/data/mysql` ディレクトリが、コンテナの `/var/lib/mysql` ディレクトリにマウントされる
+
+つまり、 **ホストのとあるディレクトリを Volume と定義して、それをコンテナにマウントする** のが Volume の仕組みだ。  
+厳密にいうと、前者の例（ `data_volume` ）のように Volume を定義してマウントする方法を **ボリュームマウンティング** 、後者の例（ `/data/mysql` ）のようにディレクトリを直接マウントする方法を **バインドマウンティング** という。  
+厳密なコマンドに直すと以下のようになる。
+
+```bash
+# バインドマウンティング
+$ docker run mysql --mount type=bind,source=/data/mysql,target=/var/lib/mysql
+```
+
+以上のような Docker の volume 操作は Storage Drivers で実現される。  
+Storage Driver は Docker プロセスがイメージやコンテナに加えられた変更を差分形式で保持する方式で、上記で 「ディレクトリをマウント」と表現してきたが厳密にはそうではない。  
+一方 Volume Drivers というものがあり、これは Docker プロセスを経由せずとも、直接コンテナからホストのディレクトリをマウントできる仕組みだ。
+
+- Storage Drivers
+    - AUFS, ZFS, BTRFS, Device Mapper, Overlay, Overlay2 など
+- Volume Drivers ( Volume Plugin )
+    - Local, Azure File Storage, Convoy, DigitalOcean Block Storage, Flocker, gce-docker, GlusterFS, NetApp, RexRay, Portworx, VMware vSphere Storage など
+
+Docker で Volume Drivers を利用する方法は以下のようになる。
+
+```
+$ docker run mysql -it \
+    --name mysql \
+    --volume-driver rexray/ebs |
+    --mount src=ebs-vol,target=/var/lib/mysql
+```
+
+Kubernetes からは CSI (Container Storage Interface) 準拠した形で上記の機能が呼び出されることになる。
+
+### 5.1. Volumes
+
+Volume は Pod の `spec.volumes` で定義し、 `spec.containers.volumeMouts` で Pod にマウントする。
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: random-number-generator
+spec:
+  containers:
+  - image: alpine
+    name: alpine
+    command: ["/bin/sh","-c"]
+    args: ["shuf -i 0-100 -n 1 >> /opt/number.out;"]
+    volumeMounts:
+    - mountPath: /opt
+      name: data-volume
+  volumes:
+  - name: data-volume
+    hostPath:
+      path: /data
+      type: Directory
+```
+
+上記の `type: Directory` の Volume の場合、 Pod がスケジューリングされた Node の `/data` をマウントする訳だが、同じ ReplicaSet の Pod が同じ Node へスケジューリングされる補償はない。  
+例えば、下記のように AWS S3 を Volume として定義して利用することもできる。
+
+```yaml
+volumes:
+- name: data-volume
+  awsElasticBlockStore:
+  hostPath:
+    volumeID: <volume-id> path: /data
+    fsType: ext4
+```
+
+### 5.2. Persistent Volumes
+
+先の Volume では、 Pod マニフェストの `spec.volumes` に定義するため、 Pod 毎にいちいち設定しなければならない。  
+Volume の一元管理が可能となるオブジェクトとして **PersistentVolume** がある。
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-vol1
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  awsElasticBlockStore:
+    volumeID: <volume-id>
+    fsType: ext4
+```
+
+```bash
+$ kubectl create –f pv-definition.yaml
+$ kubectl get persistentvolume
+```
+
+### 5.3. Persistent Volume Claims
+
+Claim は「請求」の意。  
+**PersistentVolumeClaim** を利用すれば、 Kubernetes 上に作成された PersistentVolume の中から条件に合うものを「請求」して取得することができる。
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: myclaim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+```
+
+例えば、ある PVC を apply して様子を見てみる。
+
+```bash
+$ kubectl get pv,pvc
+NAME                      CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                   STORAGECLASS   REASON   AGE
+persistentvolume/pv0001   1Gi        RWO            Delete           Bound    default/pv-slow-claim   slow                    6m24s
+
+NAME                                  STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+persistentvolumeclaim/pv-slow-claim   Bound    pv0001   1Gi        RWO            slow           42s
+```
+
+PVC の条件に合う PV である pv0001 が選ばれ、 PVC の VOLUME 項目に pv0001 が割り当てられているのが分かる。  
+この PVC を利用して Pod から PV を「請求」するのは以下の通り。
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pvc-slow-test
+spec:
+  containers:
+  - image: alpine
+    name: alpine
+    command: ["tail", "-f", "/dev/null"]
+    volumeMounts:
+    - name: claim-volume
+      mountPath: /data
+  volumes:
+  - name: claim-volume
+    persistentVolumeClaim: # ここで「請求」してる
+      claimName: pv-slow-claim
+```
+
+マニフェストだけ見ても PVC だけなので、どの PV が割り当てられるか分からない。  
+上記のマニフェストを apply した後、 describe コマンドなどで確認するしかない。  
+つまり、 **PV は静的** なのに対して、 **PVC は動的** な Volume 取得方法となる。
+
+### 5.4. Storage Class
+
+PV は静的なオブジェクトなので、例えば、 GCP などのクラウドのストレージをプロビジョンする必要がある場合はその実行を別途行わなければならない。  
+**StorageClass** はクラウドなどプロビジョニングを要するストレージを動的に確保してくれる。
+
+```yaml:sc-definition.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: google-storage
+provisioner: kubernetes.io/gce-pd # これを指定する必要あり
+```
+
+上記の StorageClass を利用して、 PVC を作成する場合は `storageClassName` 項目で作成した StorageClass を指定する。
+
+```yaml:pvc-definition.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: myclaim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassNme: google-storage # これ
+  resources:
+    requests:
+      storage: 500Mi
+```
+
+## 6. Networking
+
+Linux のネットワーク系基本コマンドは以下の通り。
+
+- `ip link`
+- `ip addr`
+- `ip addr add 192.168.1.10/24 dev eth0`
+- `ip route`
+- `route`
+- `ip route add 192.168.1.0/24 via 192.168.2.1`
+- `cat /proc/sys/net/ipv4/ip_forward`
+
+Linux の DNS 系基本コマンドは以下の通り。
+
+- `cat "192.168.1.11 db" >> /etc/hosts`
+- `cat "nameserver 192.168.1.100" >> /etc/resolv.conf`
+- `nslookup www.google.com`
+- `dig www.google.com`
+
+また、DNS レコードの `A` とか `AAAA` とか `CNAME` とか復習せんとあかんかも、、、
+
