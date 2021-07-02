@@ -764,10 +764,10 @@ spec:
 
 Linux のネットワーク系基本コマンドは以下の通り。
 
-- `ip link`
+- `ip link` , `ifconfig -a` , `cat /etc/network/interfaces`
 - `ip addr`
 - `ip addr add 192.168.1.10/24 dev eth0`
-- `ip route`
+- `ip route` : default gateway
 - `route`
 - `ip route add 192.168.1.0/24 via 192.168.2.1`
 - `cat /proc/sys/net/ipv4/ip_forward`
@@ -781,3 +781,231 @@ Linux の DNS 系基本コマンドは以下の通り。
 
 また、DNS レコードの `A` とか `AAAA` とか `CNAME` とか復習せんとあかんかも、、、
 
+### 6.1. Pod Networking
+
+CNI は `kubelet` の以下のオプションによって設定される。
+
+```bash
+$ kubelet \
+    --network-;lugin=cni \
+    --cni-conf-dir=/etc/cni/net.d \
+    --cni-bin-dir=/etc/cni/bin # /opt/cti/bin
+$ ./net-script.sh add <container> <namespace>
+```
+
+CNI 設定ファイルは JSON 形式で以下のようになっている。
+
+```json
+{
+   "cniVersion":"0.2.0",
+   "name":"mynet",
+   "type":"bridge",
+   "bridge":"cni0",
+   "isGateway":true,
+   "ipMasq":true,
+   "ipam":{
+      "type":"host-local",
+      "subnet":"10.22.0.0/16",
+      "routes":[
+         {
+            "dst":"0.0.0.0/0"
+         }
+      ]
+   }
+```
+
+### 6.2. weave
+
+weave は CNI Plugin の 1 つ。  
+ここでは weave plugin の設定についてみる。  
+weave のエージェントは Demonset として 各ノートに deploy する。
+
+```bash
+$ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+$ kubectl get pods –n kube-system
+```
+
+### 6.3. Service Networking
+
+`kube-proxy` には以下のモードがあり、 default は iptables 。
+
+```bash
+$ kube-proxy --proxy-mode [userspace | iptables | ipvs ] ...
+```
+
+### 6.4. DNS
+
+web-service という Service があった場合、以下のように名前登録される。
+
+- web-service
+    - ただし、これは default namespace のみ
+- web-service.<namespace>
+- web-service.<namespace>.svc
+- web-service.<namespace>.svc.cluster.local
+
+IP アドレスが 10.244.2.5 の Pod があった場合、以下のように名前登録される。
+
+- 10-244-2-5
+    - ただし、これは default namespace のみ
+- 10-244-2-5.<namespace>
+- 10-244-2-5.<namespace>.pod
+- 10-244-2-5.<namespace>.pod.cluster.local
+
+Kubernetes の代表的な DNS である CoreDNS は 2 冗長化された Deployment と ClusterIP として kube-system namespace にデプロイされる。  
+`/etc/coredns/Corefile` あたりに設定ファイルがある。もしくは coredns という ConfigMap がある。
+
+### 6.4. Ingress
+
+Kubernetes のサービスを インターネットに公開する場合、 Service の LoadBalancer を利用する。  
+LoadBalancer は内部的には NodePortで構成され、 GCP などのプロバイダがロードバランサを構成し、各ノードの NodePort にトラフィックを転送してくれることで成り立っている。（設定だけみると、ただの Service の LoadBalancer だけみ見えるが、じつは、）  
+しかし、以下の場合はどうだろう。
+
+- サービスの URL：「https://my-online-store.com」
+- 「https://my-online-store.com/apparel」に該当する Service(LoadBalancer) がある
+- 「https://my-online-store.com/video」に該当する Service(LoadBalancer) がある
+
+上記の場合、どのように振り分けを行うのか。  
+こういう場合に **Ingress** を用いる。  
+内部的には、Nginx などで実現した **Ingress Controller** と、 ルーティングルールの設定を記載する **Ingress Resource** からなる。  
+Nginx の場合の Ingress Controller は以下のような Deployment / ConfigMap / Service(NodePort) / ServiceAccont で実現することになる。
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nginx-ingress-controller
+spac:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: nginx-ingress
+  template:
+    metadata:
+      labels:
+        name: nginx-ingress
+    spec:
+      containers:
+      - name: nginx-ingress-controller
+        image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0
+        args:
+        - /nginx-ingress-controller
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              filePath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              filePath: metadata.namespace
+        ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+```
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-configuration
+```
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-ingress
+spec:
+  type: NordPort
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 443
+    protocol: TCP
+    name: https
+  selectors:
+    name: nginx-ingress
+```
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nginx-ingress-serviceaccount
+```
+
+Ingress Controller 用の Image を使うなど決まりがある。  
+Ingress Resource は以下のように作成する。
+
+```yaml:Ingress-wear.yaml
+# 振り分けが無い場合
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-wear
+spec:
+  backend:
+    serviceName: wear-service
+    servicePort: 80
+```
+
+```yaml:Ingress-wear-watch.yaml
+# パスベースの振り分けの場合
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-wear-watch
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /wear
+        backend:
+          serviceName: wear-service
+          servicePort: 80
+      - path: /watch
+        backend:
+          serviceName: watch-service
+          servicePort: 80
+```
+
+```yaml:Ingress-wear-watch.yaml
+# ホスト名ベースの振り分けの場合
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-wear-watch
+spec:
+  rules:
+  - host: wear.my-online-store.com
+    http:
+      paths:
+      - backend:
+          serviceName: wear-service
+          servicePort: 80
+  - host: watch.my-online-store.com
+    http:
+      paths:
+      - backend:
+          serviceName: watch-service
+          servicePort: 80
+```
+
+```bash
+$ kubectl apply -f Ingress-wear.yaml
+$ kubectl get ingress # Ingress Resource のことが ingress
+```
+
+上記のように、振り分けルールに応じて作成する。
+
+## 7. kubeadm
+
+`kubeadm` を使って Kubernetes クラスタを構築してみる。  
+以下に 1 Master/2 Worker を構築する Vagrant がある。
+
+- https://github.com/mmumshad/certified-kubernetes-administrator-course
