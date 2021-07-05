@@ -1009,3 +1009,88 @@ $ kubectl get ingress # Ingress Resource のことが ingress
 以下に 1 Master/2 Worker を構築する Vagrant がある。
 
 - https://github.com/mmumshad/certified-kubernetes-administrator-course
+
+## 8. Troubleshooting
+
+### 8.1. Application Failure
+
+- `kubectl get all` で全体感を確認
+- `name` や `port` に誤りが無いか確認
+- Service の Selector に矛盾がないか確認
+- DB の ID/Pass などといった環境変数に誤りが無いか確認
+
+### 8.2. Control Plane Failure
+
+- `kubectl get po -n kube-system` で全コンポーネントの稼働を確認
+- 各のプロセスの状態を確認
+    - `service kube-apiserver status`
+    - `service kube-controller-manager status`
+    - `service kube-scheduler status`
+- Worker Nodes のコンポーネントについても忘れず確認
+    - `service kubelet status` / `systemctl status kubelet`
+    - `service kube-proxy status`
+- さらにログを確認
+    - `kubectl logs kube-apiserver-master -n kube-system`
+    - `sudo journalctl -u kube-apiserver`
+        - **systemd** で管理されたデーモンのログを見るコマンド
+        - `/usr/lib/systemd/system/xxxx.service` という形式で **unit** という単位で管理される（だから `-u` ）
+            - `etc/systemd/system/xxxx.service.d`
+        - unit の管理には `systemctl` コマンドを利用する
+
+serviceやsystemctlとは何か？  
+serviceとsystemctlは、どちらも Linux で楽にコマンドを実行するためのプログラム。  
+
+- service
+    - /etc/init.dにあるシェルスクリプトのファイルを指定することで、シェルを実行してくれるもの
+    - 例えば、MySQLの実行時にservice mysql startとすると思うが、これは/etc/init.d/mysqlと言うシェルスクリプトにstartと言う引数を与えることで、mysqlを実行している
+- systemctl
+    - /lib/systemdにある設定ファイルを指定して、コマンドを実行するもの
+    - serviceと大きく異なる点は、serviceはシェルを実行するのに対してsystemctlは独自の設定ファイルを使って実行する点だ
+
+どちらも使える状態であれば、systemctlを使うのが望ましい。
+
+### 8.3. Woker Nodes Failure
+
+- `kubectl get nodes` でノードの状態を確認
+- `Ready` では無いノードに対して `kubectl describe node <node-name>` して `Unknown` の項目を確認
+- ノードで `top` `df -h` などしてリソースの状態を確認
+- `kubelet` の状態を確認
+    - `service kubelet status` / `systemctl status kubelet`
+    - `sudo journalctl -u kubelet`
+        - Shift + G でボトムが見れる
+- `kubelet` の証明書を確認
+    - `openssl x509 -in /var/lib/kubelet/woker-1.crt -text`
+- `kubectl cluster-info` でクラスタに関する設定が見れる
+
+### 8.4. Network Troubleshooting
+
+- CNI
+    - `kubelet` のオプション `--cni-bin-dir` や `--network-plugin` を確認
+    - CNI 系の Pod が稼働していることも確認
+- DNS
+    - kubeDNS や coreDNS が稼働していることを確認（ Deployments ）
+    - 各々の設定ファイルや ConfigMap を確認
+    - `proxy . /etc/resolve.conf`
+- `kube-proxy`
+    - DaemonSet になっているので確認
+
+## 9. Advanced kubectl
+
+**JSON PATH** を利用したコマンド。（ JSON PATH は `metadata.name` みたいなやつ）  
+`kubectl` は `kube-apiserver` と JSON 形式で通信しているが、コマンドの結果はユーザに見やすい表形式で、且つ、間引いた情報で出力されている。  
+`-o wide` オプションである程度詳細情報まで表示できるが、 `-o json` オプションを利用すれば全情報が JSON 形式で出力される。  
+しかし、あまりにも情報が多いので `-o=jsonpath=` オプションと JSON PATH を利用して情報をフィルタリングできる。
+
+```bash
+# シングルクオート と 中括弧 で囲む
+$ kubectl get po -o=jsonpath='{ .items[0].spec.containers[0].image }'
+# 中括弧単位で複数の JSON PATH を指定できる
+$ kubectl get po -o=jsonpath='{ .items[*].metadata.name }{ .items[*].status.capacity.cpu }'
+# 改行を挟んで見やすくできる
+$ kubectl get po -o=jsonpath='{ .items[*].metadata.name }{"\n"}{ .items[*].status.capacity.cpu }'
+```
+
+`range` などの JSON PATH の演算子も利用できる。  
+他にも `-o=custom-columns=` 、 `--sort-by=.metadata.name` などのオプションもある。
+
+
