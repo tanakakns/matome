@@ -1076,6 +1076,8 @@ serviceとsystemctlは、どちらも Linux で楽にコマンドを実行する
 
 ## 9. Advanced kubectl
 
+### 9.1. JSON PAH
+
 **JSON PATH** を利用したコマンド。（ JSON PATH は `metadata.name` みたいなやつ）  
 `kubectl` は `kube-apiserver` と JSON 形式で通信しているが、コマンドの結果はユーザに見やすい表形式で、且つ、間引いた情報で出力されている。  
 `-o wide` オプションである程度詳細情報まで表示できるが、 `-o json` オプションを利用すれば全情報が JSON 形式で出力される。  
@@ -1093,4 +1095,8 @@ $ kubectl get po -o=jsonpath='{ .items[*].metadata.name }{"\n"}{ .items[*].statu
 `range` などの JSON PATH の演算子も利用できる。  
 他にも `-o=custom-columns=` 、 `--sort-by=.metadata.name` などのオプションもある。
 
+### 9.2. check kubeconfig
 
+```bash
+$ kubectl cluster-info --kubeconfig /root/admin.kubeconfig
+```

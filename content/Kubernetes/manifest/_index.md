@@ -64,11 +64,14 @@ status: {}
 - cronjob
     - `--schedule` を付けると CronJob になる
     - `kubectl run mycron --schedule "1 * * * *" --image=nginx --output=yaml --dry-run=client`
-- service / clusterIP
-    - `kubectl create svc clusterip myapp --tcp=80 --output=yaml --dry-run=client`
+- service / ClusterIP
+    - `kubectl create svc clusterip myapp --tcp=80 --dry-run=client -o yaml`
         - これだと `selector` は作成されない
-    - `kubectl expose pod redis --port=6379 --name redis-service --dry-run=client -o yaml`
+    - `kubectl expose pod redis --port=6379 --name redis-service --dry-run=client -o yaml` # default で ClusterIP
         - こうすると `selector` も勝手に作成してくれる
+- service / NodePort
+    - `kubectl expose deployment hr-web-app --type=NodePort --port=8080 --name=hr-web-app-service --dry-run=client -o yaml`
+    - `--type` は他に `LoadBalancer` と `ExternalName` もサポートする
 - configmap
     - `kubectl create cm mycm --from-literal mykey=myval --output=yaml --dry-run=client`
     - `--from-file` でファイルを指定した場合ちゃんとインデントしてくれる
