@@ -1100,3 +1100,8 @@ $ kubectl get po -o=jsonpath='{ .items[*].metadata.name }{"\n"}{ .items[*].statu
 ```bash
 $ kubectl cluster-info --kubeconfig /root/admin.kubeconfig
 ```
+
+## 10. etc
+
+- [「Kubernetes the hard way」を図で理解したい -前編-](https://nishipy.com/archives/1233)
+- [「Kubernetes the hard way」を図で理解したい -後編-](https://nishipy.com/archives/1304)
