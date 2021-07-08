@@ -11,8 +11,13 @@ weight: 5
 kubernetes では `kubectl` に様々コマンドがあるが、基本的には `kubectl create/delete/apply` コマンドと **マニフェスト** とよぶ YAML/JSON ファイルを使用することで、リソースの作成/削除/更新できる。
 
 1. [マニフェストの雛形](#1-マニフェスト雛形)
-2. [マニフェストの理解](#2-マニフェスト理解)
-3. その他のリソース
+2. [共通事項](#2-共通事項)
+3. [Deployment](#3-deployment)
+4. [Pod](#4-pod)
+5. [Service](#5-service)
+6. [DaemonSet](#6-daemonset)
+7. [ConfigMap / Secret](#7-configmap-secret)
+8. [その他のリソース](#8-その他のリソース)
 
 <!--more-->
 
@@ -21,7 +26,7 @@ kubernetes では `kubectl` に様々コマンドがあるが、基本的には 
 
 ## 1. マニフェストの雛形
 
-ドライラン（ `kubectl run/create --dry-run=client` ）と yaml 表示（ `-o yaml` / `--output=yaml` を）組み合わせるとマニフェストの雛形を標準出力できる。
+ドライラン（ `kubectl run/create --dry-run=client` ）と yaml 表示（ `-o yaml` or `--output=yaml` を）組み合わせるとマニフェストの雛形を標準出力できる。
 
 ```yaml
 $ kubectl run sample --image=nginx --dry-run=client -o yaml
@@ -53,17 +58,17 @@ status: {}
 ```
 
 - pod
-    - `kubectl run mypod --image=nginx --labels=app=mypod --output=yaml --dry-run=client`
+    - `kubectl run mypod --image=nginx --labels=app=mypod --dry-run=client -o yaml`
         - `--restart=Never` を付けなくても Pod になるっぽい
         - `--expose` オプションをつけると ClusterIP も作成される
 - deployment
-    - `kubectl create deployment mydeploy --image=nginx --replicas=4 --output=yaml --dry-run=client`
+    - `kubectl create deployment mydeploy --image=nginx --replicas=4 --dry-run=client -o yaml`
 - job
     - `--restart=OnFailure` を付けると Job になる
-    - `kubectl run myjob --restart=OnFailure --image=ubuntu --output=yaml --dry-run=client -- echo hello`
+    - `kubectl run myjob --restart=OnFailure --image=ubuntu --dry-run=client -o yaml -- echo hello`
 - cronjob
     - `--schedule` を付けると CronJob になる
-    - `kubectl run mycron --schedule "1 * * * *" --image=nginx --output=yaml --dry-run=client`
+    - `kubectl run mycron --schedule "1 * * * *" --image=nginx --dry-run=client -o yaml`
 - service / ClusterIP
     - `kubectl create svc clusterip myapp --tcp=80 --dry-run=client -o yaml`
         - これだと `selector` は作成されない
@@ -73,20 +78,20 @@ status: {}
     - `kubectl expose deployment hr-web-app --type=NodePort --port=8080 --name=hr-web-app-service --dry-run=client -o yaml`
     - `--type` は他に `LoadBalancer` と `ExternalName` もサポートする
 - configmap
-    - `kubectl create cm mycm --from-literal mykey=myval --output=yaml --dry-run=client`
+    - `kubectl create cm mycm --from-literal mykey=myval --dry-run=client -o yaml`
     - `--from-file` でファイルを指定した場合ちゃんとインデントしてくれる
-    - `kubectl create cm mycm --from-file myfile.yaml --output=yaml --dry-run=client`
+    - `kubectl create cm mycm --from-file myfile.yaml --dry-run=client -o yaml`
 - secret
     - 値は base64 エンコードされているので編集に注意
-    - `kubectl create secret generic mysecret --from-literal mykey=myval --output=yaml --dry-run=client`
+    - `kubectl create secret generic mysecret --from-literal=ID=id --from-literal=PASSWORD=pass --dry-run=client -o yaml`
 - serviceaccount
-    - `kubectl create serviceaccount mysc --output=yaml --dry-run=client`
+    - `kubectl create serviceaccount mysc --dry-run=client -o yaml`
 - clusterrolebinding
-    - `kubectl create clusterrolebinding myclusterrolebinding --clusterrole=edit --serviceaccount default:mysc --output=yaml --dry-run=client`
+    - `kubectl create clusterrolebinding myclusterrolebinding --clusterrole=edit --serviceaccount default:mysc --dry-run=client -o yaml`
 - rolebinding
-    - `kubectl create rolebinding cluster-admin-binding --role=edit --serviceaccount default:mysc --output=yaml --dry-run=client`
+    - `kubectl create rolebinding cluster-admin-binding --role=edit --serviceaccount default:mysc --dry-run=client -o yaml`
 - poddisruptionbudget
-    - `kubectl create pdb my-pdb --selector=app=nginx --min-available=1 --output=yaml --dry-run=client`
+    - `kubectl create pdb my-pdb --selector=app=nginx --min-available=1 --dry-run=client -o yaml`
 
 なお、マニフェストの項目についてコマンドで調べたい場合は `kubectl explain` コマンドを利用するとよい。
 
@@ -99,8 +104,9 @@ $ kubectl explain pods --recursive
 
 # grep で絞るとよい（ -A 3 はヒット行から 3 行取得の意）
 $ kubectl explain pods --recursive | grep image -A 3
+```
 
-## 2. マニフェストの理解
+## 2. 共通事項
 
 ``` yaml:sample-pod.yml
 apiVersion: v1
@@ -162,11 +168,21 @@ kind: Service
 また、複数のマニフェストファイルを一気に適用したい場合は、ディレクトリにまとめ `-f` で指定して実行することができる。  
 その際、ファイル名辞書順で実行されることに注意。
 
-### 2.1. Label と Annotation
+### 2.1. metadata
 
-両者とも key-value 形式（ `key: value` ）でデータを保持する仕組みであるが、用途が異なる。
+```yaml
+metadata: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#objectmeta-v1-meta
+  annotations:  # 任意のメタデータを保存および取得する。外部ツールなどによって設定・変更・保存される箇所でもある。
+    key: value
+  labels:       # ReplicaSet、Service の selector で利用。
+    key: value
+  name:         # namespace 内で一意なオブジェクトの名前。
+  namespace:    # 名前空間名。空は default と同じ。 DNS_LABEL である必要があり、変更できない。
+```
 
-#### 2.1.1. Label
+Label と Annotation は key-value 形式（ `key: value` ）でデータを保持する仕組みであるが、用途が異なる。
+
+### 2.2. Label
 
 - 各リソースの `metadata` で設定する
 - あるリソースが 1 つ以上のリソースを管理する場合、 `selector` にて Label を指定することにより対象リソースを発見する
@@ -174,7 +190,7 @@ kind: Service
   - Deployment が ReplicaSet を管理する場合
   - Service が受けた通信の転送先 Pod を指定する場合、など
 
-#### 2.1.2. Annotation
+### 2.3. Annotation
 
 - リソースオブジェクトに関する不特定の情報を保存する方法
   - オブジェクトの変更理由の記録
@@ -183,12 +199,12 @@ kind: Service
   - 他のツールからの更新検知などのため
   - Deployment オブジェクトによるロールアウトのための、ReplicaSet の追跡情報の保存、など
 
-### 2.2. namespace
+### 2.4. namespace
 
 namespace は k8s クラスタ上で論理的にシステムを分割する仕組み。  
 namespace リソース（ `kind: Namespace` ）を作成し、各リソースの `metadata` にラベル付け（ `namespace: test` ）して利用する。
 
-### 2.3. Deployment
+## 3. Deployment
 
 リソースには色々あるが、理解すべきリソースは少ない。そのうちの一つ。  
 （その他は、Service、DaemonSet、CronJobくらい？）
@@ -197,33 +213,17 @@ namespace リソース（ `kind: Namespace` ）を作成し、各リソースの
 apiVersion: app/v1
 kind: Deployment
 metadata: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#objectmeta-v1-meta
-  annotations:                # 任意のメタデータを保存および取得する。外部ツールなどによって設定・変更・保存される箇所でもある。
+  annotations:  # 任意のメタデータを保存および取得する。外部ツールなどによって設定・変更・保存される箇所でもある。
     key: value
-  clusterName: string         # オブジェクトが所属するクラスタ名。異なるクラスターで同じ名前と名前空間を持つリソースを区別するために使用。使わない。
-  creationTimestamp:          # このオブジェクトが作成されたサーバ時間。変更できない。
-  deletionGracePeriodSeconds: # オブジェクトの正常終了までの時間。読み取り専用。
-  deletionTimestamp:          # オブジェクトが削除される時間。読み取り専用。
-  finalizers:                 # リストからエントリを削除する責任のあるコンポーネントの識別子。削除のみ可能。
-  generateName:               # name が設定されていない場合にのみオプションで設定される名前。
-  generation:                 # 状態の世代を表す。読み取り専用。
-  initializers:               # オブジェクトの作成時にシステムの不変条件を強制するコントローラー。DEPRECATED。
-  labels:                     # ReplicaSet、Service の selector で利用。
+  labels:       # ReplicaSet、Service の selector で利用。
     key: value
-  managedFields:              # 内部のワークフロー用でユーザは設定・理解の必要はない。
-  name:                       # namespace 内で一意なオブジェクトの名前。
-  namespace:                  # 名前空間名。空は default と同じ。 DNS_LABEL である必要があり、変更できない。
-  ownerReferences:            # このオブジェクトに依存するオブジェクトのリスト。コントローラにより管理される。
-  resourceVersion:            # オブジェクトがいつ変更されたかを判断するためにクライアントが使用できるこのオブジェクトの内部バージョン。読み取り専用。
-  selfLink:                   # このオブジェクトを表すURL。読み取り専用。
-  uid:                        # このオブジェクトの一意な ID 。システムにより管理される。
+  name:         # namespace 内で一意なオブジェクトの名前。
+  namespace:    # 名前空間名。空は default と同じ。 DNS_LABEL である必要があり、変更できない。
 spec: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#deploymentspec-v1-apps
-  minReadySeconds:         # コンテナがクラッシュすることなく、新しく作成されたポッドの準備が整うまでの最小秒数。デフォルト 0 。
-  paused: bool             # 展開が一時停止されていることを示す。
-  progressDeadlineSeconds: # 展開が失敗したと見なされるまで最大秒数。
-  replicas:                # Pod のリプリケーション数。
-  revisionHistoryLimit:    # ロールバックを許可するReplicaSetの世代数。デフォルト 10 。
-  selector: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselector-v1-meta
-            # ReplicaSet が Pod を選択するための Label Selector 。
+  replicas: # Pod のリプリケーション数。
+  selector: # ReplicaSet が Pod を選択するための Label Selector 。
+    matchLabels:
+      <key1>: <value1>   # ReplicaSet の対象セレクタ。Pod 定義 の metadata.labels に一致させる。
     matchExpressions: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#labelselectorrequirement-v1-meta
                       # Label Selector のリスト。 AND で評価される。
     matchLabels:      # key-value 形式の Label Selector のリスト。 AND で評価される。matchExpressions の方が複雑な表現が可能。
@@ -237,102 +237,30 @@ spec: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#dep
             # 作成する Pod の定義
     metadata: # 先の metadata に同じ。
     spec: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#podspec-v1-core
-      activeDeadlineSeconds: # Pod が非アクティブになってから強制終了されるまでの秒数。
-      affinity: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#affinity-v1-core
-                # Pod をスケジューリングする際の制約。
-      automountServiceAccountToken: # サービスアカウントトークンを自動的にマウントする必要があるかどうかを示す。
+      affinity:   # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#affinity-v1-core
       containers: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#container-v1-core
-                  # Pod に属するコンテナのリスト。
-        args:                     # ENTRYPOINT へ引数。
         command:                  # ENTRYPOINT 配列。
         env:                      # 環境変数のリスト。
         envFrom:                  # 環境変数を設定するソースのリスト。
         image:                    # Docker イメージ名。
-        imagePullPolicy:          # Docker イメージの pull ポリシー。 Always, Never, IfNotPresent のいずれか。
-        lifecycle:                # コンテナのライフサイクルイベントに応じて管理システムが実行するアクション。
+        imagePullPolicy:          # Docker イメージの pull ポリシー。 Always（常にpull）, Never（ローカルのみ）, IfNotPresent（ローカルに無ければpull）。
         livenessProbe:            # コンテナ死活の定期的な調査。
         name:                     # コンテナ名。DNS_LABEL となる。
         ports:                    # コンテナの公開ポートのリスト。
         readinessProbe:           # コンテナサービスの準備状況の定期的な調査。
-        resources:                # コンテナが利用するコンピュートリソース。
         securityContext:          # Pod を実行するセキュリティオプション。
-        stdin:                    # コンテナがコンテナーランタイムで標準入力にバッファーを割り当てるかどうか。デフォルト false は EOF になる。
-        stdinOnce:                # 単一の接続によって開かれた後に、コンテナランタイムがstdinチャネルを閉じるかどうか。デフォルト false 。
-        terminationMessagePath:   # オプション：コンテナの終了メッセージが書き込まれるファイルがコンテナのファイルシステムにマウントされるパス。
-        terminationMessagePolicy: # 終了メッセージの入力方法。
-        tty:                      # コンテナに TTY を割り当てるか否か。デフォルト false 。
-        volumeDevices:            # コンテナが使用するブロックデバイスのリスト。
         volumeMounts:             # コンテナのファイルシステムにマウントするポッドボリューム。
-        workingDir:               # コンテナの作業ディレクトリ。
-      dnsConfig: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#poddnsconfig-v1-core
-        nameservers: # DNSネームサーバーのIPアドレスのリスト。
-        options:     # DNSリゾルバーオプションのリスト。
-        searches:    # ホスト名検索用のDNS検索ドメインのリスト。
-      dnsPolicy:   # Pod の DNS ポリシー。ClusterFirstWithHostNet, ClusterFirst（デフォルト）, Default, None 。
-      enableServiceLinks: # サービスに関する情報をDockerリンクの構文と一致する Pod の環境変数に注入するか否か。デフォルト true 。
-      hostAliases: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#hostalias-v1-core
-                   # Pod の hosts ファイルへの追加設定。
-      hostIPC:     # ホストの IPC 名前空間を使うか否か。デフォルト false 。
-      hostNetwork: # Pod に要求されたホストネットワーキング。ホストのネットワーク名前空間を使用。デフォルト false 。
-      hostPID:     # ホストの PID 名前空間を利用するか否か。デフォルト false 。
-      hostname:    # Pod のホスト名。指定しない場合システムが付与。
-      imagePullSecrets: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#localobjectreference-v1-core
-                        # Docker イメージを Pull する際のシークレット。
-      initContainers:    # Pod に属する初期化コンテナのリスト。コンテナが開始される前に順番に実行される。
-      nodeName:          # Pod を特定のノードへスケジューリングする。
-      nodeSelector:      # Pod を配置するノードのセレクタ。
-      overhead:          # 特定の RuntimeClass の Pod の実行に関連するリソースオーバーヘッドを表す。コントローラにより自動入力される。
-      preemptionPolicy:  # 優先度の低い Pod を先取りするポリシー。
-      priority:          # 優先度の値。値が大きいほど優先度が高い。
-      priorityClassName: # Pod の優先順位を示す。
-      readinessGates: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#podreadinessgate-v1-core
-                      # Pod の準備状況を評価する。
-      restartPolicy:    # Pod 内の全てのコンテナの再起動ポリシー。
-      runtimeClassName: # Pod 実行に使用する RuntimeClass オブジェクト。
-      schedulerName:    # Pod を管理するスケジューラ。
-      securityContext: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#podsecuritycontext-v1-core
-                       # Pod レベルのセキュリティ属性。
-      serviceAccount:                # Deprecated
-      serviceAccountName:            # Pod の実行に使用する ServiceAccount 名。
-      shareProcessNamespace:         # Pod 内の全てのコンテナ間で PID 空間を共有する。デフォルト false 。
-      subdomain:                     # サブドメインを指定する。"<hostname>.<subdomain>.<pod namespace>.svc.<cluster domain>" 。
-      terminationGracePeriodSeconds: # Pod が Graceful Stop するのに要する秒数。デフォルト 30 秒。
+      initContainers:     # Pod に属する初期化コンテナのリスト。コンテナが開始される前に順番に実行される。
+      nodeName:           # Pod を特定のノードへスケジューリング場合、明示的に指定する。
+      nodeSelector:       # Pod を配置するノードのセレクタ。
+      schedulerName:      # Pod を管理する kube-scheduler を明示的に指定する場合に設定。
+      securityContext:    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#podsecuritycontext-v1-core
+                          # Pod レベルのセキュリティ属性。
+      serviceAccountName: # Pod の実行に使用する ServiceAccount 名。
       tolerations: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#toleration-v1-core
                    # Pod を特定のノードに配置する際に利用。 nodeSelector の方が古い。
       volumes: # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#volume-v1-core
                # マウントできるボリュームのリスト。
-```
-
-上記、すごい量だが、必要最低限は。
-
-```yaml
-apiVersion: app/v1
-kind: Deployment
-metadata:
-  annotations:
-    <key>: <value>
-  labels:                  # Deployment の Label
-    <key>: <value>
-  name: <string>           # Deployment 名
-  namespace: <string>      # Deployment の namespace
-spec:
-  replicas: <integer>      # ReplicaSet のレプリカ数。
-  selector:
-    matchLabels:
-      <key1>: <value1>     # ReplicaSet の対象セレクタ。以下の Pod 定義 の Label に一致させる。
-  template:                # Pod 定義
-    metadata:
-      labels:              # Pod の Label
-        <key1>: <value1>
-    spec:
-      containers:
-        image: <string>    # Pod に利用するコンテナイメージ
-        name: <string>     # Pod 名
-        ports:
-        imagePullPolicy: <string> # Docker イメージの pull ポリシー。 Always（常にpull）, Never（ローカルのみ）, IfNotPresent（ローカルに無ければpull）
-        livenessProbe:            # コンテナ死活の定期的な調査。
-        readinessProbe:           # コンテナサービスの準備状況の定期的な調査。
-        resources: {}
 ```
 
 ケースによっては追加で以下を意識する必要がある。
@@ -344,14 +272,13 @@ spec:
 
 また、 Pod の `spec.nodeName` を指定することで、スケジューラに任せず手動で Pod の配置ノードを指定することができる。
 
-### 2.4. Pod
+## 4. Pod
 
 ```yaml
 apiVersion: core/v1
 kind: Pod
 metadata: # 先の metadata に同じ。
 spec:     # 先の Deployment の spec.template.spec に同じ。
-status:   # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#podstatus-v1-core
 ```
 
 pod のマニフェストに以下を足したものが ReplicaSet 。
@@ -368,7 +295,7 @@ spec:
 
 なお、 ReplicaSet はマニフェスト上はほぼ Deployment に同じ。
 
-#### 2.4.1. Taints, Tolerations
+### 4.1. Taints, Tolerations
 
 Taints / Tolerations は Node Affinity と逆の機能。  
 **Taints** は「汚れ」、 **Tolerations** は「寛容」といった意味になる。  
@@ -404,7 +331,7 @@ tolerations:
   effect: "NoSchedule"
 ```
 
-#### 2.4.2. Node Selectors
+### 4.2. Node Selectors
 
 Pod を特定の Node にスケジュールしたい場合 **Node Selectors** を利用する。  
 Node に Labels を付与し、 Pod の `nodeSelector` にその Labels を付与することで設定できる。  
@@ -425,7 +352,7 @@ nodeSelector:
 Node Selectors は `size=Large` もしくは `size=Middle` のどちらか、といった柔軟性のあるスケジュールはできない。  
 こういう場合は Node Affinity を使う。
 
-#### 2.4.3. Node Affinity
+### 4.3. Node Affinity
 
 **Node Affinity** は Pod に対して設定し、 Node Selector と同様 Node に付与された Labels を見る。  
 Pod のマニフェストの `spec.affinity` に以下の設定をする。
@@ -452,7 +379,7 @@ affinity:
 - requiredDuringSchedulingRequiredDuringExecution
     - 必ず Affinity の通りにスケジュールされ、さらに、すでに実行中のものは再スケジュールされる
 
-#### 2.4.4. Resource Requirements
+### 4.4. Resource Requirements
 
 `spec.containers.resources` を設定することで、 Pod に割り当てるリソース（ CPU/Mem/Disk ）の要求について記載することができる。
 
@@ -478,7 +405,7 @@ resources:
 - 1Mi = 1,048,576 bytes
 - 1Ki = 1,024 bytes
 
-#### 2.4.5. Static Pod
+### 4.5. Static Pod
 
 Kubernetes の Master Nodes の機能がなかった場合でも、 `kubelet` は単独で Pod を起動することができる。（ DaemonSet や Service など Pod 以外は出来ない）  
 この Pod を **Static Pod** と呼ぶ。
@@ -495,7 +422,7 @@ Master Nodes が機能していない場合、作成された Static Pod は `do
 Master Nodes が機能している・いないにかかわらず、 Static Pod に対する変更は各 Static Pod が配置されている Node のマニフェストファイルを変更する他ない。  
 `kube-apiserver` に何らかの問題が発生しても機能継続できるように、 Master Nodes のコンポーネントで Static Pod により構成されているものがある。
 
-#### 2.4.6. Multiple Scheduler
+### 4.6. Multiple Scheduler
 
 `kube-scheduler` は複数起動することができる。  
 複数のスケジューラがある場合、 Pod のマニフェストにて `spec.schedulerName` でスケジューラ名を指定することにより目的のスケジューラによって処理させることができる。  
@@ -514,7 +441,7 @@ Master Nodes が機能している・いないにかかわらず、 Static Pod �
 ```
 
 
-#### 2.4.7. Lifecycle / Lifecycle Events / Lifecycle Handler
+### 4.7. Lifecycle / Lifecycle Events / Lifecycle Handler
 
 Pod には [のライフサイクル](https://kubernetes.io/ja/docs/concepts/workloads/pods/pod-lifecycle/) がり、 `status.phase` は Pod のライフサイクルにおけるフェーズを表しており、 Pod の状態を確認する上で重要となる。
 
@@ -587,7 +514,7 @@ postStart や preStop に指定できる Lifecycle Handler の種類は以下の
 
 先の probe と同様だ。
 
-### 2.5. Service
+## 5. Service
 
 ```yaml
 apiVersion: v1
@@ -632,7 +559,7 @@ spec:
 
 Service の `selector` の設定が正しく Pod を捉えているかどうかは `kubectl get pods --selector="app=monolith,secure=enabled"` などのコマンドで対象の Pod を取得できるか、で検査できる。
 
-### 2.6. DaemonSet
+## 6. DaemonSet
 
 各 Node に 1 Pod ずつ配置する。  
 Monitoring/Logging Agent などを仕込むのに最適。（ `kube-proxy` は DaemonSet で配置されているものもある）  
@@ -643,9 +570,9 @@ DaemonSet のマニフェストは ReplicaSet のそれに酷似している。
 $ kubectl create deployment elasticsearch --image=k8s.gcr.io/fluentd-elasticsearch:1.20 --namespace=kube-system --dry-run=client -o yaml > fluent.yaml
 ```
 
-### 2.7. ConfigMap /Secrets
+## 7. ConfigMap / Secret
 
-#### ConfigMap
+### 7.1. ConfigMap
 
 ConfigMap は以下の通りコマンドで作成するか、マニフェストを作成する。
 
@@ -686,7 +613,7 @@ spec:
         name: app-config
 ```
 
-#### Secret
+### 7.2. Secret
 
 Secret は以下の通りコマンドで作成するか、マニフェストを作成する。
 
@@ -728,14 +655,14 @@ spec:
         name: app-secret
 ```
 
-## 3. その他のリソース
+## 8. その他のリソース
 
 基本的なリソース以外に以下について記載する。
 
 - [HPA（HorizontalPodAutoscaler）](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
 - [PBD（PodDisruptionBudget）](https://kubernetes.io/docs/tasks/run-application/configure-pdb/)
 
-### 3.1. HPA（HorizontalPodAutoscaler）
+### 8.1. HPA（HorizontalPodAutoscaler）
 
 HPA は pod の負荷に応じて自動的に pod の数を水平スケールさせるリソース。  
 Deployment, ReplicaSet, ReplicationController, StatefulSetはscaled resource objectと呼ばれ、これらがauto scalingの対象リソースとなる。
@@ -761,7 +688,7 @@ spec:
 
 [参考](https://qiita.com/sheepland/items/37ea0b77df9a4b4c9d80)
 
-### 3.2. PBD（PodDisruptionBudget）
+### 8.2. PBD（PodDisruptionBudget）
 
 - `kubectl drain` によって対象 Node から Pod を退去でき、以降も Pod がスケジューリングされないように出来る
   - Node のメンテナンス(reboot)などを行う必要がある場合に kubectl drainを行うと Node で動いている Pod について gracefully に terminate される。また、ReplicaSet を使っていれば別の Node で Pod が自動的に起動される。メンテナンス完了後、kubectl uncordonを行うことで再度 Pod がスケジューリングされる状態になる。

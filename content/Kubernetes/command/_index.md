@@ -93,22 +93,22 @@ Use "kubectl options" for a list of global command-line options (applies to all 
 `kubectl` コマンドの設定情報は `${HOME}/.kube/config` にある。  
 これを `kubeconfig` と呼ぶ。
 
-```zsh
-current-context current-contextを表示する
-delete-cluster  指定したコンテキストをkubeconfigから削除する
-delete-context  指定したコンテキストをkubeconfigから削除する
-delete-user     Delete the specified user from the kubeconfig
-get-clusters    kubeconfigで定義されたクラスターを表示する
-get-contexts    1つまたは複数のコンテキストを記述する
-get-users       Display users defined in the kubeconfig
-rename-context  Renames a context from the kubeconfig file.
-set             kubeconfigに個別の変数を設定する
-set-cluster     kubeconfigにクラスターエントリを設定する
-set-context     kubeconfigにコンテキストエントリを設定する
-set-credentials kubeconfigにユーザーエントリを設定する
-unset           kubeconfigから変数を個別に削除する
-use-context     kubeconfigにcurrent-contextを設定する
-view            マージされたkubeconfigの設定または指定されたkubeconfigを表示する
+```bash
+current-context # current-contextを表示する
+delete-cluster  # 指定したコンテキストをkubeconfigから削除する
+delete-context  # 指定したコンテキストをkubeconfigから削除する
+delete-user     # Delete the specified user from the kubeconfig
+get-clusters    # kubeconfigで定義されたクラスターを表示する
+get-contexts    # 1つまたは複数のコンテキストを記述する
+get-users       # Display users defined in the kubeconfig
+rename-context  # Renames a context from the kubeconfig file.
+set             # kubeconfigに個別の変数を設定する
+set-cluster     # kubeconfigにクラスターエントリを設定する
+set-context     # kubeconfigにコンテキストエントリを設定する
+set-credentials # kubeconfigにユーザーエントリを設定する
+unset           # kubeconfigから変数を個別に削除する
+use-context     # kubeconfigにcurrent-contextを設定する
+view            # マージされたkubeconfigの設定または指定されたkubeconfigを表示する
 ```
 
 kind 環境でやる。
@@ -214,5 +214,5 @@ Pod 以外の大体のリソースは `kubectl create` で作れる。[参考](h
 例えば、以下のコマンドはデプロイメントのイメージのみ変更する。
 
 ```bash
-$ kubectl set image deployment/<demployment> <new-image>
+$ kubectl set image deployment <demployment-name> <new-image> --record
 ```

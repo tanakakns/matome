@@ -197,7 +197,7 @@ Kubernetesでは、個別のコンテナに対する設定の内容は環境変�
     - 機密情報（ID、Passwordなど）を含む環境変数を参照する場合に利用
     - マニフェスト上で秘匿化部分は base64 化されているだけなので、暗号化したい場合は `kubesec` などを利用する
 - PersistentVolume (PV)
-    - クラスタ内􏰁永続ストレージの管理に使用
+    - クラスタ内の永続ストレージの管理に使用
     - GCPでの標準はCompute Engineの永続ディスク
 - PersistentVolumeClaim (PVC)
     - PVへのリクエスト

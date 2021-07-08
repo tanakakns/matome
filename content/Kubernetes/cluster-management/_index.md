@@ -5,38 +5,20 @@ draft: false
 hide:
 - toc
 - nextpage
-weight: 6
+weight: 7
 ---
 
 <!--more-->
 
-Application Lifecycle Management について。
+1. ノードの更新
+2. コンポーネントの更新
+3. バックアップとリストア
+4. セキュリティ
 
-## 1. Rolling Update and Rollbacks
-
-Deployment のマニフェストの `spec.template.spec.containers.image` を変更し `kubectl apply` すれば、デフォルトの設定で **ローリングアップデート** される。  
-もしくは `kubectl set image deployment/<deployment-name> <pod-name>=<image-name>` で直接イメージを変更しても同様。  
-ロールアウトの確認方法は以下の通り。
-
-```bash
-# rollout の状況を確認
-$ kubectl rollout status deployment <deployment-name>
-
-# これまでの rollout を確認
-$ kubectl rollout history deployment <deployment-name>
-
-# ロールバック
-$ kubectl rollout undo deployment <deployment-name>
-```
-
-なお、ローリングアップデートされる際は ReplicaSet が再度作成されている。
-
-## 2. Cluster Maintainance
-
-### 2.1. OS の更新
+## 1. ノードの更新
 
 クラスタからノードが消失した場合、 `kube-scheduler` 起動時に設定したオプション `--pod-eviction-timeout=5m0s` が経過すると消失したノードに配置されていた Pod （ただし、 ReplicaSet の場合）は他のアクティブなノードで再作成される。（ ReplicaSet ではない場合は際作成されない）  
-障害でノードが消失する場合は仕方ないが、メンテナンスでノードを停止する場合は、ノードから Pod を **ドレイン** して他のノードへ Pod を移す必要がある。
+障害でノードが消失する場合は仕方ないが、 OS 更新などのメンテナンス作業でノードを停止する場合は、ノードから Pod を **ドレイン** して他のノードへ Pod を移す必要がある。
 
 ```bash
 # 指定ノードの Pod を Graceful Shutdown させ、徐々に Pod を退避する
@@ -53,7 +35,7 @@ $ kubectl uncordon <node-name>
 $ kubectl cordon <node-name>
 ```
 
-### 2.2. Kubernetes の更新
+## 2. コンポーネントの更新
 
 Kubernetes クラスタにインストール・実行されている各コンポーネントの更新方法について記載する。  
 Kubernetes にインストールされているコンポーネントのバージョンは `kubectl get nodes` の `VERSION` 項目にて確認できる。  

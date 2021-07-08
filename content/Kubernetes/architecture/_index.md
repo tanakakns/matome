@@ -195,7 +195,8 @@ k8s クラスタの各 Worker Node で動作するネットワークプロキシ
 
 k8s クラスタの名前解決/**サービスディスカバリ**を担当するクラスタ内の DNS サーバ。  
 `kube-apiserver` をポーリングして設定変更を検知する。  
-`kube-dns` の後継として [CoreDNS](https://kubernetes.io/ja/docs/tasks/administer-cluster/coredns/) がある。
+`kube-dns` の後継として [CoreDNS](https://kubernetes.io/ja/docs/tasks/administer-cluster/coredns/) がある。  
+2 冗長の DaemonSet として構成される。（ことが多い？）
 
 ### metrics-server
 
