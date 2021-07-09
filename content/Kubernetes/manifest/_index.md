@@ -557,7 +557,8 @@ spec:
     targetPort: 9376  # Pod の Port
 ```
 
-Service の `selector` の設定が正しく Pod を捉えているかどうかは `kubectl get pods --selector="app=monolith,secure=enabled"` などのコマンドで対象の Pod を取得できるか、で検査できる。
+Service の `selector` の設定が正しく Pod を捉えているかどうかは `kubectl get pods --selector="app=monolith,secure=enabled"` などのコマンドで対象の Pod を取得できるか、で検査できる。  
+さらに、ネットワーク疎通する場合は `nc -v <host/IP> <port>` コマンドで確認するのがよい。（ `curl` は busybox に default で入ってない、、、）
 
 ## 6. DaemonSet
 

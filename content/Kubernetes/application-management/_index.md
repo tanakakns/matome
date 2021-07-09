@@ -11,6 +11,7 @@ weight: 6
 <!--more-->
 
 1. リリース
+2. スケールイン・アウト
 
 ## 1. リリース
 
@@ -32,3 +33,36 @@ $ kubectl rollout undo deployment <deployment-name>
 ```
 
 なお、ローリングアップデートされる際は ReplicaSet が再度作成されている。
+
+## 2. スケールイン・アウト
+
+Deployment をスケーリングするには、 `spec.replicas` フィールドを更新する。  
+`kubectl explain` コマンドで、このフィールドの説明を確認してみる。
+
+```bash
+$ kubectl explain deployment.spec.replicas
+KIND:     Deployment
+VERSION:  apps/v1
+FIELD:    replicas <integer>
+DESCRIPTION:
+     Number of desired pods. This is a pointer to distinguish between explicit
+     zero and not specified. Defaults to 1.
+```
+
+`kubectl scale` コマンドでスケールアウト・インする。
+
+```bash
+# Pod 数を 5 へスケールアウト
+$ kubectl scale deployment hello --replicas=5
+
+# 確認
+$ kubectl get pods | grep hello- | wc -l
+5
+
+# Pod 数を 3 へスケールイン
+$ kubectl scale deployment hello --replicas=3
+
+# 確認
+$ kubectl get pods | grep hello- | wc -l
+3
+```
