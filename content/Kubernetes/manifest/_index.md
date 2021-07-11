@@ -558,7 +558,8 @@ spec:
 ```
 
 Service の `selector` の設定が正しく Pod を捉えているかどうかは `kubectl get pods --selector="app=monolith,secure=enabled"` などのコマンドで対象の Pod を取得できるか、で検査できる。  
-さらに、ネットワーク疎通する場合は `nc -v <host/IP> <port>` コマンドで確認するのがよい。（ `curl` は busybox に default で入ってない、、、）
+さらに、ネットワーク疎通する場合は `nc -v <host/IP> <port>` コマンドで確認するのがよい。（ `curl` は busybox に default で入ってない、、、）  
+`curl` が利用できる環境の場合は `curl <endpoint:port> -I` でヘッダ情報（ HTTP Status など）のみ確認できる。
 
 ## 6. DaemonSet
 
