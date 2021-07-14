@@ -17,7 +17,8 @@ kubernetes では `kubectl` に様々コマンドがあるが、基本的には 
 5. [Service](#5-service)
 6. [DaemonSet](#6-daemonset)
 7. [ConfigMap / Secret](#7-configmap-secret)
-8. [その他のリソース](#8-その他のリソース)
+8. [Job / CronJob](#8-job-cronjob)
+9. [その他のリソース](#8-その他のリソース)
 
 <!--more-->
 
@@ -64,11 +65,9 @@ status: {}
 - deployment
     - `kubectl create deployment mydeploy --image=nginx --replicas=4 --dry-run=client -o yaml`
 - job
-    - `--restart=OnFailure` を付けると Job になる
-    - `kubectl run myjob --restart=OnFailure --image=ubuntu --dry-run=client -o yaml -- echo hello`
+    - `kubectl create job sample --image=busybox  --dry-run=client -o yaml -- /bin/sh -c 'echo "Hello. Hololive"'`
 - cronjob
-    - `--schedule` を付けると CronJob になる
-    - `kubectl run mycron --schedule "1 * * * *" --image=nginx --dry-run=client -o yaml`
+    - `kubectl create cronjob sample --image=busybox --schedule='*/1 * * * *' --dry-run=client -o yaml -- /bin/sh -c 'echo "Hello. Hololive"'`
 - service / ClusterIP
     - `kubectl create svc clusterip myapp --tcp=80 --dry-run=client -o yaml`
         - これだと `selector` は作成されない
@@ -470,15 +469,18 @@ Liveness/Readiness Probe の双方で以下の 3 種類のヘルスチェック�
 - exec
   - コマンドを実行し、終了コードが 0 でなければ失敗
   - 例
-  ```
-  livenessProbe:
+  ```yaml
+  readinessProbe:
     exec:
       command: ["ls", "/usr/sbin/nginx"]
+    initialDelaySeconds: 10 # 初回チェックの Delay
+    periodSeconds: 5        # チェック間隔
+    failureThreshold: 8     # チェック NG の場合のリトライ回数
   ```
 - httpGet
   - HTTP GET リクエストを実行し、 Status Code が 200 〜 300 でなければ失敗
   - 例
-  ```
+  ```yaml
   libenessProbe:
     httpGet:
       path: /health
@@ -488,11 +490,14 @@ Liveness/Readiness Probe の双方で以下の 3 種類のヘルスチェック�
       httpHeaders:
       - name: Authorization
         value: Bearer TOKEN
+    initialDelaySeconds: 10 # 初回チェックの Delay
+    periodSeconds: 5        # チェック間隔
+    failureThreshold: 8     # チェック NG の場合のリトライ回数
   ```
 - tcpSocket
   - TCP セッションが確立できなければ失敗
   - 例
-  ```
+  ```yaml
   linenessProbe:
     tcpSocket:
       port: 80
@@ -615,9 +620,110 @@ spec:
         name: app-config
 ```
 
+なお、 Pod から ConfigMap を参照する方法は大きく 3 パターンある。
+
+- ConfigMap の内容の一部を環境変数へ
+    - 例
+      ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: test-pod
+      spec:
+        containers:
+          - name: test-container
+            image: k8s.gcr.io/busybox
+            command: [ "/bin/sh", "-c", "echo $(SPECIAL_LEVEL_KEY)" ] # コマンドで使用する場合は「 $() 」
+            env:
+              - name: SPECIAL_LEVEL_KEY # 環境変数
+                valueFrom:
+                  configMapKeyRef:
+                    name: special-config # 参照する ConfigMap 名
+                    key: special.how     # ConfigMap 内の key
+      ```
+- ConfigMap の内容を全て直接環境変数へ
+    - 例
+      ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: test-pod
+      spec:
+        containers:
+          - name: test-container
+            image: k8s.gcr.io/busybox
+            command: [ "/bin/sh", "-c", "env" ]
+            envFrom: # ここ
+            - configMapRef:
+                name: special-config
+      ```
+- Volume に追加する
+    - 例
+      ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: dapi-test-pod
+      spec:
+        containers:
+          - name: test-container
+            image: k8s.gcr.io/busybox
+            command: [ "/bin/sh", "-c", "ls /etc/config/" ]
+            volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+        volumes:
+          - name: config-volume
+            configMap:
+              name: special-config
+      ```
+
+3 つ目の Volume に追加するパターンが少しややこしい。  
+上記の `special-config` が `kubectl create cm special-config --from-literal=id=hoge --from-literal=password=hogehoge` のように作られた場合、コンテナ内の `/etc/config` ディレクトリ内には、 `hoge` と記載された 名前が `id` のファイルが 1 つ、 `hogehoge` と記載された名前が `password` のファイルが 1 つ作成される。  
+これだと具合が悪いので、ファイルとして配置する ConfigMap の記載方法がある。
+
+```yaml:nginx-file.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-file
+data:
+  envfile: |-
+    id=hoge
+    password=hogehoge
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - image: nginx
+    name: nginx
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/config
+  volumes:
+  - name: config-volume
+    configMap:
+      name: nginx-file
+      items:
+        - key: envfile
+          path: envfile.txt
+```
+
+上記で作成した Nginx の `/etc/config` ディレクトリには `envfile.txt` が作成されており、その中身は以下の通りだ。
+
+```text:envfile.txt
+id=hoge
+password=hogehoge
+```
+
 ### 7.2. Secret
 
-Secret は以下の通りコマンドで作成するか、マニフェストを作成する。
+Secret は以下の通りコマンドで作成するか、マニフェストを作成する。（ `generic` が付くのに注意）
 
 ```bash
 # コマンドのみで作成
@@ -657,14 +763,134 @@ spec:
         name: app-secret
 ```
 
-## 8. その他のリソース
+
+## 8. Job / CronJob
+
+### 8.1. Job
+
+Job を利用しなくても Pod で `restartPolicy: Always` を設定すれば似たようなことができる。
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: math-pod
+spec:
+  containers:
+  - name: math-add
+    image: ubuntu
+    command: ['expr', '3', '+', '2']
+  restartPolicy: Always
+```
+
+`restartPolicy` で小細工をせず、 ReplicaSet と同じレイヤで Pod をコントロールするのが **Job** だ。  
+Job のマニフェストは `spec` の下に `template` を挟む以外は Pod とほぼ同じだ。
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: math-pod-job
+spec:
+  template:
+    containers:
+    - name: math-add
+      image: ubuntu
+      command: ['expr', '3', '+', '2']
+    restartPolicy: Never
+```
+
+Job は `kubectl get jobs` で取得でき、Job が実行した Pod は通常通り `kubectl get pods` で取得できる。
+
+```bash
+$ kubectl get jobs
+NAME          DESIRED  SUCCESSFUL  AGE
+math-add-job  1        1           38s
+
+$ kubectl get pods
+NAME                READY  STATUS     RESTARTS  AGE
+math-add-job-l87pn  0/1    Completed  0         2m
+```
+
+なお、 Job は ReplicaSet とは違い、バッチ処理などに有効な機能がある。
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: math-pod-job
+spec:
+  completions: 3
+  parallelism: 3
+  backoffLimit: 6
+  template:
+    containers:
+    - name: math-add
+      image: ubuntu
+      command: ['expr', '3', '+', '2']
+    restartPolicy: Never
+```
+
+- `spec.completions`
+    - 指定した回数 Job から起動した Pod の処理が成功（ `Completed` ）するまで Pod をシーケンシャルに起動する
+- `spec.parallelism`
+    - Pod を冗長化して起動する個数
+- `spec.backoffLimit`
+    - Pod の処理が失敗した際のリトライ上限
+
+### 8.2. CronJob
+
+Job に crontab の機能をつけたものが **CronJob** 。  
+マニフェストは `spec.jobTemplate` 配下に Job の `spec` をもってくればよい。
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: reporting-cron-job
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      completions: 3
+      parallelism: 3
+      template:
+        containers:
+        - name: math-add
+          image: ubuntu
+          command: ['expr', '3', '+', '2']
+        restartPolicy: Never
+```
+
+なお、 `spec.schedule` に記載する crontab の指定方法は以下の通り。
+
+```txt
+# （行頭の # マークはコメント行を示す）
+# +------------ 分 (0 - 59)
+# | +---------- 時 (0 - 23)
+# | | +-------- 日 (1 - 31)
+# | | | +------ 月 (1 - 12)
+# | | | | +---- 曜日 (0 - 6) (日曜日=0)
+# | | | | |
+# * * * * * 実行されるコマンド
+```
+
+|例|意味|
+|:---|:---|
+|0 0 1 1 *| 1 月 1 日 0:00 に 年に 1 回実行される|
+|0 0 1 * *| 毎月 1 日 0:00 に 月に 1 回実行される|
+|0 0 * * 0| 毎週日曜 0:00 に 週に 1 回実行される|
+|0 0 * * *| 毎日 0:00 に 日に 1 回実行される|
+|0 * * * *| 毎時 0 分に 1 時間に 1 回実行される|
+
+## 9. その他のリソース
 
 基本的なリソース以外に以下について記載する。
 
 - [HPA（HorizontalPodAutoscaler）](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
 - [PBD（PodDisruptionBudget）](https://kubernetes.io/docs/tasks/run-application/configure-pdb/)
 
-### 8.1. HPA（HorizontalPodAutoscaler）
+### 9.1. HPA（HorizontalPodAutoscaler）
 
 HPA は pod の負荷に応じて自動的に pod の数を水平スケールさせるリソース。  
 Deployment, ReplicaSet, ReplicationController, StatefulSetはscaled resource objectと呼ばれ、これらがauto scalingの対象リソースとなる。
@@ -690,7 +916,7 @@ spec:
 
 [参考](https://qiita.com/sheepland/items/37ea0b77df9a4b4c9d80)
 
-### 8.2. PBD（PodDisruptionBudget）
+### 9.2. PBD（PodDisruptionBudget）
 
 - `kubectl drain` によって対象 Node から Pod を退去でき、以降も Pod がスケジューリングされないように出来る
   - Node のメンテナンス(reboot)などを行う必要がある場合に kubectl drainを行うと Node で動いている Pod について gracefully に terminate される。また、ReplicaSet を使っていれば別の Node で Pod が自動的に起動される。メンテナンス完了後、kubectl uncordonを行うことで再度 Pod がスケジューリングされる状態になる。
