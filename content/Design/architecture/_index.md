@@ -6,10 +6,8 @@ hide:
 - toc
 - nextpage
 subpage: false
-weight: 1
+weight: 2
 ---
-
-[Cloud アーキテクチャセンター](https://cloud.google.com/architecture?hl=ja)
 
 1. [デプロイ戦略](#1-デプロイ戦略)
 

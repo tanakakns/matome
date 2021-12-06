@@ -12,3 +12,6 @@ weight: 1
 <!--more-->
 
 {{% children description="true"   %}}
+
+- 参考
+  - [Cloud アーキテクチャセンター](https://cloud.google.com/architecture?hl=ja)
