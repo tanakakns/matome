@@ -6,7 +6,7 @@ hide:
 - toc
 - nextpage
 subpage: false
-weight: 2
+weight: 3
 ---
 
 1. [デプロイ戦略](#1-デプロイ戦略)
