@@ -230,3 +230,5 @@ Railsっぽい。
 
 - [Cloud APIs API 設計ガイド](https://cloud.google.com/apis/design/)
 - [API設計スキルを次のレベルに引き上げるベストプラクティス22選](https://qiita.com/baby-degu/items/6f516189445d98ddbb7d)
+- [Zalando RESTful API と イベントスキーマのガイドライン](https://restful-api-guidelines-ja.netlify.app/)
+  - Original: [Zalando RESTful API and Event Guidelines](https://opensource.zalando.com/restful-api-guidelines/)
