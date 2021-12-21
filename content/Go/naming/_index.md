@@ -5,7 +5,7 @@ draft: false
 hide:
 - toc
 - nextpage
-weight: 3
+weight: 4
 ---
 
 Go の命名規則をまとめる。

@@ -5,7 +5,7 @@ draft: false
 hide:
 - toc
 - nextpage
-weight: 2
+weight: 3
 ---
 
 基本文法についてメモる。

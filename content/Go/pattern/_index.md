@@ -5,7 +5,7 @@ draft: false
 hide:
 - toc
 - nextpage
-weight: 4
+weight: 5
 ---
 
 Go らしい書き方や処理パターンについて記載する。

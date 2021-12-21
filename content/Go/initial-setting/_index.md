@@ -23,11 +23,11 @@ Go言語の初期設定周りについて。
 https://golang.org/doc/install/source#environment
 
 - `GOROOT`
-    - go のバイナリのホームまでのパス
+    - go のバイナリのホームまでのパス
 	- `go env GOROOT` で値確認
 - `GOPATH`
     - `go env GOPATH` で値確認
-    - go の各種資材が配置パスであってプロジェクトのパスでないことに注意
+    - go の各種資材が配置パスであってプロジェクトのパスでないことに注意
     - プロジェクトのパスは `$GOPATH/src/github.com/<Githubアカウント名>/<プロジェクト名>`
 	    - ただし、後述する **GOPATH mode** の場合
 - `GOOS`
@@ -35,7 +35,7 @@ https://golang.org/doc/install/source#environment
 - `GOARCH`
     - コンパイルして作成するバイナリの対象 CPU を指定する
 
-`.zshenv` （ bash の場合は `.bash_profile` ）に以下を追記。
+`.zshenv` （ bash の場合は `.bash_profile` ）に以下を追記。
 
 ```zsh
 export GOROOT=`go env GOROOT`
