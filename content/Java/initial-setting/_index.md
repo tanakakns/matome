@@ -95,3 +95,30 @@ ToDo
 - Spring Boot Tools など Pivotal 製のやつ
 - Spring Boot Dashboard など Microsoft 製のやつ
 - Lombok Annotations Support for VS Code
+
+## 5. docker によるマルチステージビルド
+
+```dockerfile
+###############################################
+# Build Source Code
+###############################################
+FROM maven:3.8.4-amazoncorretto-17 as BUILD
+ 
+WORKDIR /build
+COPY . .
+ 
+RUN --mount=type=cache,target=/root/.m2 \
+     mvn clean package
+ 
+###############################################
+# Create Final Image
+###############################################
+FROM amazoncorretto:17.0.2-alpine3.15
+
+RUN apk add --no-cache tzdata
+ENV TZ Asia/Tokyo
+ 
+COPY --from=BUILD /build/[Project Dir]/target/[builded].jar /home/java/app.jar
+ 
+ENTRYPOINT ["java", "-jar", "/home/java/app.jar"]
+```
