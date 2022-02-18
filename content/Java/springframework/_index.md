@@ -14,6 +14,7 @@ Spring Framework もといほぼ SpringBoot ベースのメモ。
 2. [アノテーション](#2-アノテーション)
 3. [Beanスコープ](#3-Beanスコープ)
 4. [設定](#4-設定)
+5. [プロジェクト構成](#5-プロジェクト構成)
 
 ## 1. プロジェクト作成
 
@@ -118,3 +119,16 @@ Spring の設定には
 - SpringSession設定クラス（ `src/main/java/com/pepese/sample/config/SessionConfig.java` などに配置）
   - `@Configuration` 、 `@EnableRedisHttpSession` アノテーションを付与
   - ConnectionFactory などを生成するメソッドを実装して利用
+
+## 5. プロジェクト構成
+
+CleanArchitecture 風なプロジェクト構成。
+
+- `src/main/java/com/pepese/sample/Application.java` ： SpringBoot 起動クラス
+- `src/main/java/com/pepese/sample/config/` ： Java Based Configuration クラス
+- `src/main/java/com/pepese/sample/adapter/` ： コントローラとか
+- `src/main/java/com/pepese/sample/domain/` ： ドメインとなる Bean クラス
+- `src/main/java/com/pepese/sample/infrastructure/` ： リポジトリとか
+- `src/main/java/com/pepese/sample/usecase/` ： ユースケースとなる Service クラス
+- 残りメモ
+  - ロガーは？

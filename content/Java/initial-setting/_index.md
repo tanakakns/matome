@@ -96,6 +96,12 @@ ToDo
 - Spring Boot Dashboard など Microsoft 製のやつ
 - Lombok Annotations Support for VS Code
 
+ショートカットは以下のようなものがあるが、 VSCode メニューの「移動」を見ればすぐ分かる。
+
+- インポート：（NG箇所を選択してから） Command + .
+- クラス定義に飛ぶ：（該当箇所を選択してから） F12 （ fn 押しながら）
+- 参照先へ飛ぶ：（該当箇所を選択してから） Shift + F12 
+
 ## 5. docker によるマルチステージビルド
 
 ```dockerfile
