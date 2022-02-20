@@ -14,7 +14,8 @@ Spring Framework もといほぼ SpringBoot ベースのメモ。
 2. [アノテーション](#2-アノテーション)
 3. [Beanスコープ](#3-Beanスコープ)
 4. [設定](#4-設定)
-5. [プロジェクト構成](#5-プロジェクト構成)
+5. [ロガー](#5-ロガー)
+6. [プロジェクト構成](#6-プロジェクト構成)
 
 ## 1. プロジェクト作成
 
@@ -120,7 +121,80 @@ Spring の設定には
   - `@Configuration` 、 `@EnableRedisHttpSession` アノテーションを付与
   - ConnectionFactory などを生成するメソッドを実装して利用
 
-## 5. プロジェクト構成
+## 5. ロガー
+
+インターフェースにSLF4J、実装にLogbackを利用する。  
+SpringBootの場合は依存に含まれているため、特に POM への追加は不要。  
+LoggerFactoryに「クラス」or「名前」を指定することで取得できるが、基本は「クラス」。
+
+```java
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class LoggertTest {
+    // クラス
+    private static final Logger log = LoggerFactory.getLogger(LoggerTest.class);
+}
+```
+
+```java
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class LoggertTest {
+    // 名前
+    private static final Logger log = LoggerFactory.getLogger("MyLogger.test");
+}
+```
+
+毎回書くのはダルいので Lombok の `@slf4j` アノテーションをクラスに付与すれば `log` というフィールドで利用可能になる。
+
+```java
+import lombok.extern.slf4j.Slf4j;
+
+@slf4j
+public class LoggertTest {
+}
+```
+
+ログメッセージに `{}` を記述すると **プレースフォルダー** として利用できる。
+
+```java
+int num1 = 1234;
+int num2 = 5678;
+log.debug("この数値は{}と{}です。", num1, num2);
+// 20:00:33 DEBUG - この数値は1234と5678です。
+```
+
+Filter などで MDC に項目を追加できる。
+
+```java
+import org.slf4j.MDC;
+import org.springframework.web.filter.OncePerRequestFilter;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class LoggingFilter extends OncePerRequestFilter {
+    
+  public LoggingFilter() {
+    super();
+  }
+
+  @Override
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    String httpmethod = request.getMethod();
+    MDC.put("httpMethod", httpmethod); // HTTPメソッドをログに追加
+    try {
+      filterChain.doFilter(request, response);
+    } finally {
+    }
+  }
+}
+```
+
+Logback の設定ファイルは `src/main/resources/logback.xml`
+
+## 6. プロジェクト構成
 
 CleanArchitecture 風なプロジェクト構成。
 
@@ -130,5 +204,4 @@ CleanArchitecture 風なプロジェクト構成。
 - `src/main/java/com/pepese/sample/domain/` ： ドメインとなる Bean クラス
 - `src/main/java/com/pepese/sample/infrastructure/` ： リポジトリとか
 - `src/main/java/com/pepese/sample/usecase/` ： ユースケースとなる Service クラス
-- 残りメモ
-  - ロガーは？
+- `src/main/resources/logback.xml` ： ログ設定ファイル
