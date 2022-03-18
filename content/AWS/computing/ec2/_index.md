@@ -11,7 +11,7 @@ weight: 1
 
 <!--more-->
 
-Amazon EC2](https://docs.aws.amazon.com/ja_jp/AWSEC2/latest/UserGuide/concepts.html)についてまとめる。
+[Amazon EC2](https://docs.aws.amazon.com/ja_jp/AWSEC2/latest/UserGuide/concepts.html)についてまとめる。
 
 - 概要
 - Amazon EC2 Auto Scaling
