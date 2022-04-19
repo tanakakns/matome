@@ -5,7 +5,7 @@ baseURL = "https://tanakakns.github.io/"
 title = "テックまとめ"
 theme = "docport"
 enableRobotsTXT = true
-googleAnalytics = "UA-42388425-3"
+# googleAnalytics = "UA-42388425-3"
 pluralizeListTitles = false # Sectionのタイトル名複数形を防ぐ
 
 [Author]
@@ -15,12 +15,12 @@ pluralizeListTitles = false # Sectionのタイトル名複数形を防ぐ
 
 [Params]
   description = "備忘録用メモサイト"
-  twitter_cards = true
+#  twitter_cards = true
   color_main = "#737373"
   color_second = "#b30000"
   disableSearch = true
   mathjax = true
 
-[Params.widgets.social]
-  twitter = "@PeePeeSE"
-  github = "pepese"
+#[Params.widgets.social]
+#  twitter = "@PeePeeSE"
+#  github = "pepese"
