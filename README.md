@@ -20,7 +20,7 @@ $ hugo server -D
 
 # Github Pages 公開
 $ rm -fR public # 初回のみ
-$ git submodule add -f https://pepese@github.com/pepese/pepese.github.io.git public # 初回のみ
+$ git submodule add -f https://tanakakns@github.com/tanakakns/tanakakns.github.io.git public # 初回のみ
 $ hugo
 $ cd public
 $ git add .

@@ -6,7 +6,7 @@ hide:
 - toc
 - nextpage
 subpage: false
-weight: 5
+weight: 8
 ---
 
 RDS、DynamoDB、ElastiCache、Neptune、Amazon QLDB、Amazon DocumentDB、Amazon Keyspaces、Amazon Timestream
