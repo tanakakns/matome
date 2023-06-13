@@ -9,7 +9,7 @@ subpage: false
 weight: 14
 ---
 
-ToDo
+AWS Organizations、AWS Config、AWS Control Tower、AWS IAM Identity Center、AWS CloudTrail
 
 <!--more-->
 

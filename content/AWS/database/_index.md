@@ -9,7 +9,7 @@ subpage: false
 weight: 8
 ---
 
-RDS、DynamoDB、ElastiCache、Neptune、Amazon QLDB、Amazon DocumentDB、Amazon Keyspaces、Amazon Timestream
+RDS、DynamoDB、ElastiCache、Neptune、Amazon QLDB、Amazon DocumentDB、Amazon Keyspaces、Amazon Timestream、Amazon RDS Proxy
 
 <!--more-->
 
