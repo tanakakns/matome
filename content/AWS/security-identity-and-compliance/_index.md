@@ -14,3 +14,7 @@ ToDo
 <!--more-->
 
 {{% children description="true"   %}}
+
+- **AWS Firewall Manager**
+  - AWS WAF、AWS Shield Advanced、Amazon VPC セキュリティグループ、AWS Network Firewall、Amazon Route 53 Resolver DNS Firewall など、さまざまな保護のために、**複数のアカウントとリソースにおける管理とメンテナンス**のタスクを簡素化する
+  - [docs](https://docs.aws.amazon.com/ja_jp/waf/latest/developerguide/fms-chapter.html)

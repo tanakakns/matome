@@ -41,3 +41,10 @@ weight: 1
 - AWS Resource Access Manager( **AWS RAM** ) を用いて、AWSアカウント間やOU間でリソースの共有を行える
 
 参考：https://www.ashisuto.co.jp/db_blog/article/aws-organizations.html
+
+## 3. SCPを使用した戦略
+
+- 拒否リスト戦略
+  - アクションはデフォルトで許可され、禁止するサービスとアクションを指定する
+- 許可リスト戦略
+  - アクションはデフォルトで禁止され、許可するサービスとアクションを指定する

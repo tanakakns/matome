@@ -14,3 +14,7 @@ ToDo
 <!--more-->
 
 {{% children description="true"   %}}
+
+- **Gateway Load Balancer**
+  - 受信したトラフィックを複数のアベイラビリティーゾーンの複数のターゲット (Elastic Load Balancing) に自動的に分散することができるサービス
+  - 登録されているターゲットの状態をモニタリングし、正常なターゲットにのみトラフィックをルーティングする
